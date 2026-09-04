@@ -167,24 +167,13 @@
     align-items:center;
     justify-content:center;
     background:var(--bg);
-    z-index:5;
+    z-index:1;
     cursor:pointer;
     overflow:hidden;
   }
   .yay-overlay.show{ display:flex; }
-  .yay-letter{
-    display:inline-block;
-    transform: translate(var(--tx), var(--ty)) rotate(var(--rot));
-  }
-  .yay-letter-inner{
-    display:inline-block;
-    color:var(--bright);
-    font-size: calc(var(--hero-size) * 1.25);
-    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-    animation-delay: var(--delay);
-  }
 
-  .lose-face{
+  .milestone-face{
     width:min(70vmin, 700px);
     height:auto;
     animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -265,10 +254,16 @@
     <div class="board" id="board"></div>
   </div>
 
-  <div class="yay-overlay" id="yayOverlay"></div>
+  <div class="yay-overlay" id="yayOverlay">
+    <svg class="milestone-face" viewBox="0 0 786.799 291.08" style="--final-scale:1;">
+      <path fill="var(--bright)" d="M583 101C583 127.56 578.2 152.2 568.6 174.92C558.68 197.96 545.08 218.12 527.8 235.4C510.2 253 489.88 266.6 466.84 276.2C443.8 286.12 419.16 291.08 392.92 291.08C366.36 291.08 341.72 286.12 319 276.2C295.96 266.6 275.8 253 258.52 235.4C240.92 218.12 227.32 197.96 217.72 174.92C207.8 152.2 202.84 127.56 202.84 101L223 101C223 124.68 227.48 146.76 236.44 167.24C245.08 187.72 257.24 205.64 272.92 221C288.28 236.68 306.2 248.84 326.68 257.48C347.16 266.44 369.24 270.92 392.92 270.92C416.6 270.92 438.68 266.44 459.16 257.48C479.64 248.84 497.72 236.68 513.4 221C528.76 205.64 540.92 187.72 549.88 167.24C558.52 146.76 562.84 124.68 562.84 101L583 101Z"/>
+      <path fill="var(--bright)" d="M751.759 72.96C741.999 72.96 733.679 69.6 726.799 62.88C720.079 56.16 716.719 47.44 716.719 36.72C716.719 25.84 720.079 17.04 726.799 10.32C733.679 3.44001 741.999 0 751.759 0C761.519 0 769.759 3.44001 776.479 10.32C783.359 17.04 786.799 25.84 786.799 36.72C786.799 47.44 783.359 56.16 776.479 62.88C769.759 69.6 761.519 72.96 751.759 72.96Z"/>
+      <path fill="var(--bright)" d="M35.04 72.96C25.28 72.96 16.96 69.6 10.08 62.88C3.36002 56.16 0 47.44 0 36.72C0 25.84 3.36002 17.04 10.08 10.32C16.96 3.44001 25.28 0 35.04 0C44.8 0 53.04 3.44001 59.76 10.32C66.64 17.04 70.08 25.84 70.08 36.72C70.08 47.44 66.64 56.16 59.76 62.88C53.04 69.6 44.8 72.96 35.04 72.96Z"/>
+    </svg>
+  </div>
 
   <div class="yay-overlay" id="loseOverlay" style="background:var(--incorrect);">
-    <svg class="lose-face" viewBox="0 0 786.799 207.12" style="--final-scale:1;">
+    <svg class="milestone-face" viewBox="0 0 786.799 207.12" style="--final-scale:1;">
       <path fill="var(--bright)" d="M751.759 72.96C741.999 72.96 733.679 69.6 726.799 62.88C720.079 56.16 716.719 47.44 716.719 36.72C716.719 25.84 720.079 17.04 726.799 10.32C733.679 3.44001 741.999 0 751.759 0C761.519 0 769.759 3.44001 776.479 10.32C783.359 17.04 786.799 25.84 786.799 36.72C786.799 47.44 783.359 56.16 776.479 62.88C769.759 69.6 761.519 72.96 751.759 72.96Z"/>
       <path fill="var(--bright)" d="M203.332 207.12C203.332 180.56 208.133 155.92 217.733 133.2C227.653 110.16 241.252 90 258.533 72.72C276.133 55.12 296.453 41.52 319.493 31.92C342.533 22 367.173 17.04 393.413 17.04C419.973 17.04 444.612 22 467.332 31.92C490.372 41.52 510.533 55.12 527.813 72.72C545.413 90 559.013 110.16 568.613 133.2C578.533 155.92 583.493 180.56 583.493 207.12H563.333C563.333 183.44 558.853 161.36 549.893 140.88C541.253 120.4 529.093 102.48 513.413 87.12C498.053 71.44 480.133 59.28 459.653 50.64C439.173 41.68 417.093 37.2 393.413 37.2C369.733 37.2 347.653 41.68 327.173 50.64C306.693 59.28 288.613 71.44 272.933 87.12C257.573 102.48 245.412 120.4 236.452 140.88C227.812 161.36 223.493 183.44 223.493 207.12H203.332Z"/>
       <path fill="var(--bright)" d="M35.04 72.96C25.28 72.96 16.96 69.6 10.08 62.88C3.36002 56.16 0 47.44 0 36.72C0 25.84 3.36002 17.04 10.08 10.32C16.96 3.44001 25.28 0 35.04 0C44.8 0 53.04 3.44001 59.76 10.32C66.64 17.04 70.08 25.84 70.08 36.72C70.08 47.44 66.64 56.16 59.76 62.88C53.04 69.6 44.8 72.96 35.04 72.96Z"/>
@@ -283,13 +278,6 @@
 
   var X_SVG = '<svg viewBox="0 0 199.175 199.175"><path fill="var(--bright)" d="M37.0514 48.4488L48.4467 37.0534L99.7259 88.3326L151.005 37.0534L162.4 48.4488L111.121 99.7279L162.4 151.007L151.005 162.402L99.7259 111.123L48.4467 162.402L37.0514 151.007L88.3305 99.7279L37.0514 48.4488Z"/></svg>';
   var O_SVG = '<svg viewBox="0 0 199.175 199.175"><circle cx="99.5874" cy="99.5869" r="58.5809" fill="none" stroke="var(--bright)" stroke-width="16.7374"/></svg>';
-
-  var YAY_LETTERS = [
-    { ch: 'y', rot: -16, scale: 1.05, tx: '0em',    ty: '0.18em'  },
-    { ch: 'a', rot: 7,   scale: 1.3,  tx: '0.03em', ty: '-0.05em' },
-    { ch: 'y', rot: -7,  scale: 1.75, tx: '0.06em', ty: '-0.38em' },
-    { ch: '!', rot: -11, scale: 0.85, tx: '0.05em', ty: '0.55em'  }
-  ];
 
   var WINS_TO_GO = 5;
   var BLOCK_CHANCE_EASY = 0.65;
@@ -502,15 +490,6 @@
   }
 
   function showYay(){
-    var html = '';
-    for(var i=0;i<YAY_LETTERS.length;i++){
-      var letter = YAY_LETTERS[i];
-      var delay = (i * 0.15) + 's';
-      html += '<span class="yay-letter" style="--tx:' + letter.tx + '; --ty:' + letter.ty + '; --rot:' + letter.rot + 'deg;">' +
-        '<span class="num yay-letter-inner" style="--final-scale:' + letter.scale + '; --delay:' + delay + ';">' + letter.ch + '</span>' +
-        '</span>';
-    }
-    els.yayOverlay.innerHTML = html;
     els.yayOverlay.classList.add('show');
     dismissTimer = setTimeout(finishMilestone, 3000);
   }
@@ -518,7 +497,6 @@
   function finishMilestone(){
     clearTimeout(scorePillTimer);
     els.yayOverlay.classList.remove('show');
-    els.yayOverlay.innerHTML = '';
     els.loseOverlay.classList.remove('show');
     state.scoreX = 0;
     state.scoreO = 0;
