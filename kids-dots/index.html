@@ -105,32 +105,48 @@
   .dots-canvas-wrap{ position:relative; width:var(--canvas-size); height:var(--canvas-size); }
   .dots-canvas{ width:100%; height:100%; display:block; overflow:visible; }
 
-  .dot-hit{ cursor:pointer; }
-  .dot-hitarea{ fill:transparent; }
-  .dot-bullet{ fill:var(--bright); transition: fill 150ms ease; }
-  .dot-hit.wrong .dot-bullet{ fill:var(--incorrect); }
-
-  /* number labels are plain HTML, not SVG, so their 28px matches the design
-     literally instead of scaling up/down with the canvas's viewBox zoom. */
+  /* Dot, gap, rings and number are all literal Figma pixel values (12px dot,
+     8px gap, 20px/26px bullseye rings, 28px type) — fixed regardless of the
+     canvas's viewBox zoom, matching design exactly rather than scaling with it. */
   .dots-labels{ position:absolute; inset:0; pointer-events:none; }
-  .dot-label{ position:absolute; font-size:28px; color:var(--bright); white-space:nowrap; transition: color 150ms ease, opacity 300ms ease; }
-  .dot-label.wrong{ color:var(--incorrect); }
-  .dot-label.reveal-hide{ opacity:0; }
+  .dot-point{
+    position:absolute;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:16px;
+    margin:-16px;
+    pointer-events:auto;
+    cursor:pointer;
+    transition:opacity 300ms ease;
+  }
+  .dot-point.reveal-hide{ opacity:0; pointer-events:none; }
+
+  .dot-bullet-wrap{ position:relative; flex:none; width:12px; height:12px; }
+  .dot-bullet{ width:12px; height:12px; border-radius:50%; background:var(--bright); transition:background 150ms ease; }
+  .dot-point.wrong .dot-bullet{ background:var(--incorrect); }
+
+  .dot-label{ font-size:28px; color:var(--bright); white-space:nowrap; transition:color 150ms ease; }
+  .dot-point.wrong .dot-label{ color:var(--incorrect); }
 
   /* bullseye marker on the dot the child most recently connected — shows
      where they are now, without giving away which number comes next. */
-  .target-ring{ fill:none; stroke:var(--bright); transform-box:fill-box; transform-origin:center; animation: ring-breathe 1.8s ease-in-out infinite; }
-  .target-ring.outer{ animation-delay: 0.3s; }
+  .target-ring{
+    position:absolute; top:50%; left:50%;
+    border-radius:50%;
+    border:1px solid var(--bright);
+    transform:translate(-50%,-50%);
+    animation: ring-breathe 1.8s ease-in-out infinite;
+  }
+  .target-ring.r1{ width:20px; height:20px; }
+  .target-ring.r2{ width:26px; height:26px; animation-delay:0.3s; }
 
   @keyframes ring-breathe{
-    0%,100%{ opacity:0.9; transform:scale(1); }
-    50%{ opacity:0.5; transform:scale(1.12); }
+    0%,100%{ opacity:0.9; transform:translate(-50%,-50%) scale(1); }
+    50%{ opacity:0.5; transform:translate(-50%,-50%) scale(1.12); }
   }
 
   .dot-line{ stroke:var(--bright); fill:none; stroke-width:2; stroke-linecap:round; vector-effect:non-scaling-stroke; transition: stroke-dashoffset 350ms ease; }
-
-  .dot-hit{ transition: opacity 300ms ease; }
-  .dot-hit.reveal-hide{ opacity:0; pointer-events:none; }
 
   /* ---------- phone: single scrollable slider-menu bar ---------- */
   @media (max-width: 767px), (max-height: 500px){
@@ -308,8 +324,7 @@
     }
 
     for (var j = 0; j < pts.length; j++) {
-      els.svg.appendChild(makeDot(pts[j], j));
-      els.labels.appendChild(makeLabel(pts[j], j));
+      els.labels.appendChild(makePoint(pts[j], j));
     }
   }
 
@@ -331,29 +346,38 @@
     return line;
   }
 
-  function makeDot(p, index){
-    var g = svgEl('g', { class: 'dot-hit', 'data-index': index });
+  function makePoint(p, index){
     var isCurrent = index === state.next - 1;
 
-    g.appendChild(svgEl('circle', { class:'dot-hitarea', cx:p[0] + 8, cy:p[1], r:19 }));
-    if (isCurrent) {
-      g.appendChild(svgEl('circle', { class:'target-ring outer', cx:p[0], cy:p[1], r:8.3, 'stroke-width':0.7 }));
-      g.appendChild(svgEl('circle', { class:'target-ring', cx:p[0], cy:p[1], r:6.3, 'stroke-width':0.8 }));
-    }
-    g.appendChild(svgEl('circle', { class:'dot-bullet', cx:p[0], cy:p[1], r:4 }));
-    g.addEventListener('click', function(){ onDotTap(index); });
-    return g;
-  }
+    var row = document.createElement('div');
+    row.className = 'dot-point';
+    row.dataset.index = index;
+    row.style.left = (p[0] / 200 * 100) + '%';
+    row.style.top = (p[1] / 200 * 100) + '%';
+    row.style.transform = 'translate(0, -50%)';
 
-  function makeLabel(p, index){
-    var span = document.createElement('span');
-    span.className = 'dot-label num';
-    span.dataset.index = index;
-    span.style.left = (p[0] / 200 * 100) + '%';
-    span.style.top = (p[1] / 200 * 100) + '%';
-    span.style.transform = 'translate(14px, -50%)';
-    span.textContent = index + 1;
-    return span;
+    var bulletWrap = document.createElement('div');
+    bulletWrap.className = 'dot-bullet-wrap';
+    if (isCurrent) {
+      var r1 = document.createElement('div');
+      r1.className = 'target-ring r1';
+      var r2 = document.createElement('div');
+      r2.className = 'target-ring r2';
+      bulletWrap.appendChild(r1);
+      bulletWrap.appendChild(r2);
+    }
+    var bullet = document.createElement('div');
+    bullet.className = 'dot-bullet';
+    bulletWrap.appendChild(bullet);
+
+    var label = document.createElement('span');
+    label.className = 'dot-label num';
+    label.textContent = index + 1;
+
+    row.appendChild(bulletWrap);
+    row.appendChild(label);
+    row.addEventListener('click', function(){ onDotTap(index); });
+    return row;
   }
 
   function onDotTap(index){
@@ -366,15 +390,10 @@
   }
 
   function flashWrong(index){
-    var g = els.svg.querySelector('.dot-hit[data-index="' + index + '"]');
-    var label = els.labels.querySelector('.dot-label[data-index="' + index + '"]');
-    if (!g) return;
-    g.classList.add('wrong');
-    if (label) label.classList.add('wrong');
-    setTimeout(function(){
-      g.classList.remove('wrong');
-      if (label) label.classList.remove('wrong');
-    }, 250);
+    var row = els.labels.querySelector('.dot-point[data-index="' + index + '"]');
+    if (!row) return;
+    row.classList.add('wrong');
+    setTimeout(function(){ row.classList.remove('wrong'); }, 250);
   }
 
   function connectDot(){
@@ -388,8 +407,7 @@
   function onShapeComplete(){
     state.busy = true;
     document.body.style.background = 'var(--success)';
-    els.svg.querySelectorAll('.dot-hit').forEach(function(dot){ dot.classList.add('reveal-hide'); });
-    els.labels.querySelectorAll('.dot-label').forEach(function(label){ label.classList.add('reveal-hide'); });
+    els.labels.querySelectorAll('.dot-point').forEach(function(row){ row.classList.add('reveal-hide'); });
     setTimeout(function(){
       document.body.style.background = '';
       newShape();
