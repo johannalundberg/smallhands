@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Math by Eliel</title>
+<title>Small Hands</title>
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <style>
   @font-face{
@@ -397,8 +397,14 @@
   // which silently broke every icon button on touchscreens. Cancelling the
   // later 'mousedown' compatibility event still blocks the focus-shift
   // without swallowing the click.
+  // Only guarded while the keyboard is actually open: the answer input stays
+  // "focused" even after the keyboard is dismissed via its own hide control
+  // (no blur fires), so if this kept blocking the focus-shift afterwards too,
+  // the next tray tap would land as a touch on a still-focused input and iOS
+  // would silently resurrect the keyboard — snapping the equation/submit
+  // button into the typing layout for no visible reason.
   document.addEventListener('mousedown', function(e){
-    if (e.target.closest('.icon-btn')) {
+    if (e.target.closest('.icon-btn') && isKeyboardOpen()) {
       e.preventDefault();
     }
   });
