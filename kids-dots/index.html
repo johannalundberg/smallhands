@@ -116,6 +116,10 @@
     gap:8px;
     padding:16px;
     margin:-16px;
+    /* without this, the -50% in the translate below is measured against the
+       border box (content + the 16px hit-area padding), overshooting the
+       vertical centering by exactly that padding. */
+    transform-box: content-box;
     pointer-events:auto;
     cursor:pointer;
     transition:opacity 300ms ease;
