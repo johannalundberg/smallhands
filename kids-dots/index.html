@@ -21,6 +21,7 @@
     --ink-muted:rgba(32,32,32,0.4);
     --success:#04D052;
     --incorrect:#ED2B2E;
+    --line-complete:#111111;
     /* Figma frame: 1728x1117 */
     --hero-size: clamp(2.6rem, 13.3102vw, 230px);
     --unit: 1.1574vw;
@@ -150,7 +151,8 @@
     50%{ opacity:0.5; transform:translate(-50%,-50%) scale(1.12); }
   }
 
-  .dot-line{ stroke:var(--bright); fill:none; stroke-width:2; stroke-linecap:round; vector-effect:non-scaling-stroke; transition: stroke-dashoffset 350ms ease; }
+  .dot-line{ stroke:var(--bright); fill:none; stroke-width:2; stroke-linecap:round; vector-effect:non-scaling-stroke; transition: stroke-dashoffset 350ms ease, stroke 900ms ease; }
+  .dot-line.complete{ stroke:var(--line-complete); }
 
   /* ---------- phone: single scrollable slider-menu bar ---------- */
   @media (max-width: 767px), (max-height: 500px){
@@ -416,6 +418,7 @@
     state.busy = true;
     document.body.style.background = 'var(--success)';
     els.labels.querySelectorAll('.dot-point').forEach(function(row){ row.classList.add('reveal-hide'); });
+    els.svg.querySelectorAll('.dot-line').forEach(function(line){ line.classList.add('complete'); });
     setTimeout(function(){
       document.body.style.background = '';
       newShape();
