@@ -184,6 +184,12 @@
     animation-delay: var(--delay);
   }
 
+  .lose-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
   /* ---------- phone: single scrollable slider-menu bar ---------- */
   @media (max-width: 767px), (max-height: 500px){
     :root{
@@ -261,6 +267,14 @@
 
   <div class="yay-overlay" id="yayOverlay"></div>
 
+  <div class="yay-overlay" id="loseOverlay" style="background:var(--incorrect);">
+    <svg class="lose-face" viewBox="0 0 786.799 207.12" style="--final-scale:1;">
+      <path fill="var(--bright)" d="M751.759 72.96C741.999 72.96 733.679 69.6 726.799 62.88C720.079 56.16 716.719 47.44 716.719 36.72C716.719 25.84 720.079 17.04 726.799 10.32C733.679 3.44001 741.999 0 751.759 0C761.519 0 769.759 3.44001 776.479 10.32C783.359 17.04 786.799 25.84 786.799 36.72C786.799 47.44 783.359 56.16 776.479 62.88C769.759 69.6 761.519 72.96 751.759 72.96Z"/>
+      <path fill="var(--bright)" d="M203.332 207.12C203.332 180.56 208.133 155.92 217.733 133.2C227.653 110.16 241.252 90 258.533 72.72C276.133 55.12 296.453 41.52 319.493 31.92C342.533 22 367.173 17.04 393.413 17.04C419.973 17.04 444.612 22 467.332 31.92C490.372 41.52 510.533 55.12 527.813 72.72C545.413 90 559.013 110.16 568.613 133.2C578.533 155.92 583.493 180.56 583.493 207.12H563.333C563.333 183.44 558.853 161.36 549.893 140.88C541.253 120.4 529.093 102.48 513.413 87.12C498.053 71.44 480.133 59.28 459.653 50.64C439.173 41.68 417.093 37.2 393.413 37.2C369.733 37.2 347.653 41.68 327.173 50.64C306.693 59.28 288.613 71.44 272.933 87.12C257.573 102.48 245.412 120.4 236.452 140.88C227.812 161.36 223.493 183.44 223.493 207.12H203.332Z"/>
+      <path fill="var(--bright)" d="M35.04 72.96C25.28 72.96 16.96 69.6 10.08 62.88C3.36002 56.16 0 47.44 0 36.72C0 25.84 3.36002 17.04 10.08 10.32C16.96 3.44001 25.28 0 35.04 0C44.8 0 53.04 3.44001 59.76 10.32C66.64 17.04 70.08 25.84 70.08 36.72C70.08 47.44 66.64 56.16 59.76 62.88C53.04 69.6 44.8 72.96 35.04 72.96Z"/>
+    </svg>
+  </div>
+
 <script>
 (function(){
   "use strict";
@@ -295,6 +309,7 @@
     board: document.getElementById('board'),
     boardWrap: document.getElementById('boardWrap'),
     yayOverlay: document.getElementById('yayOverlay'),
+    loseOverlay: document.getElementById('loseOverlay'),
     diffGroup: document.getElementById('diffGroup'),
     backBtn: document.getElementById('backBtn'),
     refreshBtn: document.getElementById('refreshBtn'),
@@ -477,7 +492,13 @@
     state.scoreO += 1;
     updateScoreDisplay();
     flashScorePill(els.scorePillO);
-    resetBoard();
+    if(state.scoreO >= WINS_TO_GO) showComputerMilestone();
+    else resetBoard();
+  }
+
+  function showComputerMilestone(){
+    els.loseOverlay.classList.add('show');
+    dismissTimer = setTimeout(finishMilestone, 3000);
   }
 
   function showYay(){
@@ -498,6 +519,7 @@
     clearTimeout(scorePillTimer);
     els.yayOverlay.classList.remove('show');
     els.yayOverlay.innerHTML = '';
+    els.loseOverlay.classList.remove('show');
     state.scoreX = 0;
     state.scoreO = 0;
     updateScoreDisplay();
@@ -530,6 +552,7 @@
   }
 
   els.yayOverlay.addEventListener('click', finishMilestone);
+  els.loseOverlay.addEventListener('click', finishMilestone);
   els.refreshBtn.addEventListener('click', restartRound);
   els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
 
