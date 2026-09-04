@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Connect the Dots by Eliel</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  @font-face{
+    font-family:'Spline Sans Mono';
+    src: url('fonts/SplineSansMono.woff2') format('woff2');
+    font-weight:400;
+    font-style:normal;
+    font-display:swap;
+  }
+
+  :root{
+    --bg:#DA2296;
+    --bright:#E4E4E4;
+    --ink:#202020;
+    --ink-muted:rgba(32,32,32,0.4);
+    --success:#04D052;
+    --incorrect:#ED2B2E;
+    /* Figma frame: 1728x1117 */
+    --hero-size: clamp(2.6rem, 13.3102vw, 230px);
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+    --canvas-size: min(88vmin, 88vw, 820px);
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --hero-size: clamp(90px, 14.4733vw, 150px);
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+    transition: background 80ms ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  .num{
+    font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings: "zero" 1;
+    font-weight:400;
+  }
+
+  /* ---------- icon buttons (difficulty / back / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  /* ---------- the connect-the-dots canvas ---------- */
+  .dots-canvas-wrap{ position:relative; width:var(--canvas-size); height:var(--canvas-size); }
+  .dots-canvas{ width:100%; height:100%; display:block; overflow:visible; }
+
+  .dot-hit{ cursor:pointer; }
+  .dot-hitarea{ fill:transparent; }
+  .dot-bullet{ fill:var(--bright); transition: fill 150ms ease; }
+  .dot-hit.wrong .dot-bullet{ fill:var(--incorrect); }
+
+  /* number labels are plain HTML, not SVG, so their 28px matches the design
+     literally instead of scaling up/down with the canvas's viewBox zoom. */
+  .dots-labels{ position:absolute; inset:0; pointer-events:none; }
+  .dot-label{ position:absolute; font-size:28px; color:var(--bright); white-space:nowrap; transition: color 150ms ease, opacity 300ms ease; }
+  .dot-label.wrong{ color:var(--incorrect); }
+  .dot-label.reveal-hide{ opacity:0; }
+
+  /* bullseye marker on the dot the child most recently connected — shows
+     where they are now, without giving away which number comes next. */
+  .target-ring{ fill:none; stroke:var(--bright); transform-box:fill-box; transform-origin:center; animation: ring-breathe 1.8s ease-in-out infinite; }
+  .target-ring.outer{ animation-delay: 0.3s; }
+
+  @keyframes ring-breathe{
+    0%,100%{ opacity:0.9; transform:scale(1); }
+    50%{ opacity:0.5; transform:scale(1.12); }
+  }
+
+  .dot-line{ stroke:var(--bright); fill:none; stroke-width:2; stroke-linecap:round; vector-effect:non-scaling-stroke; transition: stroke-dashoffset 350ms ease; }
+
+  .dot-hit{ transition: opacity 300ms ease; }
+  .dot-hit.reveal-hide{ opacity:0; pointer-events:none; }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  @media (max-width: 767px), (max-height: 500px){
+    :root{
+      --hero-size: clamp(2.6rem, 16.5587vw, 140px);
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      background: rgba(32,32,32,0.4);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    .diff-group, .btn-row{ display:contents; }
+    body{
+      padding-top: calc(var(--unit) * 2 + var(--icon-size));
+      padding-bottom: calc(var(--unit) * 2 + var(--icon-size));
+    }
+  }
+
+  @media (max-height: 500px) and (orientation: landscape){
+    :root{
+      --hero-size: clamp(2.2rem, 30vh, 140px);
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="controls-slider" id="controlsSlider">
+    <div class="diff-group" id="diffGroup">
+      <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M114 75C114 53.4609 96.5391 36 75 36C53.4609 36 36 53.4609 36 75C36 96.5391 53.4609 114 75 114V150C33.5786 150 0 116.421 0 75C0 33.5786 33.5786 0 75 0C116.421 0 150 33.5786 150 75C150 116.421 116.421 150 75 150V114C96.5391 114 114 96.5391 114 75Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+        <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/></svg>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" aria-label="New puzzle">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M111.491 32.1671L112.864 53.5756L90.0895 53.5683"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M110.802 97.5619C106.102 105.702 98.8837 112.094 90.2343 115.774C81.5848 119.454 71.9735 120.223 62.8492 117.964C53.7249 115.705 45.5822 110.541 39.6485 103.251C33.7149 95.9607 30.312 86.9392 29.9527 77.5463C29.5935 68.1534 32.2974 58.8983 37.6569 51.1762C43.0164 43.454 50.7409 37.6834 59.666 34.7343C68.5911 31.7851 78.2331 31.8172 87.1383 34.8258C96.0436 37.8343 103.729 43.6563 109.037 51.4139"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="dots-canvas-wrap">
+    <svg class="dots-canvas" id="dotsSvg" viewBox="0 0 200 200"></svg>
+    <div class="dots-labels" id="dotsLabels"></div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Every shape is a closed loop of [x,y] points in a shared 0-200 viewBox,
+  // numbered in the order a child should tap them. Tapping the last point
+  // also draws the closing segment back to point 1.
+  var SHAPES = {
+    easy: [
+      { points: [[100,30],[122,50],[100,65],[155,80],[170,120],[155,165],[100,185],[45,165],[30,120],[45,80]] }, // apple
+      { points: [[40,175],[25,140],[35,100],[70,70],[110,50],[140,55],[165,70],[145,85],[115,95],[75,140]] }, // rubber ducky
+      { points: [[100,15],[126.4,63.6],[180.8,73.8],[142.8,113.9],[150,168.8],[100,145],[50,168.8],[57.2,113.9],[19.2,73.8],[73.6,63.6]] }, // starfish
+      { points: [[100,10],[127.5,52.37],[177.9,55],[155,100],[177.9,145],[127.5,147.63],[100,190],[72.5,147.63],[22.1,145],[45,100],[22.1,55],[72.5,52.37]] }, // smiling sun
+      { points: [[20,175],[180,175],[150,145],[150,30],[65,145],[35,145]] }, // classic sailboat
+      { points: [[100,180],[30,60],[55,25],[100,15],[145,25],[170,60]] }, // pizza slice
+      { points: [[100,15],[160.1,39.9],[185,100],[160.1,160.1],[100,185],[39.9,160.1],[15,100],[39.9,39.9]] }, // beach ball
+      { points: [[125,20],[75,40],[45,100],[75,160],[125,180],[100,150],[85,100],[100,50]] }, // crescent moon
+      { points: [[40,95],[30,60],[55,25],[100,15],[145,25],[170,60],[160,95],[125,95],[125,180],[75,180],[75,95]] }, // chubby mushroom
+      { points: [[100,190],[65,115],[50,90],[60,55],[100,35],[140,55],[150,90],[135,115]] }, // ice cream
+      { points: [[30,100],[55,65],[110,55],[150,75],[120,100],[150,125],[110,145],[55,135]] }, // cute little fish
+      { points: [[100,175],[20,90],[45,40],[100,20],[155,40],[180,90]] }, // watermelon slice
+      { points: [[100,15],[128,42],[155,20],[152,65],[114,88],[115,150],[140,168],[115,190],[85,190],[85,150],[86,88],[48,65],[45,20],[72,42]] }, // tulip
+      { points: [[100,20],[128,72],[128,145],[162,178],[100,155],[38,178],[72,145],[72,72]] }, // rocket ship
+      { points: [[100,25],[138.9,44.05],[155,90],[138.9,135.95],[100,180],[61.1,135.95],[45,90],[61.1,44.05]] }, // balloon
+      { points: [[100,45],[170,25],[170,115],[149.5,164.5],[100,185],[50.5,164.5],[30,115],[30,25]] }, // teddy bear
+      { points: [[75,185],[125,185],[160,130],[140,95],[125,55],[100,30],[75,55],[60,95],[40,130]] }, // cupcake with cherry
+      { points: [[30,140],[30,110],[70,80],[140,80],[170,110],[185,140]] }, // car outline
+      { points: [[100,30],[130,45],[155,80],[165,130],[140,170],[100,185],[60,170],[35,130],[45,80],[70,45]] }, // ladybug
+      { points: [[55,75],[145,75],[180,55],[180,145],[145,125],[55,125],[20,145],[20,55]] } // wrapped candy
+    ],
+    medium: [
+      { points: [[100,10],[119.98,72.5],[185.6,72.2],[132.3,110.5],[152.9,172.8],[100,134],[47.1,172.8],[67.7,110.5],[14.4,72.2],[80,72.5]] }, // 5-point star
+      { points: [[20,100],[45,70],[90,58],[108,35],[125,68],[175,45],[140,100],[175,155],[122,128],[100,155],[78,132],[45,130]] }, // fish
+      { points: [[100,175],[148,132],[172,92],[152,55],[118,48],[100,78],[82,48],[48,55],[28,92],[52,132]] } // heart
+    ],
+    hard: [
+      { points: [[100,8],[114,35],[122,62],[122,110],[122,140],[152,182],[130,168],[118,195],[100,165],[82,195],[70,168],[48,182],[78,140],[78,110],[78,62],[86,35]] }, // rocket
+      { points: [[30,170],[170,170],[170,110],[155,75],[141,110],[127,55],[113,110],[100,35],[87,110],[73,55],[59,110],[45,75],[30,110]] }, // crown
+      { points: [[20,185],[20,100],[37.5,75],[55,100],[55,130],[85,130],[85,160],[115,160],[115,130],[145,130],[145,100],[162.5,75],[180,100],[180,185]] } // castle
+    ]
+  };
+
+  var NS = 'http://www.w3.org/2000/svg';
+
+  var state = {
+    difficulty: 'easy',
+    shapeCursor: { easy: 0, medium: 0, hard: 0 },
+    points: [],
+    next: 0,
+    busy: false
+  };
+
+  var els = {
+    svg: document.getElementById('dotsSvg'),
+    labels: document.getElementById('dotsLabels'),
+    diffGroup: document.getElementById('diffGroup'),
+    backBtn: document.getElementById('backBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    controlsSlider: document.getElementById('controlsSlider')
+  };
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+
+  function svgEl(name, attrs){
+    var el = document.createElementNS(NS, name);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  function pickNextShape(){
+    var pool = SHAPES[state.difficulty];
+    var cursor = state.shapeCursor[state.difficulty] % pool.length;
+    state.shapeCursor[state.difficulty] = cursor + 1;
+    return pool[cursor];
+  }
+
+  function newShape(){
+    state.points = pickNextShape().points;
+    state.next = 0;
+    state.busy = false;
+    render();
+  }
+
+  function render(){
+    els.svg.innerHTML = '';
+    els.labels.innerHTML = '';
+    var pts = state.points;
+    var linesToDraw = Math.max(0, Math.min(state.next, pts.length) - 1);
+
+    for (var i = 0; i < linesToDraw; i++) {
+      els.svg.appendChild(makeLine(pts[i], pts[i + 1]));
+    }
+    if (state.next >= pts.length) {
+      els.svg.appendChild(makeLine(pts[pts.length - 1], pts[0])); // closing segment
+    }
+
+    for (var j = 0; j < pts.length; j++) {
+      els.svg.appendChild(makeDot(pts[j], j));
+      els.labels.appendChild(makeLabel(pts[j], j));
+    }
+  }
+
+  function makeLine(a, b){
+    // vector-effect:non-scaling-stroke renders stroke-dasharray in real screen
+    // pixels rather than viewBox units, so the draw-in length must be converted
+    // to match — otherwise it repeats as a dashed pattern instead of one solid dash.
+    var len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    var scale = els.svg.getBoundingClientRect().width / 200;
+    var pxLen = len * scale;
+    var line = svgEl('line', {
+      class: 'dot-line',
+      x1: a[0], y1: a[1], x2: b[0], y2: b[1],
+      'stroke-dasharray': pxLen, 'stroke-dashoffset': pxLen
+    });
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ line.setAttribute('stroke-dashoffset', 0); });
+    });
+    return line;
+  }
+
+  function makeDot(p, index){
+    var g = svgEl('g', { class: 'dot-hit', 'data-index': index });
+    var isCurrent = index === state.next - 1;
+
+    g.appendChild(svgEl('circle', { class:'dot-hitarea', cx:p[0] + 8, cy:p[1], r:19 }));
+    if (isCurrent) {
+      g.appendChild(svgEl('circle', { class:'target-ring outer', cx:p[0], cy:p[1], r:8.3, 'stroke-width':0.7 }));
+      g.appendChild(svgEl('circle', { class:'target-ring', cx:p[0], cy:p[1], r:6.3, 'stroke-width':0.8 }));
+    }
+    g.appendChild(svgEl('circle', { class:'dot-bullet', cx:p[0], cy:p[1], r:4 }));
+    g.addEventListener('click', function(){ onDotTap(index); });
+    return g;
+  }
+
+  function makeLabel(p, index){
+    var span = document.createElement('span');
+    span.className = 'dot-label num';
+    span.dataset.index = index;
+    span.style.left = (p[0] / 200 * 100) + '%';
+    span.style.top = (p[1] / 200 * 100) + '%';
+    span.style.transform = 'translate(14px, -50%)';
+    span.textContent = index + 1;
+    return span;
+  }
+
+  function onDotTap(index){
+    if (state.busy) return;
+    if (index === state.next) {
+      connectDot();
+    } else {
+      flashWrong(index);
+    }
+  }
+
+  function flashWrong(index){
+    var g = els.svg.querySelector('.dot-hit[data-index="' + index + '"]');
+    var label = els.labels.querySelector('.dot-label[data-index="' + index + '"]');
+    if (!g) return;
+    g.classList.add('wrong');
+    if (label) label.classList.add('wrong');
+    setTimeout(function(){
+      g.classList.remove('wrong');
+      if (label) label.classList.remove('wrong');
+    }, 250);
+  }
+
+  function connectDot(){
+    state.next += 1;
+    render();
+    if (state.next >= state.points.length) {
+      onShapeComplete();
+    }
+  }
+
+  function onShapeComplete(){
+    state.busy = true;
+    document.body.style.background = 'var(--success)';
+    els.svg.querySelectorAll('.dot-hit').forEach(function(dot){ dot.classList.add('reveal-hide'); });
+    els.labels.querySelectorAll('.dot-label').forEach(function(label){ label.classList.add('reveal-hide'); });
+    setTimeout(function(){
+      document.body.style.background = '';
+      newShape();
+    }, 2400);
+  }
+
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.difficulty = btn.getAttribute('data-tier');
+    newShape();
+  });
+
+  els.refreshBtn.addEventListener('click', newShape);
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+
+  // First-visit only: gently peek-scroll the bottom slider tray so new users notice
+  // it scrolls (there are more icons than fit on a phone screen), then ease back to
+  // the correct resting view with the easy-difficulty icon as the leftmost icon.
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'dotsByEliel.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = Math.min(maxScroll, el.clientWidth * 0.6);
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  setTimeout(introduceTraySlider, 500);
+
+  els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+  newShape();
+})();
+</script>
+
+</body>
+</html>
