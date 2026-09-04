@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Kids Learning by Eliel</title>
+<style>
+  :root{
+    --hub-bg:#212121;
+    --tile-bg:rgba(0,0,0,0.5);
+    --tt-cell-bg:#7874FD;
+    --math-badge:#9702D7;
+    --glyph:#E4E4E4;
+    --win:#04D052;
+    --tile-gap:10px;
+  }
+
+  @media (min-width:1367px){
+    :root{ --tile-gap:20px; }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    min-height: var(--app-height, 100vh);
+    background:var(--hub-bg);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    padding: 20px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  .tiles{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:var(--tile-gap);
+  }
+  @media (min-width:768px) and (max-width:1023px) and (min-height:501px){
+    .tiles{ grid-template-columns:repeat(4, 1fr); }
+  }
+  @media (min-width:1024px) and (max-width:1366px) and (min-height:500px){
+    .tiles{ grid-template-columns:repeat(5, 1fr); }
+  }
+  @media (min-width:1367px){
+    .tiles{ grid-template-columns:repeat(auto-fill, minmax(321px, 1fr)); }
+  }
+
+  .tile{
+    aspect-ratio:1 / 1;
+    border-radius:3.1024%;
+    background:var(--tile-bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  a.tile{
+    cursor:pointer;
+    text-decoration:none;
+    transition:transform 120ms ease;
+  }
+  a.tile:active{ transform:scale(0.96); }
+  @media (hover:hover) and (pointer:fine){
+    a.tile:hover{ transform:scale(1.035); }
+  }
+
+  .badge{
+    position:relative;
+    width:62.057%;
+    height:62.057%;
+  }
+  .badge svg{ position:absolute; inset:0; margin:auto; display:block; opacity:0; }
+
+  .math-badge{ background:var(--math-badge); border-radius:50%; }
+  .math-badge svg{ width:100%; height:100%; }
+
+  @keyframes fade4{
+    0%{ opacity:1; }
+    20%{ opacity:1; }
+    25%{ opacity:0; }
+    95%{ opacity:0; }
+    100%{ opacity:1; }
+  }
+  .math-badge svg{ animation: fade4 4.8s ease-in-out infinite; }
+  .math-badge svg:nth-child(2){ animation-delay:-1.2s; }
+  .math-badge svg:nth-child(3){ animation-delay:-2.4s; }
+  .math-badge svg:nth-child(4){ animation-delay:-3.6s; }
+
+  .mini-board{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(3,1fr);
+    gap: 8.404%;
+    width:62.057%;
+    height:62.057%;
+  }
+  .mini-cell{
+    background:var(--tt-cell-bg);
+    border-radius: 8.404%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .mini-cell svg{ width:100%; height:100%; display:block; }
+
+  @keyframes tt-o3-appear{
+    0%{ opacity:0; }
+    28%{ opacity:0; }
+    33%{ opacity:1; }
+    100%{ opacity:1; }
+  }
+  @keyframes tt-x8-appear{
+    0%{ opacity:0; }
+    61%{ opacity:0; }
+    66%{ opacity:1; }
+    100%{ opacity:1; }
+  }
+  @keyframes tt-diag-win-bg{
+    0%{ background-color:var(--tt-cell-bg); }
+    61%{ background-color:var(--tt-cell-bg); }
+    66%{ background-color:var(--win); }
+    100%{ background-color:var(--win); }
+  }
+  .mc-diag-bg{ animation: tt-diag-win-bg 4.5s ease-in-out infinite; }
+  .mc-o3-appear{ opacity:0; animation: tt-o3-appear 4.5s ease-in-out infinite; }
+  .mc-x8-appear{ opacity:0; animation: tt-x8-appear 4.5s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+  <div class="tiles">
+    <a class="tile" href="kids-tictactoe/" aria-label="Tic-Tac-Toe">
+      <div class="mini-board">
+        <div class="mini-cell mc-diag-bg"><svg viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
+        <div class="mini-cell"><svg viewBox="0 0 63.13 63.13"><circle cx="31.5652" cy="31.5648" r="18.5676" fill="none" stroke="var(--glyph)" stroke-width="5.30504"/></svg></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell"><svg class="mc-o3-appear" viewBox="0 0 63.13 63.13"><circle cx="31.5652" cy="31.5648" r="18.5676" fill="none" stroke="var(--glyph)" stroke-width="5.30504"/></svg></div>
+        <div class="mini-cell mc-diag-bg"><svg viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell mc-diag-bg"><svg class="mc-x8-appear" viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
+      </div>
+    </a>
+
+    <a class="tile" href="kids-math/" aria-label="Math">
+      <div class="badge math-badge">
+        <svg viewBox="0 0 154 154"><path fill="var(--glyph)" d="M37 80.5417V72.625H72.625V37H80.5417V72.625H116.167V80.5417H80.5417V116.167H72.625V80.5417H37Z"/></svg>
+        <svg viewBox="0 0 154 154"><path fill="var(--glyph)" d="M37 80.9167V73H116.167V80.9167H37Z"/></svg>
+        <svg viewBox="0 0 154 154"><path fill="var(--glyph)" d="M45.7954 51.3941L51.3933 45.7962L76.584 70.9868L101.775 45.7962L107.373 51.3941L82.1819 76.5848L107.373 101.775L101.775 107.373L76.584 82.1827L51.3933 107.373L45.7954 101.775L70.9861 76.5848L45.7954 51.3941Z"/></svg>
+        <svg viewBox="0 0 154 154"><g fill="var(--glyph)"><path d="M37 80.9167V73H116.167V80.9167H37Z"/><circle cx="76.5" cy="54.5" r="6.5"/><circle cx="76.5" cy="98.5" r="6.5"/></g></svg>
+      </div>
+    </a>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+})();
+</script>
+
+</body>
+</html>
