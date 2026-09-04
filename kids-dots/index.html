@@ -354,7 +354,9 @@
     row.dataset.index = index;
     row.style.left = (p[0] / 200 * 100) + '%';
     row.style.top = (p[1] / 200 * 100) + '%';
-    row.style.transform = 'translate(0, -50%)';
+    // -6px = half the 12px dot, so the dot's center lands exactly on the point
+    // (left/top alone would place the dot's left edge there instead).
+    row.style.transform = 'translate(-6px, -50%)';
 
     var bulletWrap = document.createElement('div');
     bulletWrap.className = 'dot-bullet-wrap';
