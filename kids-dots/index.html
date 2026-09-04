@@ -307,24 +307,10 @@
     state.points = pickNextShape().points;
     state.next = 0;
     state.busy = false;
-    render();
-  }
-
-  function render(){
     els.svg.innerHTML = '';
     els.labels.innerHTML = '';
-    var pts = state.points;
-    var linesToDraw = Math.max(0, Math.min(state.next, pts.length) - 1);
-
-    for (var i = 0; i < linesToDraw; i++) {
-      els.svg.appendChild(makeLine(pts[i], pts[i + 1]));
-    }
-    if (state.next >= pts.length) {
-      els.svg.appendChild(makeLine(pts[pts.length - 1], pts[0])); // closing segment
-    }
-
-    for (var j = 0; j < pts.length; j++) {
-      els.labels.appendChild(makePoint(pts[j], j));
+    for (var j = 0; j < state.points.length; j++) {
+      els.labels.appendChild(makePoint(state.points[j], j));
     }
   }
 
@@ -347,8 +333,6 @@
   }
 
   function makePoint(p, index){
-    var isCurrent = index === state.next - 1;
-
     var row = document.createElement('div');
     row.className = 'dot-point';
     row.dataset.index = index;
@@ -360,14 +344,6 @@
 
     var bulletWrap = document.createElement('div');
     bulletWrap.className = 'dot-bullet-wrap';
-    if (isCurrent) {
-      var r1 = document.createElement('div');
-      r1.className = 'target-ring r1';
-      var r2 = document.createElement('div');
-      r2.className = 'target-ring r2';
-      bulletWrap.appendChild(r1);
-      bulletWrap.appendChild(r2);
-    }
     var bullet = document.createElement('div');
     bullet.className = 'dot-bullet';
     bulletWrap.appendChild(bullet);
@@ -399,11 +375,37 @@
   }
 
   function connectDot(){
+    var justConnected = state.next;
+    var previousCurrent = state.next - 1; // -1 means no dot was current yet
+
     state.next += 1;
-    render();
+
+    if (previousCurrent >= 0) {
+      els.svg.appendChild(makeLine(state.points[previousCurrent], state.points[justConnected]));
+    }
+    moveCurrentMarker(previousCurrent, justConnected);
+
     if (state.next >= state.points.length) {
+      els.svg.appendChild(makeLine(state.points[state.points.length - 1], state.points[0])); // closing segment
       onShapeComplete();
     }
+  }
+
+  // Moves the bullseye ring to the dot the child just connected, leaving every
+  // earlier dot/line untouched so nothing re-plays its draw-in animation.
+  function moveCurrentMarker(oldIndex, newIndex){
+    if (oldIndex >= 0) {
+      var oldWrap = els.labels.querySelector('.dot-point[data-index="' + oldIndex + '"] .dot-bullet-wrap');
+      if (oldWrap) oldWrap.querySelectorAll('.target-ring').forEach(function(r){ r.remove(); });
+    }
+    var newWrap = els.labels.querySelector('.dot-point[data-index="' + newIndex + '"] .dot-bullet-wrap');
+    if (!newWrap) return;
+    var r1 = document.createElement('div');
+    r1.className = 'target-ring r1';
+    var r2 = document.createElement('div');
+    r2.className = 'target-ring r2';
+    newWrap.insertBefore(r2, newWrap.firstChild);
+    newWrap.insertBefore(r1, newWrap.firstChild);
   }
 
   function onShapeComplete(){
