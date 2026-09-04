@@ -428,9 +428,11 @@
   els.diffGroup.addEventListener('click', function(e){
     var btn = e.target.closest('.diff-btn');
     if (!btn) return;
+    var tier = btn.getAttribute('data-tier');
+    if (tier === state.difficulty) return; // already selected — don't reset the current puzzle
     els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
-    state.difficulty = btn.getAttribute('data-tier');
+    state.difficulty = tier;
     newShape();
   });
 

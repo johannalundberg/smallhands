@@ -655,14 +655,18 @@
   els.opGroup.addEventListener('click', function(e){
     var btn = e.target.closest('.op-btn');
     if (!btn) return;
-    state.activeOp = btn.getAttribute('data-op');
+    var op = btn.getAttribute('data-op');
+    if (op === state.activeOp) return; // already selected — don't reset the current problem
+    state.activeOp = op;
     newProblem();
   });
 
   els.diffGroup.addEventListener('click', function(e){
     var btn = e.target.closest('.diff-btn');
     if (!btn) return;
-    state.difficulty = btn.getAttribute('data-tier');
+    var tier = btn.getAttribute('data-tier');
+    if (tier === state.difficulty) return; // already selected — don't reset the current problem
+    state.difficulty = tier;
     newProblem();
   });
 
