@@ -54,10 +54,10 @@
   /* Phone landscape: every other breakpoint above is width-only, so a narrow-but-
      short phone in landscape fell through to the base 2-column portrait layout —
      square tiles sized off that narrow width made each one taller than the whole
-     (short) viewport, spilling past the bottom edge. Four tiles across fit exactly
-     one row (there are only 4 tiles total), sized off the short height instead. */
+     (short) viewport, spilling past the bottom edge. 3 columns (a 3+1 wrap for the
+     current 4 tiles) keeps every tile comfortably inside the padded edges. */
   @media (max-height:500px) and (orientation:landscape){
-    .tiles{ grid-template-columns:repeat(4, 1fr); }
+    .tiles{ grid-template-columns:repeat(3, 1fr); }
   }
 
   .tile{
