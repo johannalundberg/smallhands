@@ -51,13 +51,23 @@
   @media (min-width:1367px){
     .tiles{ grid-template-columns:repeat(auto-fill, minmax(321px, 1fr)); }
   }
-  /* Phone landscape: every other breakpoint above is width-only, so a narrow-but-
-     short phone in landscape fell through to the base 2-column portrait layout —
-     square tiles sized off that narrow width made each one taller than the whole
-     (short) viewport, spilling past the bottom edge. 3 columns (a 3+1 wrap for the
-     current 4 tiles) keeps every tile comfortably inside the padded edges. */
+  /* Phone landscape: several rounds of trying to reflow the grid to fit (4 columns,
+     then 3) each fixed one overflow only to reveal another (vertical, then
+     horizontal) that couldn't be confirmed fixed without a real device to test on.
+     Matches the game sub-pages' approach instead: don't try to fit the grid at all,
+     just block the view with a plain "please rotate" screen. */
+  .rotate-block{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:#ED2B2E;
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
   @media (max-height:500px) and (orientation:landscape){
-    .tiles{ grid-template-columns:repeat(3, 1fr); }
+    .rotate-block{ display:flex; }
   }
 
   .tile{
@@ -167,6 +177,16 @@
 </head>
 <body>
 
+  <div class="rotate-block">
+    <svg viewBox="0 0 786.799 291.08">
+      <g transform="translate(0,392.08) scale(1,-1)">
+        <path fill="var(--glyph)" d="M583 101C583 127.56 578.2 152.2 568.6 174.92C558.68 197.96 545.08 218.12 527.8 235.4C510.2 253 489.88 266.6 466.84 276.2C443.8 286.12 419.16 291.08 392.92 291.08C366.36 291.08 341.72 286.12 319 276.2C295.96 266.6 275.8 253 258.52 235.4C240.92 218.12 227.32 197.96 217.72 174.92C207.8 152.2 202.84 127.56 202.84 101L223 101C223 124.68 227.48 146.76 236.44 167.24C245.08 187.72 257.24 205.64 272.92 221C288.28 236.68 306.2 248.84 326.68 257.48C347.16 266.44 369.24 270.92 392.92 270.92C416.6 270.92 438.68 266.44 459.16 257.48C479.64 248.84 497.72 236.68 513.4 221C528.76 205.64 540.92 187.72 549.88 167.24C558.52 146.76 562.84 124.68 562.84 101L583 101Z"/>
+      </g>
+      <path fill="var(--glyph)" d="M751.759 72.96C741.999 72.96 733.679 69.6 726.799 62.88C720.079 56.16 716.719 47.44 716.719 36.72C716.719 25.84 720.079 17.04 726.799 10.32C733.679 3.44001 741.999 0 751.759 0C761.519 0 769.759 3.44001 776.479 10.32C783.359 17.04 786.799 25.84 786.799 36.72C786.799 47.44 783.359 56.16 776.479 62.88C769.759 69.6 761.519 72.96 751.759 72.96Z"/>
+      <path fill="var(--glyph)" d="M35.04 72.96C25.28 72.96 16.96 69.6 10.08 62.88C3.36002 56.16 0 47.44 0 36.72C0 25.84 3.36002 17.04 10.08 10.32C16.96 3.44001 25.28 0 35.04 0C44.8 0 53.04 3.44001 59.76 10.32C66.64 17.04 70.08 25.84 70.08 36.72C70.08 47.44 66.64 56.16 59.76 62.88C53.04 69.6 44.8 72.96 35.04 72.96Z"/>
+    </svg>
+  </div>
+
   <div class="tiles">
     <a class="tile" href="tictactoe/" aria-label="Tic-Tac-Toe">
       <div class="mini-board">
@@ -227,20 +247,6 @@
     window.addEventListener('resize', updateAppHeight);
   }
 
-  // iOS Safari can get stuck rendering at the previous orientation's zoom/scale
-  // after rotating back (a long-standing WebKit bug tied to user-scalable=no in
-  // the viewport meta) — nudging the viewport meta's content on orientationchange
-  // forces it to recompute layout at the correct scale.
-  function fixOrientationZoom(){
-    var viewport = document.querySelector('meta[name="viewport"]');
-    if (!viewport) return;
-    var original = viewport.getAttribute('content');
-    viewport.setAttribute('content', original + ', user-scalable=yes');
-    setTimeout(function(){
-      viewport.setAttribute('content', original);
-    }, 300);
-  }
-  window.addEventListener('orientationchange', fixOrientationZoom);
 })();
 </script>
 
