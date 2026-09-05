@@ -247,6 +247,33 @@
     window.addEventListener('resize', updateAppHeight);
   }
 
+  // iOS Safari can get stuck rendering at the previous orientation's zoom/scale
+  // after rotating back (a long-standing WebKit bug tied to user-scalable=no in
+  // the viewport meta) — nudging the viewport meta's content forces it to
+  // recompute layout at the correct scale. Listens on visualViewport's own
+  // resize, not just orientationchange, since that event alone isn't reliably
+  // firing (or firing late enough) on every device to catch this.
+  var viewportOriginalContent = null;
+  function fixOrientationZoom(){
+    var viewport = document.querySelector('meta[name="viewport"]');
+    if (!viewport) return;
+    // captured once — re-reading the attribute on each call would risk capturing
+    // an already-toggled value as "original" if two triggers overlap, permanently
+    // stranding the page with user-scalable=yes
+    if (viewportOriginalContent === null) viewportOriginalContent = viewport.getAttribute('content');
+    viewport.setAttribute('content', viewportOriginalContent + ', user-scalable=yes');
+    setTimeout(function(){
+      viewport.setAttribute('content', viewportOriginalContent);
+    }, 300);
+  }
+  window.addEventListener('orientationchange', fixOrientationZoom);
+  if (window.visualViewport) {
+    var orientationFixTimer = null;
+    window.visualViewport.addEventListener('resize', function(){
+      clearTimeout(orientationFixTimer);
+      orientationFixTimer = setTimeout(fixOrientationZoom, 100);
+    });
+  }
 })();
 </script>
 
