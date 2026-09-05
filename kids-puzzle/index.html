@@ -108,25 +108,36 @@
     display:grid;
     width:var(--board-size);
     height:var(--board-size);
-    /* defined here (not :root) so var(--n), set via JS on this same element, resolves —
-       a custom property's var() refs are substituted using the environment of the
-       element where it's DEFINED, not re-resolved per descendant that inherits it. */
-    --piece-border: calc((var(--board-size) / var(--n)) * 0.02458);
+  }
+  /* Grid dividers are drawn once as a shared overlay (not a border per piece) so the
+     stroke is a flat 6px at every difficulty and sits centered on each seam — half in,
+     half out — instead of doubling where two pieces' own borders would overlap. */
+  .board-lines{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    overflow:visible;
+    z-index:1;
+  }
+  .board-lines line{
+    stroke:var(--bright);
+    stroke-width:6px;
+    vector-effect:non-scaling-stroke;
   }
   .slot{ position:relative; }
   .slot.hover::after{
     content:'';
     position:absolute;
     inset:0;
-    border: calc(var(--piece-border) * 1.6) solid var(--bright);
+    border: 4px solid var(--bright);
     pointer-events:none;
-    z-index:1;
+    z-index:2;
   }
   .piece{
     width:100%;
     height:100%;
-    box-sizing:border-box;
-    border: var(--piece-border) solid var(--bright);
     background-color:var(--piece);
     background-repeat:no-repeat;
     cursor:grab;
@@ -234,6 +245,7 @@
 
   <div class="board-wrap" id="boardWrap">
     <div class="board" id="board"></div>
+    <svg class="board-lines" id="boardLines"></svg>
   </div>
 
   <div class="celebration" id="celebration"></div>
@@ -261,6 +273,7 @@
   var els = {
     board: document.getElementById('board'),
     boardWrap: document.getElementById('boardWrap'),
+    boardLines: document.getElementById('boardLines'),
     diffGroup: document.getElementById('diffGroup'),
     backBtn: document.getElementById('backBtn'),
     refreshBtn: document.getElementById('refreshBtn'),
@@ -268,6 +281,24 @@
     celebration: document.getElementById('celebration'),
     controlsSlider: document.getElementById('controlsSlider')
   };
+
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+
+  function renderGridLines(n){
+    var svg = els.boardLines;
+    svg.setAttribute('viewBox', '0 0 ' + n + ' ' + n);
+    svg.innerHTML = '';
+    for (var i = 0; i <= n; i++) {
+      var v = document.createElementNS(SVG_NS, 'line');
+      v.setAttribute('x1', i); v.setAttribute('y1', 0);
+      v.setAttribute('x2', i); v.setAttribute('y2', n);
+      svg.appendChild(v);
+      var h = document.createElementNS(SVG_NS, 'line');
+      h.setAttribute('x1', 0); h.setAttribute('y1', i);
+      h.setAttribute('x2', n); h.setAttribute('y2', i);
+      svg.appendChild(h);
+    }
+  }
 
   function updateAppHeight(){
     var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -322,7 +353,7 @@
   function buildBoard(){
     var n = TIER_N[state.difficulty];
     state.n = n;
-    els.board.style.setProperty('--n', n);
+    renderGridLines(n);
     var total = n * n;
     state.slots = shufflePieces(total);
     state.busy = false;
@@ -462,12 +493,12 @@
     state.busy = true;
     document.body.style.background = 'var(--success)';
     setTimeout(function(){
-      document.body.style.background = '';
       state.progress += 1;
       updateProgressDots();
       if (state.progress >= ROUND_SIZE) {
-        showCelebration();
+        showCelebration(); // background stays green through the celebration; reset there instead
       } else {
+        document.body.style.background = '';
         nextPuzzle();
       }
     }, 900);
