@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Number Puzzle by Eliel</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  :root{
+    --bg:#E2C226;
+    --piece:#707EFF;
+    --bright:#E4E4E4;
+    --ink-muted:rgba(32,32,32,0.4);
+    --success:#04D052;
+    --incorrect:#ED2B2E;
+    /* Figma frame: 1728x1117 */
+    --board-size: min(76vmin, 76vw, 570px);
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+    transition: background 80ms ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ---------- icon buttons (difficulty / back / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  .progress-dots{
+    position:absolute;
+    right:var(--unit);
+    bottom:var(--unit);
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap: calc(var(--icon-size) * 0.08);
+  }
+  .progress-dots .dot{
+    width: calc(var(--icon-size) * 0.25);
+    height: calc(var(--icon-size) * 0.25);
+    border-radius:50%;
+    background: var(--ink-muted);
+    transition: background 150ms ease;
+  }
+  .progress-dots .dot.done{ background: var(--bright); }
+
+  /* ---------- the sliding picture puzzle ---------- */
+  .board-wrap{ position:relative; }
+  .board{
+    display:grid;
+    width:var(--board-size);
+    height:var(--board-size);
+    /* defined here (not :root) so var(--n), set via JS on this same element, resolves —
+       a custom property's var() refs are substituted using the environment of the
+       element where it's DEFINED, not re-resolved per descendant that inherits it. */
+    --piece-border: calc((var(--board-size) / var(--n)) * 0.02458);
+  }
+  .slot{ position:relative; }
+  .slot.hover::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    border: calc(var(--piece-border) * 1.6) solid var(--bright);
+    pointer-events:none;
+    z-index:1;
+  }
+  .piece{
+    width:100%;
+    height:100%;
+    box-sizing:border-box;
+    border: var(--piece-border) solid var(--bright);
+    background-color:var(--piece);
+    background-repeat:no-repeat;
+    cursor:grab;
+    touch-action:none;
+    transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 150ms ease;
+  }
+  .piece.lifted{ opacity:0.25; }
+  .piece.pop{ animation: piece-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes piece-pop{
+    0%{ transform:scale(0.88); }
+    100%{ transform:scale(1); }
+  }
+  .piece-ghost{
+    position:fixed;
+    z-index:5;
+    pointer-events:none;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+    transform: scale(1.06) rotate(-2deg);
+  }
+
+  @keyframes bounce-in{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(var(--final-scale)); opacity:1; }
+  }
+  .celebration{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:4;
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  @media (max-width: 767px), (max-height: 500px){
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      background: rgba(32,32,32,0.4);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    .diff-group, .btn-row{ display:contents; }
+    .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
+    body{
+      padding-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
+      padding-bottom: calc(var(--unit) * 3 + var(--icon-size) * 2);
+    }
+  }
+
+  @media (max-height: 500px) and (orientation: landscape){
+    :root{
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="controls-slider" id="controlsSlider">
+    <div class="diff-group" id="diffGroup">
+      <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M114 75C114 53.4609 96.5391 36 75 36C53.4609 36 36 53.4609 36 75C36 96.5391 53.4609 114 75 114V150C33.5786 150 0 116.421 0 75C0 33.5786 33.5786 0 75 0C116.421 0 150 33.5786 150 75C150 116.421 116.421 150 75 150V114C96.5391 114 114 96.5391 114 75Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+        <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/></svg>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" aria-label="New puzzle">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M111.491 32.1671L112.864 53.5756L90.0895 53.5683"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M110.802 97.5619C106.102 105.702 98.8837 112.094 90.2343 115.774C81.5848 119.454 71.9735 120.223 62.8492 117.964C53.7249 115.705 45.5822 110.541 39.6485 103.251C33.7149 95.9607 30.312 86.9392 29.9527 77.5463C29.5935 68.1534 32.2974 58.8983 37.6569 51.1762C43.0164 43.454 50.7409 37.6834 59.666 34.7343C68.5911 31.7851 78.2331 31.8172 87.1383 34.8258C96.0436 37.8343 103.729 43.6563 109.037 51.4139"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="progress-dots" id="progressDots">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <div class="board" id="board"></div>
+  </div>
+
+  <div class="celebration" id="celebration"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var TIER_N = { easy: 2, medium: 3, hard: 4 };
+  var ROUND_SIZE = 10;
+  var DIGIT_SRC = [];
+  for (var d = 0; d <= 9; d++) DIGIT_SRC.push('assets/digit-' + d + '.svg');
+
+  var state = {
+    difficulty: 'easy',
+    n: 2,
+    digit: 0,
+    digitOrder: [],
+    digitCursor: 0,
+    slots: [],
+    progress: 0,
+    busy: false
+  };
+
+  var els = {
+    board: document.getElementById('board'),
+    boardWrap: document.getElementById('boardWrap'),
+    diffGroup: document.getElementById('diffGroup'),
+    backBtn: document.getElementById('backBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    progressDots: document.querySelectorAll('#progressDots .dot'),
+    celebration: document.getElementById('celebration'),
+    controlsSlider: document.getElementById('controlsSlider')
+  };
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+
+  function shuffleDigits(){
+    var arr = [0,1,2,3,4,5,6,7,8,9];
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function isSolved(arr){
+    return arr.every(function(v, i){ return v === i; });
+  }
+
+  function shufflePieces(total){
+    var arr = [];
+    for (var i = 0; i < total; i++) arr.push(i);
+    do {
+      for (var i2 = arr.length - 1; i2 > 0; i2--) {
+        var j = Math.floor(Math.random() * (i2 + 1));
+        var t = arr[i2]; arr[i2] = arr[j]; arr[j] = t;
+      }
+    } while (isSolved(arr));
+    return arr;
+  }
+
+  function renderSlot(slotIndex){
+    var slotEl = els.board.children[slotIndex];
+    var pieceEl = slotEl.querySelector('.piece');
+    var pieceIndex = state.slots[slotIndex];
+    var n = state.n;
+    var row = Math.floor(pieceIndex / n), col = pieceIndex % n;
+    var posX = n === 1 ? 0 : (col / (n - 1)) * 100;
+    var posY = n === 1 ? 0 : (row / (n - 1)) * 100;
+    pieceEl.style.backgroundImage = 'url(' + DIGIT_SRC[state.digit] + ')';
+    pieceEl.style.backgroundSize = (n * 100) + '% ' + (n * 100) + '%';
+    pieceEl.style.backgroundPosition = posX + '% ' + posY + '%';
+  }
+
+  function buildBoard(){
+    var n = TIER_N[state.difficulty];
+    state.n = n;
+    els.board.style.setProperty('--n', n);
+    var total = n * n;
+    state.slots = shufflePieces(total);
+    state.busy = false;
+    els.board.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+    els.board.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
+    els.board.innerHTML = '';
+    for (var i = 0; i < total; i++) {
+      var slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.dataset.slot = i;
+      var piece = document.createElement('div');
+      piece.className = 'piece';
+      piece.addEventListener('pointerdown', onPieceDown);
+      slot.appendChild(piece);
+      els.board.appendChild(slot);
+    }
+    for (var j = 0; j < total; j++) renderSlot(j);
+  }
+
+  function nextPuzzle(){
+    if (state.digitCursor >= state.digitOrder.length) {
+      state.digitOrder = shuffleDigits();
+      state.digitCursor = 0;
+    }
+    state.digit = state.digitOrder[state.digitCursor++];
+    buildBoard();
+  }
+
+  function updateProgressDots(){
+    els.progressDots.forEach(function(dot, i){
+      dot.classList.toggle('done', i < state.progress);
+    });
+  }
+
+  function restartRound(){
+    state.progress = 0;
+    updateProgressDots();
+    state.digitOrder = shuffleDigits();
+    state.digitCursor = 0;
+    nextPuzzle();
+  }
+
+  // ---------- drag to swap ----------
+  var drag = null;
+
+  function onPieceDown(e){
+    if (state.busy) return;
+    e.preventDefault();
+    var piece = e.currentTarget;
+    var slotEl = piece.parentElement;
+    var rect = piece.getBoundingClientRect();
+
+    var ghost = piece.cloneNode(true);
+    ghost.className = 'piece piece-ghost';
+    ghost.style.width = rect.width + 'px';
+    ghost.style.height = rect.height + 'px';
+    ghost.style.left = rect.left + 'px';
+    ghost.style.top = rect.top + 'px';
+    document.body.appendChild(ghost);
+    piece.classList.add('lifted');
+
+    drag = {
+      piece: piece,
+      ghost: ghost,
+      sourceSlot: Number(slotEl.dataset.slot),
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      hoverSlot: null,
+      hoverSlotEl: null
+    };
+
+    try { piece.setPointerCapture(e.pointerId); } catch (err) {}
+    piece.addEventListener('pointermove', onPointerMove);
+    piece.addEventListener('pointerup', onPointerUp);
+    piece.addEventListener('pointercancel', onPointerUp);
+  }
+
+  function onPointerMove(e){
+    if (!drag) return;
+    drag.ghost.style.left = (e.clientX - drag.offsetX) + 'px';
+    drag.ghost.style.top = (e.clientY - drag.offsetY) + 'px';
+
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    var slotEl = el && el.closest ? el.closest('.slot') : null;
+    var slotIdx = slotEl ? Number(slotEl.dataset.slot) : null;
+    if (slotIdx !== drag.hoverSlot) {
+      if (drag.hoverSlotEl) drag.hoverSlotEl.classList.remove('hover');
+      drag.hoverSlot = slotIdx;
+      drag.hoverSlotEl = slotEl;
+      if (slotEl) slotEl.classList.add('hover');
+    }
+  }
+
+  function onPointerUp(e){
+    if (!drag) return;
+    var piece = drag.piece;
+    try { piece.releasePointerCapture(e.pointerId); } catch (err) {}
+    piece.removeEventListener('pointermove', onPointerMove);
+    piece.removeEventListener('pointerup', onPointerUp);
+    piece.removeEventListener('pointercancel', onPointerUp);
+    drag.ghost.remove();
+    piece.classList.remove('lifted');
+    if (drag.hoverSlotEl) drag.hoverSlotEl.classList.remove('hover');
+
+    var targetSlot = drag.hoverSlot;
+    var sourceSlot = drag.sourceSlot;
+    drag = null;
+
+    if (targetSlot !== null && targetSlot !== sourceSlot) {
+      swapSlots(sourceSlot, targetSlot);
+    }
+  }
+
+  function swapSlots(a, b){
+    var tmp = state.slots[a];
+    state.slots[a] = state.slots[b];
+    state.slots[b] = tmp;
+    renderSlot(a);
+    renderSlot(b);
+    var pieceA = els.board.children[a].querySelector('.piece');
+    var pieceB = els.board.children[b].querySelector('.piece');
+    pieceA.classList.add('pop');
+    pieceB.classList.add('pop');
+    setTimeout(function(){
+      pieceA.classList.remove('pop');
+      pieceB.classList.remove('pop');
+    }, 220);
+    checkSolved();
+  }
+
+  function checkSolved(){
+    if (!isSolved(state.slots)) return;
+    onSolved();
+  }
+
+  function onSolved(){
+    state.busy = true;
+    document.body.style.background = 'var(--success)';
+    setTimeout(function(){
+      document.body.style.background = '';
+      state.progress += 1;
+      updateProgressDots();
+      if (state.progress >= ROUND_SIZE) {
+        showCelebration();
+      } else {
+        nextPuzzle();
+      }
+    }, 900);
+  }
+
+  var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 786.799 291.08" style="--final-scale:1;">' +
+    '<path fill="var(--bright)" d="M583 101C583 127.56 578.2 152.2 568.6 174.92C558.68 197.96 545.08 218.12 527.8 235.4C510.2 253 489.88 266.6 466.84 276.2C443.8 286.12 419.16 291.08 392.92 291.08C366.36 291.08 341.72 286.12 319 276.2C295.96 266.6 275.8 253 258.52 235.4C240.92 218.12 227.32 197.96 217.72 174.92C207.8 152.2 202.84 127.56 202.84 101L223 101C223 124.68 227.48 146.76 236.44 167.24C245.08 187.72 257.24 205.64 272.92 221C288.28 236.68 306.2 248.84 326.68 257.48C347.16 266.44 369.24 270.92 392.92 270.92C416.6 270.92 438.68 266.44 459.16 257.48C479.64 248.84 497.72 236.68 513.4 221C528.76 205.64 540.92 187.72 549.88 167.24C558.52 146.76 562.84 124.68 562.84 101L583 101Z"/>' +
+    '<path fill="var(--bright)" d="M751.759 72.96C741.999 72.96 733.679 69.6 726.799 62.88C720.079 56.16 716.719 47.44 716.719 36.72C716.719 25.84 720.079 17.04 726.799 10.32C733.679 3.44001 741.999 0 751.759 0C761.519 0 769.759 3.44001 776.479 10.32C783.359 17.04 786.799 25.84 786.799 36.72C786.799 47.44 783.359 56.16 776.479 62.88C769.759 69.6 761.519 72.96 751.759 72.96Z"/>' +
+    '<path fill="var(--bright)" d="M35.04 72.96C25.28 72.96 16.96 69.6 10.08 62.88C3.36002 56.16 0 47.44 0 36.72C0 25.84 3.36002 17.04 10.08 10.32C16.96 3.44001 25.28 0 35.04 0C44.8 0 53.04 3.44001 59.76 10.32C66.64 17.04 70.08 25.84 70.08 36.72C70.08 47.44 66.64 56.16 59.76 62.88C53.04 69.6 44.8 72.96 35.04 72.96Z"/>' +
+    '</svg>';
+
+  function showCelebration(){
+    els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    els.boardWrap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    setTimeout(function(){
+      els.celebration.style.display = 'none';
+      els.boardWrap.style.display = '';
+      document.body.style.background = '';
+      state.progress = 0;
+      updateProgressDots();
+      state.digitOrder = shuffleDigits();
+      state.digitCursor = 0;
+      nextPuzzle();
+    }, 3000);
+  }
+
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    var tier = btn.getAttribute('data-tier');
+    if (tier === state.difficulty) return; // already selected — don't reshuffle the current puzzle
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.difficulty = tier;
+    buildBoard();
+  });
+
+  els.refreshBtn.addEventListener('click', restartRound);
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+
+  // First-visit only: gently peek-scroll the bottom slider tray so new users notice
+  // it scrolls (there are more icons than fit on a phone screen), then ease back to
+  // the correct resting view with the easy-difficulty icon as the leftmost icon.
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'puzzleByEliel.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = Math.min(maxScroll, el.clientWidth * 0.6);
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  setTimeout(introduceTraySlider, 500);
+
+  els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+  restartRound();
+})();
+</script>
+
+</body>
+</html>

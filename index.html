@@ -92,6 +92,25 @@
     50%{ opacity:0.5; transform:scale(1.12); }
   }
 
+  .puzzle-badge svg{ width:100%; height:100%; opacity:1; }
+  .puzzle-badge .pz-piece{ transform-box:fill-box; transform-origin:center; animation: pz-drop 4.5s ease-in-out infinite; }
+  .puzzle-badge .pz-flash{ opacity:0; animation: pz-flash 4.5s ease-in-out infinite; }
+
+  @keyframes pz-drop{
+    0%{ transform:translate(0,-28px) rotate(-9deg) scale(1.1); }
+    30%{ transform:translate(0,-28px) rotate(-9deg) scale(1.1); }
+    50%{ transform:translate(0,0) rotate(0deg) scale(1); }
+    100%{ transform:translate(0,0) rotate(0deg) scale(1); }
+  }
+  @keyframes pz-flash{
+    0%{ opacity:0; }
+    48%{ opacity:0; }
+    55%{ opacity:0.85; }
+    72%{ opacity:0.85; }
+    85%{ opacity:0; }
+    100%{ opacity:0; }
+  }
+
   @keyframes fade4{
     0%{ opacity:1; }
     20%{ opacity:1; }
@@ -178,6 +197,38 @@
           <circle class="ring" cx="25" cy="33" r="9.5"/>
           <circle class="dot" cx="25" cy="33" r="6"/>
           <circle class="dot" cx="150" cy="112" r="6"/>
+        </svg>
+      </div>
+    </a>
+
+    <a class="tile" href="kids-puzzle/" aria-label="Number Puzzle">
+      <div class="badge puzzle-badge">
+        <svg viewBox="0 0 200 200">
+          <svg x="0" y="0" width="66.667" height="66.667" viewBox="0 0 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
+          <svg x="66.667" y="0" width="66.667" height="66.667" viewBox="66.667 0 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
+          <svg x="133.333" y="0" width="66.667" height="66.667" viewBox="133.333 0 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
+          <svg x="0" y="66.667" width="66.667" height="66.667" viewBox="0 66.667 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
+          <svg x="66.667" y="66.667" width="66.667" height="66.667" viewBox="66.667 66.667 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
+          <svg x="133.333" y="66.667" width="66.667" height="66.667" viewBox="133.333 66.667 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
+          <svg x="0" y="133.333" width="66.667" height="66.667" viewBox="0 133.333 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
+          <svg x="66.667" y="133.333" width="66.667" height="66.667" viewBox="66.667 133.333 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
+          <svg x="133.333" y="133.333" width="66.667" height="66.667" viewBox="133.333 133.333 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
+          <g class="pz-cells" fill="none" stroke="var(--glyph)" stroke-width="1.8">
+            <rect x="0" y="0" width="66.667" height="66.667"/>
+            <rect x="66.667" y="0" width="66.667" height="66.667"/>
+            <rect x="133.333" y="0" width="66.667" height="66.667"/>
+            <rect x="0" y="66.667" width="66.667" height="66.667"/>
+            <rect x="66.667" y="66.667" width="66.667" height="66.667"/>
+            <rect x="133.333" y="66.667" width="66.667" height="66.667"/>
+            <rect x="0" y="133.333" width="66.667" height="66.667"/>
+            <rect x="66.667" y="133.333" width="66.667" height="66.667"/>
+            <rect x="133.333" y="133.333" width="66.667" height="66.667"/>
+          </g>
+          <g class="pz-piece">
+            <svg x="0" y="133.333" width="66.667" height="66.667" viewBox="0 133.333 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
+            <rect x="0" y="133.333" width="66.667" height="66.667" fill="none" stroke="var(--glyph)" stroke-width="1.8"/>
+          </g>
+          <rect class="pz-flash" x="0" y="0" width="200" height="200" fill="var(--win)"/>
         </svg>
       </div>
     </a>
