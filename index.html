@@ -92,8 +92,7 @@
     50%{ opacity:0.5; transform:scale(1.12); }
   }
 
-  .puzzle-badge svg{ width:100%; height:100%; opacity:1; }
-  .puzzle-badge .pz-frame{ opacity:0; animation: pz-fade3 4.5s ease-in-out infinite; }
+  .puzzle-badge .pz-frame{ position:absolute; inset:0; width:100%; height:100%; display:block; opacity:0; animation: pz-fade3 4.5s ease-in-out infinite; }
   .puzzle-badge .pz-frame:nth-child(1){ animation-delay:0s; }
   .puzzle-badge .pz-frame:nth-child(2){ animation-delay:-1.5s; }
   .puzzle-badge .pz-frame:nth-child(3){ animation-delay:-3s; }
@@ -198,32 +197,9 @@
 
     <a class="tile" href="kids-puzzle/" aria-label="Number Puzzle">
       <div class="badge puzzle-badge">
-        <svg viewBox="0 0 200 200">
-          <svg x="0" y="0" width="66.667" height="66.667" viewBox="0 0 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
-          <svg x="66.667" y="0" width="66.667" height="66.667" viewBox="66.667 0 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
-          <svg x="133.333" y="0" width="66.667" height="66.667" viewBox="133.333 0 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
-          <svg x="0" y="66.667" width="66.667" height="66.667" viewBox="0 66.667 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
-          <svg x="66.667" y="66.667" width="66.667" height="66.667" viewBox="66.667 66.667 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
-          <svg x="133.333" y="66.667" width="66.667" height="66.667" viewBox="133.333 66.667 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
-          <svg x="66.667" y="133.333" width="66.667" height="66.667" viewBox="66.667 133.333 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
-          <svg x="133.333" y="133.333" width="66.667" height="66.667" viewBox="133.333 133.333 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
-          <g class="pz-cells" fill="none" stroke="var(--glyph)" stroke-width="1.8">
-            <rect x="0" y="0" width="66.667" height="66.667"/>
-            <rect x="66.667" y="0" width="66.667" height="66.667"/>
-            <rect x="133.333" y="0" width="66.667" height="66.667"/>
-            <rect x="0" y="66.667" width="66.667" height="66.667"/>
-            <rect x="66.667" y="66.667" width="66.667" height="66.667"/>
-            <rect x="133.333" y="66.667" width="66.667" height="66.667"/>
-            <rect x="0" y="133.333" width="66.667" height="66.667"/>
-            <rect x="66.667" y="133.333" width="66.667" height="66.667"/>
-            <rect x="133.333" y="133.333" width="66.667" height="66.667"/>
-          </g>
-          <g class="pz-slot">
-            <svg class="pz-frame" x="0" y="133.333" width="66.667" height="66.667" viewBox="0 133.333 66.667 66.667"><image href="kids-puzzle/assets/digit-9.svg" x="0" y="0" width="200" height="200" preserveAspectRatio="none"/></svg>
-            <svg class="pz-frame" x="0" y="133.333" width="66.667" height="66.667" viewBox="0 0 66.667 66.667"><image href="kids-puzzle/assets/badge-mismatch-piece.svg" x="0" y="0" width="66.667" height="66.667" preserveAspectRatio="none"/></svg>
-            <svg class="pz-frame" x="0" y="133.333" width="66.667" height="66.667" viewBox="0 0 66.667 66.667"><image href="kids-puzzle/assets/badge-mismatch-piece.svg" x="0" y="0" width="66.667" height="66.667" preserveAspectRatio="none"/></svg>
-          </g>
-        </svg>
+        <img class="pz-frame" src="kids-puzzle/assets/badge-frame-1.svg" alt="">
+        <img class="pz-frame" src="kids-puzzle/assets/badge-frame-2.svg" alt="">
+        <img class="pz-frame" src="kids-puzzle/assets/badge-frame-3.svg" alt="">
       </div>
     </a>
   </div>
