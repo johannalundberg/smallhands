@@ -134,6 +134,24 @@
   .board-lines.solved{
     opacity:0;
   }
+  /* Shown only during the solved reveal, covering the sliced pieces underneath with
+     one unsliced image — slicing the same picture across several elements left a
+     persistent hairline seam at the shared edge no matter the technique (confirmed
+     down to device-pixel-matched, nearest-neighbor-rendered <img> crops); a single
+     image has nothing left to disagree with itself about. */
+  .board-solved-img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 300ms ease;
+    z-index:3;
+  }
+  .board-solved-img.show{
+    opacity:1;
+  }
   /* Slots are positioned in exact device pixels via JS (cumulative rounded
      boundaries), not CSS Grid's 1fr tracks — 1fr divides the board into
      fractional-pixel tracks that each round independently, leaving a hairline
@@ -148,14 +166,26 @@
     pointer-events:none;
     z-index:2;
   }
+  /* A real <img> clipped by overflow:hidden, not a CSS background-image slice —
+     the same source image sliced across separate elements via background-size/
+     position showed a persistent hairline seam even with pixel-exact, shared,
+     device-pixel-matched values (confirmed by rendering the same bitmap once,
+     unsliced, with zero artifact). Each background-image is apparently resampled
+     independently per element; an <img> avoids that entirely. */
   .piece{
-    width:100%;
-    height:100%;
+    position:absolute;
+    inset:0;
+    overflow:hidden;
     background-color:var(--piece);
-    background-repeat:no-repeat;
     cursor:grab;
     touch-action:none;
     transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 150ms ease;
+  }
+  .piece img{
+    position:absolute;
+    display:block;
+    max-width:none;
+    pointer-events:none;
   }
   .piece.lifted{ opacity:0.25; }
   .piece.pop{ animation: piece-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -259,6 +289,7 @@
   <div class="board-wrap" id="boardWrap">
     <div class="board" id="board"></div>
     <svg class="board-lines" id="boardLines"></svg>
+    <img class="board-solved-img" id="boardSolvedImg" alt="">
   </div>
 
   <div class="celebration" id="celebration"></div>
@@ -279,6 +310,10 @@
   var BLANK_CACHE = {};
   var BLANK_SAMPLE_SIZE = 360;
   var BG_RGB = [112, 126, 255]; // #707EFF
+
+  // Loaded Image per digit, kept around so getDigitBitmap() (defined further down)
+  // can re-rasterize on demand at whatever size the board currently needs.
+  var DIGIT_IMG = {};
   // Each digit SVG has its own faint 1px decorative border stroke around the full
   // image, which bleeds a slight (~29 delta) tint into perimeter cells when sliced —
   // not real glyph content (that reads ~116 delta). Tolerance sits between the two.
@@ -315,6 +350,7 @@
     DIGIT_SRC.forEach(function(src, d){
       var img = new Image();
       img.onload = function(){
+        DIGIT_IMG[d] = img; // kept for on-demand bitmap rendering, see getDigitBitmap()
         var canvas = document.createElement('canvas');
         canvas.width = BLANK_SAMPLE_SIZE;
         canvas.height = BLANK_SAMPLE_SIZE;
@@ -328,6 +364,27 @@
       img.onerror = finish;
       img.src = src;
     });
+  }
+
+  // Rasterized on demand at the board's actual DEVICE-pixel size (not just CSS
+  // pixels) and cached per digit+size — a bitmap at any other resolution still
+  // needs the browser to resample it to fit, and that resampling is applied per
+  // piece independently, which is exactly what left a hairline seam even after
+  // switching from live-SVG to a fixed-size bitmap. Matching device pixels exactly
+  // makes background-size a 1:1 copy for every piece: nothing left to resample.
+  var DIGIT_BITMAP_CACHE = {};
+  function getDigitBitmap(digit, cssSizePx){
+    var devicePx = Math.max(1, Math.round(cssSizePx * (window.devicePixelRatio || 1)));
+    var key = digit + '_' + devicePx;
+    if (DIGIT_BITMAP_CACHE[key]) return DIGIT_BITMAP_CACHE[key];
+    var img = DIGIT_IMG[digit];
+    var canvas = document.createElement('canvas');
+    canvas.width = devicePx;
+    canvas.height = devicePx;
+    canvas.getContext('2d').drawImage(img, 0, 0, devicePx, devicePx);
+    var url = canvas.toDataURL('image/png');
+    DIGIT_BITMAP_CACHE[key] = url;
+    return url;
   }
 
   var state = {
@@ -345,6 +402,7 @@
     board: document.getElementById('board'),
     boardWrap: document.getElementById('boardWrap'),
     boardLines: document.getElementById('boardLines'),
+    boardSolvedImg: document.getElementById('boardSolvedImg'),
     diffGroup: document.getElementById('diffGroup'),
     backBtn: document.getElementById('backBtn'),
     refreshBtn: document.getElementById('refreshBtn'),
@@ -384,9 +442,13 @@
   }
 
   // --board-size is viewport-relative, so the board's actual rendered pixel size
-  // (and therefore the rounded slot boundaries) can change on resize/rotation.
+  // (and therefore the rounded slot boundaries) can change on resize/rotation —
+  // re-render every piece too, since their background-size/position are absolute
+  // pixels derived from those same boundaries.
   window.addEventListener('resize', function(){
-    if (state.n) layoutSlots(state.n);
+    if (!state.n) return;
+    layoutSlots(state.n);
+    for (var i = 0; i < state.n * state.n; i++) renderSlot(i);
   });
 
   function shuffleDigits(){
@@ -417,17 +479,28 @@
     return arr;
   }
 
+  // background-size/position are set in absolute pixels shared across every piece
+  // (not a percentage of each piece's own width) — rounding the board into n slots
+  // necessarily makes some slots 1px wider than others (e.g. 143px vs 142px), and a
+  // percentage size is relative to THAT piece's own width, so differently-sized
+  // pieces would render the artwork at very slightly different zoom levels: a real
+  // sub-pixel misalignment at their shared edge, invisible only while grid lines
+  // drew over it. An absolute pixel size is the same number for every piece, so
+  // there's nothing left to disagree about.
   function renderSlot(slotIndex){
     var slotEl = els.board.children[slotIndex];
     var pieceEl = slotEl.querySelector('.piece');
+    var imgEl = pieceEl.querySelector('img');
     var pieceIndex = state.slots[slotIndex];
     var n = state.n;
     var row = Math.floor(pieceIndex / n), col = pieceIndex % n;
-    var posX = n === 1 ? 0 : (col / (n - 1)) * 100;
-    var posY = n === 1 ? 0 : (row / (n - 1)) * 100;
-    pieceEl.style.backgroundImage = 'url(' + DIGIT_SRC[state.digit] + ')';
-    pieceEl.style.backgroundSize = (n * 100) + '% ' + (n * 100) + '%';
-    pieceEl.style.backgroundPosition = posX + '% ' + posY + '%';
+    var bounds = state.bounds;
+    var boardPx = bounds[bounds.length - 1];
+    imgEl.src = getDigitBitmap(state.digit, boardPx);
+    imgEl.style.width = boardPx + 'px';
+    imgEl.style.height = boardPx + 'px';
+    imgEl.style.left = (-bounds[col]) + 'px';
+    imgEl.style.top = (-bounds[row]) + 'px';
   }
 
   // Cumulative rounded boundaries (not independently-rounded track widths) guarantee
@@ -437,6 +510,7 @@
     var size = els.board.getBoundingClientRect().width;
     var bounds = [];
     for (var i = 0; i <= n; i++) bounds.push(Math.round(i * size / n));
+    state.bounds = bounds;
     for (var row = 0; row < n; row++) {
       for (var col = 0; col < n; col++) {
         var slotEl = els.board.children[row * n + col];
@@ -453,6 +527,7 @@
     var n = TIER_N[state.difficulty];
     state.n = n;
     els.boardLines.classList.remove('solved');
+    els.boardSolvedImg.classList.remove('show');
     renderGridLines(n);
     var total = n * n;
     state.blanks = BLANK_CACHE[state.digit + '_' + n] || null;
@@ -466,6 +541,10 @@
       var piece = document.createElement('div');
       piece.className = 'piece';
       piece.addEventListener('pointerdown', onPieceDown);
+      var img = document.createElement('img');
+      img.draggable = false;
+      img.alt = '';
+      piece.appendChild(img);
       slot.appendChild(piece);
       els.board.appendChild(slot);
     }
@@ -593,6 +672,9 @@
     state.busy = true;
     document.body.style.background = 'var(--success)';
     els.boardLines.classList.add('solved');
+    var boardPx = state.bounds[state.bounds.length - 1];
+    els.boardSolvedImg.src = getDigitBitmap(state.digit, boardPx);
+    els.boardSolvedImg.classList.add('show');
     setTimeout(function(){
       state.progress += 1;
       updateProgressDots();
