@@ -120,11 +120,19 @@
     pointer-events:none;
     overflow:visible;
     z-index:1;
+    transition: opacity 300ms ease;
   }
   .board-lines line{
     stroke:var(--bright);
-    stroke-width:4px;
+    stroke-width:2px;
     vector-effect:non-scaling-stroke;
+  }
+  /* solved: seams fade away and the piece image reads as one continuous picture.
+     Fading the whole overlay's opacity (not each line's stroke color) — a fully
+     transparent stroke color still leaves a faint antialiasing artifact at the
+     seam in some renderers, but opacity:0 genuinely removes it. */
+  .board-lines.solved{
+    opacity:0;
   }
   .slot{ position:relative; }
   .slot.hover::after{
@@ -136,8 +144,11 @@
     z-index:2;
   }
   .piece{
-    width:100%;
-    height:100%;
+    /* bleeds 1px past its grid cell on every side — CSS Grid's 1fr tracks can round
+       to fractional device pixels, leaving a hairline gap between adjacent pieces;
+       this small overlap covers it (imperceptible against a continuous image slice) */
+    position:absolute;
+    inset:-1px;
     background-color:var(--piece);
     background-repeat:no-repeat;
     cursor:grab;
@@ -259,6 +270,64 @@
   var DIGIT_SRC = [];
   for (var d = 0; d <= 9; d++) DIGIT_SRC.push('assets/digit-' + d + '.svg');
 
+  // Pieces that are pure background (no part of the digit's glyph) give no visual
+  // clue and are interchangeable, so they shouldn't have to land in their "home"
+  // slot for the puzzle to count as solved. Detected once per digit by rendering
+  // it to a canvas and sampling each grid cell for any non-background pixel.
+  var BLANK_CACHE = {};
+  var BLANK_SAMPLE_SIZE = 360;
+  var BG_RGB = [112, 126, 255]; // #707EFF
+  // Each digit SVG has its own faint 1px decorative border stroke around the full
+  // image, which bleeds a slight (~29 delta) tint into perimeter cells when sliced —
+  // not real glyph content (that reads ~116 delta). Tolerance sits between the two.
+  var BLANK_TOLERANCE = 60;
+
+  function computeBlanksForDigit(ctx, size, n){
+    var cell = size / n;
+    var blanks = [];
+    for (var idx = 0; idx < n * n; idx++) {
+      var row = Math.floor(idx / n), col = idx % n;
+      var isBlank = true;
+      try {
+        var data = ctx.getImageData(Math.round(col * cell), Math.round(row * cell), Math.round(cell), Math.round(cell)).data;
+        for (var p = 0; p < data.length; p += 4) {
+          if (Math.abs(data[p] - BG_RGB[0]) > BLANK_TOLERANCE || Math.abs(data[p + 1] - BG_RGB[1]) > BLANK_TOLERANCE || Math.abs(data[p + 2] - BG_RGB[2]) > BLANK_TOLERANCE) {
+            isBlank = false;
+            break;
+          }
+        }
+      } catch (e) {
+        isBlank = false; // if sampling fails for any reason, don't grant leniency
+      }
+      blanks.push(isBlank);
+    }
+    return blanks;
+  }
+
+  function preloadBlankData(done){
+    var remaining = DIGIT_SRC.length;
+    function finish(){
+      remaining -= 1;
+      if (remaining === 0) done();
+    }
+    DIGIT_SRC.forEach(function(src, d){
+      var img = new Image();
+      img.onload = function(){
+        var canvas = document.createElement('canvas');
+        canvas.width = BLANK_SAMPLE_SIZE;
+        canvas.height = BLANK_SAMPLE_SIZE;
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(img, 0, 0, BLANK_SAMPLE_SIZE, BLANK_SAMPLE_SIZE);
+        [2, 3, 4].forEach(function(n){
+          BLANK_CACHE[d + '_' + n] = computeBlanksForDigit(ctx, BLANK_SAMPLE_SIZE, n);
+        });
+        finish();
+      };
+      img.onerror = finish;
+      img.src = src;
+    });
+  }
+
   var state = {
     difficulty: 'easy',
     n: 2,
@@ -321,11 +390,14 @@
     return arr;
   }
 
-  function isSolved(arr){
-    return arr.every(function(v, i){ return v === i; });
+  function isSolved(arr, blanks){
+    return arr.every(function(v, i){
+      if (blanks && blanks[i]) return true; // blank slot: any piece there is fine
+      return v === i;
+    });
   }
 
-  function shufflePieces(total){
+  function shufflePieces(total, blanks){
     var arr = [];
     for (var i = 0; i < total; i++) arr.push(i);
     do {
@@ -333,7 +405,7 @@
         var j = Math.floor(Math.random() * (i2 + 1));
         var t = arr[i2]; arr[i2] = arr[j]; arr[j] = t;
       }
-    } while (isSolved(arr));
+    } while (isSolved(arr, blanks));
     return arr;
   }
 
@@ -353,9 +425,11 @@
   function buildBoard(){
     var n = TIER_N[state.difficulty];
     state.n = n;
+    els.boardLines.classList.remove('solved');
     renderGridLines(n);
     var total = n * n;
-    state.slots = shufflePieces(total);
+    state.blanks = BLANK_CACHE[state.digit + '_' + n] || null;
+    state.slots = shufflePieces(total, state.blanks);
     state.busy = false;
     els.board.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
     els.board.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
@@ -485,13 +559,14 @@
   }
 
   function checkSolved(){
-    if (!isSolved(state.slots)) return;
+    if (!isSolved(state.slots, state.blanks)) return;
     onSolved();
   }
 
   function onSolved(){
     state.busy = true;
     document.body.style.background = 'var(--success)';
+    els.boardLines.classList.add('solved');
     setTimeout(function(){
       state.progress += 1;
       updateProgressDots();
@@ -573,7 +648,9 @@
   setTimeout(introduceTraySlider, 500);
 
   els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  restartRound();
+  preloadBlankData(function(){
+    restartRound();
+  });
 })();
 </script>
 
