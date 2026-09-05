@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Small Hands</title>
+<title>Math</title>
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <style>
   @font-face{
@@ -722,7 +722,7 @@
   function introduceTraySlider(){
     var el = els.controlsSlider;
     if (!el || window.innerWidth > 767) return;
-    var STORAGE_KEY = 'mathByEliel.traySliderIntroShown';
+    var STORAGE_KEY = 'math.traySliderIntroShown';
     try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
     var maxScroll = el.scrollWidth - el.clientWidth;
     if (maxScroll <= 0) return;

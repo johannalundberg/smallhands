@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Tic-Tac-Toe by Eliel</title>
+<title>Tic-Tac-Toe</title>
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <style>
   @font-face{
@@ -594,7 +594,7 @@
   function introduceTraySlider(){
     var el = document.getElementById('controlsSlider');
     if (!el || window.innerWidth > 767) return;
-    var STORAGE_KEY = 'tictactoeByEliel.traySliderIntroShown';
+    var STORAGE_KEY = 'tictactoe.traySliderIntroShown';
     try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
     var maxScroll = el.scrollWidth - el.clientWidth;
     if (maxScroll <= 0) return;
