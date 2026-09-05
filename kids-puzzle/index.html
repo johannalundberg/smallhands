@@ -105,7 +105,7 @@
   /* ---------- the sliding picture puzzle ---------- */
   .board-wrap{ position:relative; }
   .board{
-    display:grid;
+    position:relative;
     width:var(--board-size);
     height:var(--board-size);
   }
@@ -134,7 +134,12 @@
   .board-lines.solved{
     opacity:0;
   }
-  .slot{ position:relative; }
+  /* Slots are positioned in exact device pixels via JS (cumulative rounded
+     boundaries), not CSS Grid's 1fr tracks — 1fr divides the board into
+     fractional-pixel tracks that each round independently, leaving a hairline
+     gap (or overlap) between some pieces depending on n and the board's
+     current rendered size. Explicit shared-boundary pixels can't gap. */
+  .slot{ position:absolute; }
   .slot.hover::after{
     content:'';
     position:absolute;
@@ -144,11 +149,8 @@
     z-index:2;
   }
   .piece{
-    /* bleeds 1px past its grid cell on every side — CSS Grid's 1fr tracks can round
-       to fractional device pixels, leaving a hairline gap between adjacent pieces;
-       this small overlap covers it (imperceptible against a continuous image slice) */
-    position:absolute;
-    inset:-1px;
+    width:100%;
+    height:100%;
     background-color:var(--piece);
     background-repeat:no-repeat;
     cursor:grab;
@@ -381,6 +383,12 @@
     window.addEventListener('resize', updateAppHeight);
   }
 
+  // --board-size is viewport-relative, so the board's actual rendered pixel size
+  // (and therefore the rounded slot boundaries) can change on resize/rotation.
+  window.addEventListener('resize', function(){
+    if (state.n) layoutSlots(state.n);
+  });
+
   function shuffleDigits(){
     var arr = [0,1,2,3,4,5,6,7,8,9];
     for (var i = arr.length - 1; i > 0; i--) {
@@ -422,6 +430,25 @@
     pieceEl.style.backgroundPosition = posX + '% ' + posY + '%';
   }
 
+  // Cumulative rounded boundaries (not independently-rounded track widths) guarantee
+  // adjacent slots share the exact same pixel edge — no gap, no overlap — regardless
+  // of n or the board's current (viewport-relative, often fractional) rendered size.
+  function layoutSlots(n){
+    var size = els.board.getBoundingClientRect().width;
+    var bounds = [];
+    for (var i = 0; i <= n; i++) bounds.push(Math.round(i * size / n));
+    for (var row = 0; row < n; row++) {
+      for (var col = 0; col < n; col++) {
+        var slotEl = els.board.children[row * n + col];
+        if (!slotEl) continue;
+        slotEl.style.left = bounds[col] + 'px';
+        slotEl.style.top = bounds[row] + 'px';
+        slotEl.style.width = (bounds[col + 1] - bounds[col]) + 'px';
+        slotEl.style.height = (bounds[row + 1] - bounds[row]) + 'px';
+      }
+    }
+  }
+
   function buildBoard(){
     var n = TIER_N[state.difficulty];
     state.n = n;
@@ -431,8 +458,6 @@
     state.blanks = BLANK_CACHE[state.digit + '_' + n] || null;
     state.slots = shufflePieces(total, state.blanks);
     state.busy = false;
-    els.board.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
-    els.board.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
     els.board.innerHTML = '';
     for (var i = 0; i < total; i++) {
       var slot = document.createElement('div');
@@ -444,6 +469,7 @@
       slot.appendChild(piece);
       els.board.appendChild(slot);
     }
+    layoutSlots(n);
     for (var j = 0; j < total; j++) renderSlot(j);
   }
 
@@ -576,7 +602,7 @@
         document.body.style.background = '';
         nextPuzzle();
       }
-    }, 900);
+    }, 1600);
   }
 
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 786.799 291.08" style="--final-scale:1;">' +
