@@ -86,8 +86,12 @@
     -webkit-transform: translateZ(0);
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    transition: transform 120ms ease;
   }
   .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ transform: translateZ(0) scale(1.035); }
+  }
   .icon-btn svg{ width:100%; height:100%; display:block; }
   .icon-btn .fill-bg{ transition: fill 120ms ease; }
   .icon-btn .fill-glyph{ transition: fill 150ms ease; }
@@ -206,6 +210,7 @@
   .submit-btn .fill-glyph{ fill:var(--ink); }
   .submit-btn:disabled{ opacity:0.4; cursor:default; }
   .submit-btn:disabled:active{ transform: translateZ(0); }
+  .submit-btn:disabled:hover{ transform: translateZ(0); }
 
   /* ---------- phone: single scrollable slider-menu bar ---------- */
   /* max-height clause catches a phone in landscape (width alone would otherwise put
