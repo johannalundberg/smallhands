@@ -370,8 +370,15 @@
     return blanks;
   }
 
+  // A second, green-background Image per digit — same glyph, success-green fill
+  // instead of the piece-blue fill — used only for the solved-state reveal overlay.
+  // The overlay must stay fully opaque (its whole job is covering the sliced pieces'
+  // seam with one unbroken image): a transparent version here would let the still-blue
+  // pieces underneath show through and defeat that.
+  var DIGIT_IMG_GREEN = {};
+
   function preloadBlankData(done){
-    var remaining = DIGIT_SRC.length;
+    var remaining = DIGIT_SRC.length * 2;
     function finish(){
       remaining -= 1;
       if (remaining === 0) done();
@@ -392,6 +399,28 @@
       };
       img.onerror = finish;
       img.src = src;
+
+      fetch(src).then(function(r){ return r.text(); }).then(function(svgText){
+        // the only piece-blue fill in the file is this single full-canvas rect —
+        // recoloring it to success-green keeps the rect (so the image stays opaque)
+        // while swapping the background color the glyph sits on. The file also has a
+        // full-canvas stroke rect (stroke="#E4E4E4", the shared --bright color) meant
+        // to blend into the piece-blue background; on green it reads as a visible
+        // border, so recolor that too so it keeps blending in rather than standing out.
+        var recolored = svgText
+          .replace(/(<rect[^>]*fill=")#707EFF("[^>]*\/>)/, '$1#04D052$2')
+          .replace(/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1#04D052$2');
+        var blob = new Blob([recolored], { type: 'image/svg+xml' });
+        var url = URL.createObjectURL(blob);
+        var timg = new Image();
+        timg.onload = function(){
+          DIGIT_IMG_GREEN[d] = timg;
+          URL.revokeObjectURL(url);
+          finish();
+        };
+        timg.onerror = finish;
+        timg.src = url;
+      }).catch(finish);
     });
   }
 
@@ -402,11 +431,11 @@
   // switching from live-SVG to a fixed-size bitmap. Matching device pixels exactly
   // makes background-size a 1:1 copy for every piece: nothing left to resample.
   var DIGIT_BITMAP_CACHE = {};
-  function getDigitBitmap(digit, cssSizePx){
+  function getDigitBitmap(digit, cssSizePx, green){
     var devicePx = Math.max(1, Math.round(cssSizePx * (window.devicePixelRatio || 1)));
-    var key = digit + '_' + devicePx;
+    var key = digit + '_' + devicePx + (green ? '_g' : '');
     if (DIGIT_BITMAP_CACHE[key]) return DIGIT_BITMAP_CACHE[key];
-    var img = DIGIT_IMG[digit];
+    var img = green ? (DIGIT_IMG_GREEN[digit] || DIGIT_IMG[digit]) : DIGIT_IMG[digit];
     var canvas = document.createElement('canvas');
     canvas.width = devicePx;
     canvas.height = devicePx;
@@ -723,7 +752,7 @@
     document.body.style.background = 'var(--success)';
     els.boardLines.classList.add('solved');
     var boardPx = state.bounds[state.bounds.length - 1];
-    els.boardSolvedImg.src = getDigitBitmap(state.digit, boardPx);
+    els.boardSolvedImg.src = getDigitBitmap(state.digit, boardPx, true);
     els.boardSolvedImg.classList.add('show');
     setTimeout(function(){
       state.progress += 1;
@@ -806,9 +835,7 @@
   setTimeout(introduceTraySlider, 500);
 
   els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  preloadBlankData(function(){
-    restartRound();
-  });
+  preloadBlankData(restartRound);
 })();
 </script>
 
