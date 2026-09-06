@@ -603,6 +603,7 @@
   }
 
   function buildBoard(){
+    forceEndDrag(); // a drag mid-flight would otherwise orphan its ghost tile once the board under it is torn down
     var n = TIER_N[state.difficulty];
     state.n = n;
     els.boardLines.classList.remove('solved');
@@ -657,8 +658,34 @@
   // ---------- drag to swap ----------
   var drag = null;
 
+  // Cleans up a drag's ghost tile and "lifted" state regardless of how it ends. Pulled
+  // out of onPointerUp so other exit paths (a rebuild mid-drag, or the pointer sequence
+  // silently dying without pointerup/pointercancel — seen once on phone, once on tablet,
+  // most likely an OS gesture stealing the touch) can reach the same cleanup instead of
+  // leaving the fixed-position ghost tile stuck on screen forever.
+  function forceEndDrag(){
+    if (!drag) return;
+    var piece = drag.piece;
+    piece.removeEventListener('pointermove', onPointerMove);
+    piece.removeEventListener('pointerup', onPointerUp);
+    piece.removeEventListener('pointercancel', onPointerUp);
+    drag.ghost.remove();
+    piece.classList.remove('lifted');
+    if (drag.hoverSlotEl) drag.hoverSlotEl.classList.remove('hover');
+    drag = null;
+  }
+  // Bubble phase (not capture): the piece's own pointerup handler must run first so it
+  // can still read drag.hoverSlot/sourceSlot to commit the swap before this clears it.
+  window.addEventListener('pointerup', forceEndDrag);
+  window.addEventListener('pointercancel', forceEndDrag);
+  window.addEventListener('blur', forceEndDrag);
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) forceEndDrag();
+  });
+
   function onPieceDown(e){
     if (state.busy) return;
+    forceEndDrag(); // guard against a stale drag from a previous pointer sequence that never cleaned up
     e.preventDefault();
     var piece = e.currentTarget;
     var slotEl = piece.parentElement;
@@ -707,18 +734,10 @@
 
   function onPointerUp(e){
     if (!drag) return;
-    var piece = drag.piece;
-    try { piece.releasePointerCapture(e.pointerId); } catch (err) {}
-    piece.removeEventListener('pointermove', onPointerMove);
-    piece.removeEventListener('pointerup', onPointerUp);
-    piece.removeEventListener('pointercancel', onPointerUp);
-    drag.ghost.remove();
-    piece.classList.remove('lifted');
-    if (drag.hoverSlotEl) drag.hoverSlotEl.classList.remove('hover');
-
+    try { drag.piece.releasePointerCapture(e.pointerId); } catch (err) {}
     var targetSlot = drag.hoverSlot;
     var sourceSlot = drag.sourceSlot;
-    drag = null;
+    forceEndDrag();
 
     if (targetSlot !== null && targetSlot !== sourceSlot) {
       swapSlots(sourceSlot, targetSlot);
