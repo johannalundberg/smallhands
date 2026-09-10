@@ -16,6 +16,12 @@
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
     --tile-gap: clamp(6px, 1.2vmin, 18px);
+    /* Vertical space reserved above/below the grid for the icon rows — equal on
+       desktop (diff-group top-right, btn-row bottom-left both take one band), but
+       overridden asymmetrically on the phone tray breakpoint below, where only the
+       bottom has anything in it. */
+    --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+    --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
@@ -111,11 +117,11 @@
     display:grid;
     grid-template-columns:repeat(var(--cols), 1fr);
     gap:var(--tile-gap);
-    /* Fill as much of the space between the corner icons as possible: cap height to
-       the viewport minus the icon rows top and bottom (plus a little breathing room),
-       then convert that height budget to a width via the tier's own aspect ratio —
-       whichever of that, 94vw, or the outer safety cap is smallest wins. */
-    width:min(94vw, calc((var(--app-height, 100vh) - 2 * (var(--icon-size) + 2 * var(--unit))) * var(--aspect)), var(--grid-max));
+    /* Fill as much of the reserved vertical space as possible: cap height to the
+       viewport minus --v-reserve-top/bottom, then convert that height budget to a
+       width via the tier's own aspect ratio — whichever of that, 94vw, or the
+       outer safety cap is smallest wins. */
+    width:min(94vw, calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) * var(--aspect)), var(--grid-max));
   }
   .tile{
     position:relative;
@@ -192,6 +198,16 @@
     :root{
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
+      /* The vmin-based desktop gap ends up much thinner than the Figma sketch's
+         ~8% of tile size once tiles are this small — scale off viewport width
+         instead, which tracks phone tile size much more closely. */
+      --tile-gap: clamp(10px, 3.4vw, 24px);
+      /* Only the bottom has anything in it here (the tray) — reserve just a small
+         breathing margin up top instead of a whole matching icon-sized band, so
+         the grid centers between the true top of the screen and the tray, not
+         the middle of the viewport. */
+      --v-reserve-top: var(--unit);
+      --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
     }
     .controls-slider{
       display:flex;
@@ -211,8 +227,8 @@
     .controls-slider::-webkit-scrollbar{ display:none; }
     .diff-group, .btn-row{ display:contents; }
     body{
-      padding-top: calc(var(--unit) * 2 + var(--icon-size));
-      padding-bottom: calc(var(--unit) * 2 + var(--icon-size));
+      padding-top: var(--v-reserve-top);
+      padding-bottom: var(--v-reserve-bottom);
     }
   }
 
