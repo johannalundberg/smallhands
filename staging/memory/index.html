@@ -111,18 +111,41 @@
     display:grid;
     grid-template-columns:repeat(var(--cols), 1fr);
     gap:var(--tile-gap);
-    width:min(92vw, calc(92vh * var(--aspect)), var(--grid-max));
+    /* Fill as much of the space between the corner icons as possible: cap height to
+       the viewport minus the icon rows top and bottom (plus a little breathing room),
+       then convert that height budget to a width via the tier's own aspect ratio —
+       whichever of that, 94vw, or the outer safety cap is smallest wins. */
+    width:min(94vw, calc((var(--app-height, 100vh) - 2 * (var(--icon-size) + 2 * var(--unit))) * var(--aspect)), var(--grid-max));
   }
   .tile{
     position:relative;
     aspect-ratio:1;
     cursor:pointer;
     perspective:600px;
+    transition: opacity 300ms ease, transform 300ms ease;
   }
-  .tile.pop{ animation: tile-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  /* A matched pair clears away entirely a beat after the match (see onTileClick)
+     so only the tiles still in play stay on screen, instead of sitting there
+     dimmed as done. */
+  .tile.gone{ opacity:0; transform:scale(0.8); pointer-events:none; }
+  /* Found-a-pair feedback: bounce up bigger then settle, the same spring feel
+     as the icon buttons growing on hover, just more pronounced. */
+  .tile.pop{ animation: tile-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1); }
   @keyframes tile-pop{
-    0%{ transform:scale(0.88); }
+    0%{ transform:scale(1); }
+    45%{ transform:scale(1.18); }
+    75%{ transform:scale(0.96); }
     100%{ transform:scale(1); }
+  }
+  /* Board build: tiles pop in one at a time in a random order (a staggered
+     animation-delay set per tile in JS) so a fresh board feels like it's
+     shuffling into place rather than just appearing all at once. */
+  /* No overshoot here (unlike the match bounce) — tiles sit edge to edge with
+     only a thin gap, so growing past their own cell would clip into neighbors. */
+  .tile.entering{ animation: tile-enter 280ms ease-out both; }
+  @keyframes tile-enter{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(1); opacity:1; }
   }
   .tile-inner{
     position:absolute; inset:0;
@@ -139,19 +162,11 @@
     align-items:center;
     justify-content:center;
   }
-  /* card back: same muted mark on every tile until it's flipped — the actual
-     pair art only exists on the front face, so nothing here can leak which
-     tile is which before a player picks it. */
-  .tile-face.back{ background:rgba(255,255,255,0.14); }
-  .tile-face.back::after{
-    content:'';
-    width:38%;
-    height:38%;
-    border-radius:30%;
-    background:rgba(255,255,255,0.35);
-  }
+  /* card back: flat placeholder orange (matches the Figma sketch) on every
+     tile until it's flipped — the actual pair art only exists on the front
+     face, so nothing here can leak which tile is which before a player picks it. */
+  .tile-face.back{ background:#F37745; }
   .tile-face.front{ transform:rotateY(180deg); }
-  .tile.matched .tile-face.front{ opacity:0.6; }
 
   .tile-shape{ position:relative; width:62%; height:62%; background:currentColor; }
   .shape-circle{ border-radius:50%; }
@@ -283,9 +298,9 @@
   "use strict";
 
   var TIERS = {
-    easy:   { cols:4, rows:2, maxW:640 },
-    medium: { cols:6, rows:3, maxW:760 },
-    hard:   { cols:7, rows:4, maxW:760 }
+    easy:   { cols:4, rows:2, maxW:1000 },
+    medium: { cols:6, rows:3, maxW:1200 },
+    hard:   { cols:7, rows:4, maxW:1200 }
   };
 
   // Placeholder pair art until real tile drawings are ready: a flat CSS shape
@@ -397,9 +412,17 @@
     return tile;
   }
 
+  // Matches the phone-slider-menu breakpoint below — on a narrow/short screen the
+  // grid swaps to a portrait shape (more rows, fewer columns) per the updated phone
+  // sketches, so tiles can grow to fill the tall narrow viewport instead of staying
+  // landscape-shaped and leaving empty space above/below.
+  var mobileMQ = window.matchMedia('(max-width: 767px), (max-height: 500px)');
+
   function buildBoard(){
     var tier = TIERS[state.difficulty];
-    var total = tier.cols * tier.rows;
+    var cols = tier.cols, rows = tier.rows;
+    if (mobileMQ.matches) { cols = tier.rows; rows = tier.cols; }
+    var total = cols * rows;
     state.pairsNeeded = total / 2;
     state.open = [];
     state.matched = 0;
@@ -409,13 +432,25 @@
     for (var p = 0; p < state.pairsNeeded; p++) { ids.push(p); ids.push(p); }
     shuffle(ids);
 
-    els.grid.style.setProperty('--cols', tier.cols);
-    els.grid.style.setProperty('--aspect', tier.cols / tier.rows);
+    // Independent random order for the "shuffling in" entrance stagger — deliberately
+    // not tied to board position, so tiles pop in scattered around the grid rather
+    // than in reading order.
+    var entranceRank = new Array(total);
+    shuffle(Array.from({ length: total }, function(_, i){ return i; })).forEach(function(pos, i){
+      entranceRank[pos] = i;
+    });
+
+    els.grid.style.setProperty('--cols', cols);
+    els.grid.style.setProperty('--aspect', cols / rows);
     els.grid.style.setProperty('--grid-max', tier.maxW + 'px');
 
     els.grid.innerHTML = '';
     for (var t = 0; t < total; t++) {
-      els.grid.appendChild(makeTile(ids[t]));
+      var tile = makeTile(ids[t]);
+      tile.classList.add('entering');
+      tile.style.animationDelay = (entranceRank[t] * 35) + 'ms';
+      tile.addEventListener('animationend', function(){ this.classList.remove('entering'); }, { once:true });
+      els.grid.appendChild(tile);
     }
   }
 
@@ -436,13 +471,18 @@
       b.classList.remove('open');
       a.classList.add('pop');
       b.classList.add('pop');
-      setTimeout(function(){ a.classList.remove('pop'); b.classList.remove('pop'); }, 260);
+      setTimeout(function(){ a.classList.remove('pop'); b.classList.remove('pop'); }, 420);
       state.open = [];
       state.matched += 1;
       state.busy = false;
-      if (state.matched >= state.pairsNeeded) {
-        setTimeout(showCelebration, 500);
-      }
+      var isFinalPair = state.matched >= state.pairsNeeded;
+      // Give the player a beat to see the matched pair bounce before it clears
+      // away, leaving only the still-unmatched tiles on screen.
+      setTimeout(function(){
+        a.classList.add('gone');
+        b.classList.add('gone');
+        if (isFinalPair) showCelebration();
+      }, 750);
     } else {
       setTimeout(function(){
         a.classList.remove('open');
@@ -460,12 +500,14 @@
     '</svg>';
 
   function showCelebration(){
+    document.body.style.background = 'var(--success)';
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
       els.celebration.style.display = 'none';
       els.boardWrap.style.display = '';
+      document.body.style.background = '';
       buildBoard();
     }, 3000);
   }
@@ -480,6 +522,14 @@
   });
   els.refreshBtn.addEventListener('click', buildBoard);
   els.backBtn.addEventListener('click', function(){ window.location.href = '../../index.html'; });
+
+  // Re-lay the grid in the right orientation if the viewport crosses the
+  // mobile breakpoint (rotating a real device, or resizing a window).
+  if (mobileMQ.addEventListener) {
+    mobileMQ.addEventListener('change', buildBoard);
+  } else if (mobileMQ.addListener) {
+    mobileMQ.addListener(buildBoard); // older Safari
+  }
 
   els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
   buildBoard();
