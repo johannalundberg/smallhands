@@ -137,16 +137,6 @@
     75%{ transform:scale(0.96); }
     100%{ transform:scale(1); }
   }
-  /* Board build: tiles pop in one at a time in a random order (a staggered
-     animation-delay set per tile in JS) so a fresh board feels like it's
-     shuffling into place rather than just appearing all at once. */
-  /* No overshoot here (unlike the match bounce) — tiles sit edge to edge with
-     only a thin gap, so growing past their own cell would clip into neighbors. */
-  .tile.entering{ animation: tile-enter 280ms ease-out both; }
-  @keyframes tile-enter{
-    0%{ transform:scale(0); opacity:0; }
-    100%{ transform:scale(1); opacity:1; }
-  }
   .tile-inner{
     position:absolute; inset:0;
     transform-style:preserve-3d;
@@ -432,25 +422,13 @@
     for (var p = 0; p < state.pairsNeeded; p++) { ids.push(p); ids.push(p); }
     shuffle(ids);
 
-    // Independent random order for the "shuffling in" entrance stagger — deliberately
-    // not tied to board position, so tiles pop in scattered around the grid rather
-    // than in reading order.
-    var entranceRank = new Array(total);
-    shuffle(Array.from({ length: total }, function(_, i){ return i; })).forEach(function(pos, i){
-      entranceRank[pos] = i;
-    });
-
     els.grid.style.setProperty('--cols', cols);
     els.grid.style.setProperty('--aspect', cols / rows);
     els.grid.style.setProperty('--grid-max', tier.maxW + 'px');
 
     els.grid.innerHTML = '';
     for (var t = 0; t < total; t++) {
-      var tile = makeTile(ids[t]);
-      tile.classList.add('entering');
-      tile.style.animationDelay = (entranceRank[t] * 35) + 'ms';
-      tile.addEventListener('animationend', function(){ this.classList.remove('entering'); }, { once:true });
-      els.grid.appendChild(tile);
+      els.grid.appendChild(makeTile(ids[t]));
     }
   }
 
