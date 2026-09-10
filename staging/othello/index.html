@@ -7,8 +7,8 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#04D052;
-    --cell:#0A9F61;
+    --bg:#47595B;
+    --cell:#04D052;
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
@@ -676,17 +676,16 @@
     '<path fill="var(--bright)" d="M35.04 72.96C25.28 72.96 16.96 69.6 10.08 62.88C3.36002 56.16 0 47.44 0 36.72C0 25.84 3.36002 17.04 10.08 10.32C16.96 3.44001 25.28 0 35.04 0C44.8 0 53.04 3.44001 59.76 10.32C66.64 17.04 70.08 25.84 70.08 36.72C70.08 47.44 66.64 56.16 59.76 62.88C53.04 69.6 44.8 72.96 35.04 72.96Z"/>' +
     '</svg>';
 
-  // Win: no background flash needed — the page is already the success-green
-  // color at rest in this colorway. Loss: flash the shared --incorrect red.
+  // Flash the shared success-green on a win, the shared --incorrect red on a loss.
   function showCelebration(isWin){
     els.celebration.innerHTML = isWin ? CELEBRATION_FACE_SVG : SAD_FACE_SVG;
-    if (!isWin) document.body.style.background = 'var(--incorrect)';
+    document.body.style.background = isWin ? 'var(--success)' : 'var(--incorrect)';
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
       els.celebration.style.display = 'none';
       els.boardWrap.style.display = '';
-      if (!isWin) document.body.style.background = '';
+      document.body.style.background = '';
       startGame();
     }, 3000);
   }
