@@ -223,28 +223,29 @@
     82%, 100%{ transform:rotateY(0deg); }
   }
 
-  /* Othello: the classic 2x2 opening, with one disc periodically flipping to the
-     other color and back — previewing the core "outflank and flip" mechanic,
-     same rotateY front/back-face technique as the memory badge and the real game. */
-  .othello-badge{
+  /* Othello: cross-fades through 3 board states — the classic diagonal opening,
+     black capturing three of the four, then a full black sweep — before looping
+     back to the opening. Sharp-cornered green cells + black gap-lines match the
+     exported badge assets (Figma node 45:2489); the 3-way crossfade reuses the
+     same pz-fade3 timing as the number-puzzle badge. */
+  .othello-badge{ position:relative; }
+  .oth-frame{
+    position:absolute; inset:0;
     display:grid;
     grid-template-columns:repeat(2, 1fr);
     grid-template-rows:repeat(2, 1fr);
-    gap: 4%;
+    gap:2px;
+    background:#000;
+    opacity:0;
+    animation: pz-fade3 4.5s ease-in-out infinite;
   }
-  .oth-cell{ background:#04D052; border-radius:14%; display:flex; align-items:center; justify-content:center; }
-  .oth-disc{ position:relative; width:66%; aspect-ratio:1; perspective:300px; }
-  .oth-disc-inner{ position:absolute; inset:0; transform-style:preserve-3d; }
-  .oth-disc.oth-flip .oth-disc-inner{ animation: oth-flip 4.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite; }
-  .oth-face{ position:absolute; inset:0; border-radius:50%; backface-visibility:hidden; }
-  .oth-face.white{ background:var(--glyph); }
-  .oth-face.black{ background:#141414; transform:rotateY(180deg); }
-
-  @keyframes oth-flip{
-    0%, 40%{ transform:rotateY(0deg); }
-    55%, 85%{ transform:rotateY(180deg); }
-    100%{ transform:rotateY(0deg); }
-  }
+  .oth-frame:nth-child(1){ animation-delay:0s; }
+  .oth-frame:nth-child(2){ animation-delay:-1.5s; }
+  .oth-frame:nth-child(3){ animation-delay:-3s; }
+  .oth-cell{ background:#04D052; display:flex; align-items:center; justify-content:center; }
+  .oth-disc{ width:88.7%; aspect-ratio:1; border-radius:50%; }
+  .oth-disc.black{ background:#111111; }
+  .oth-disc.white{ background:#E4E4E4; }
 </style>
 </head>
 <body>
@@ -324,10 +325,24 @@
 
     <a class="tile" href="othello/" aria-label="Othello">
       <div class="badge othello-badge">
-        <div class="oth-cell"><div class="oth-disc"><div class="oth-disc-inner"><div class="oth-face white"></div><div class="oth-face black"></div></div></div></div>
-        <div class="oth-cell"><div class="oth-disc"><div class="oth-disc-inner"><div class="oth-face black"></div><div class="oth-face white"></div></div></div></div>
-        <div class="oth-cell"><div class="oth-disc"><div class="oth-disc-inner"><div class="oth-face black"></div><div class="oth-face white"></div></div></div></div>
-        <div class="oth-cell"><div class="oth-disc oth-flip"><div class="oth-disc-inner"><div class="oth-face white"></div><div class="oth-face black"></div></div></div></div>
+        <div class="oth-frame">
+          <div class="oth-cell"><div class="oth-disc black"></div></div>
+          <div class="oth-cell"><div class="oth-disc white"></div></div>
+          <div class="oth-cell"><div class="oth-disc white"></div></div>
+          <div class="oth-cell"><div class="oth-disc black"></div></div>
+        </div>
+        <div class="oth-frame">
+          <div class="oth-cell"><div class="oth-disc black"></div></div>
+          <div class="oth-cell"><div class="oth-disc black"></div></div>
+          <div class="oth-cell"><div class="oth-disc white"></div></div>
+          <div class="oth-cell"><div class="oth-disc black"></div></div>
+        </div>
+        <div class="oth-frame">
+          <div class="oth-cell"><div class="oth-disc black"></div></div>
+          <div class="oth-cell"><div class="oth-disc black"></div></div>
+          <div class="oth-cell"><div class="oth-disc black"></div></div>
+          <div class="oth-cell"><div class="oth-disc black"></div></div>
+        </div>
       </div>
     </a>
   </div>
