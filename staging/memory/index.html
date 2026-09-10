@@ -15,7 +15,7 @@
     --incorrect:#ED2B2E;
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
-    --tile-gap: clamp(6px, 1.2vmin, 18px);
+    --tile-gap: 12px; /* fallback only — JS recomputes this per board build to match Figma's ratio */
     /* Vertical space reserved above/below the grid for the icon rows — equal on
        desktop (diff-group top-right, btn-row bottom-left both take one band), but
        overridden asymmetrically on the phone tray breakpoint below, where only the
@@ -198,10 +198,6 @@
     :root{
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
-      /* The vmin-based desktop gap ends up much thinner than the Figma sketch's
-         ~8% of tile size once tiles are this small — scale off viewport width
-         instead, which tracks phone tile size much more closely. */
-      --tile-gap: clamp(10px, 3.4vw, 24px);
       /* Only the bottom has anything in it here (the tray) — reserve just a small
          breathing margin up top instead of a whole matching icon-sized band, so
          the grid centers between the true top of the screen and the tray, not
@@ -441,6 +437,17 @@
     els.grid.style.setProperty('--cols', cols);
     els.grid.style.setProperty('--aspect', cols / rows);
     els.grid.style.setProperty('--grid-max', tier.maxW + 'px');
+
+    // Match the Figma sketch's gap-to-tile-size ratio (~8%) exactly at every tier and
+    // breakpoint, rather than a flat gap that balloons proportionally on tiers with
+    // smaller tiles. The grid's own width is fixed independently of gap (set purely by
+    // the --v-reserve/aspect formula above), so it can be measured first and solved
+    // backwards for the tile size a given gap would leave: cols*tile + (cols-1)*gap =
+    // containerWidth, and gap = GAP_RATIO*tile.
+    var GAP_RATIO = 0.08;
+    var containerWidth = els.grid.getBoundingClientRect().width;
+    var tileSize = containerWidth / (cols + GAP_RATIO * (cols - 1));
+    els.grid.style.setProperty('--tile-gap', (tileSize * GAP_RATIO) + 'px');
 
     els.grid.innerHTML = '';
     for (var t = 0; t < total; t++) {
