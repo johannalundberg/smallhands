@@ -173,6 +173,55 @@
   .mc-diag-bg{ animation: tt-diag-win-bg 4.5s ease-in-out infinite; }
   .mc-o3-appear{ opacity:0; animation: tt-o3-appear 4.5s ease-in-out infinite; }
   .mc-x8-appear{ opacity:0; animation: tt-x8-appear 4.5s ease-in-out infinite; }
+
+  /* Previews the core memory-match mechanic: two tiles flip over at once to
+     reveal they're NOT a matching pair (different glyphs), then flip back down. */
+  .memory-badge{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    grid-template-rows:repeat(2, 1fr);
+    gap: 4%;
+  }
+  .mem-cell{ position:relative; border-radius:14%; background:#F37745; }
+  .mem-cell.mem-flip{ background:none; perspective:300px; }
+  .mem-inner{
+    position:absolute; inset:0;
+    transform-style:preserve-3d;
+    animation-duration: 4.5s;
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation-iteration-count: infinite;
+  }
+  /* Flip one tile up, then the other shortly after — like actually picking two
+     tiles in the game, not both at once — hold both revealed together (so the
+     mismatch reads clearly), then flip both back down together. */
+  .mem-flip-a .mem-inner{ animation-name: mem-flip-a; }
+  .mem-flip-b .mem-inner{ animation-name: mem-flip-b; }
+  .mem-face{
+    position:absolute; inset:0;
+    border-radius:14%;
+    backface-visibility:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .mem-face.back{ background:#F37745; }
+  .mem-face.front{ transform:rotateY(180deg); }
+  /* Overrides every property the generic .badge svg rule sets (position/inset/
+     margin/opacity, meant for the math-badge's fade sequence) — it cascades onto
+     any svg inside .badge, including this one, and would otherwise leave the
+     glyph permanently invisible and stripped out of flow. */
+  .mem-face.front svg{ position:static; inset:auto; margin:0; opacity:1; display:block; width:56%; height:56%; }
+
+  @keyframes mem-flip-a{
+    0%, 4%{ transform:rotateY(0deg); }
+    15%, 70%{ transform:rotateY(180deg); }
+    82%, 100%{ transform:rotateY(0deg); }
+  }
+  @keyframes mem-flip-b{
+    0%, 19%{ transform:rotateY(0deg); }
+    30%, 70%{ transform:rotateY(180deg); }
+    82%, 100%{ transform:rotateY(0deg); }
+  }
 </style>
 </head>
 <body>
@@ -228,6 +277,25 @@
         <img class="pz-frame" src="numberpuzzle/assets/badge-frame-1.svg" alt="">
         <img class="pz-frame" src="numberpuzzle/assets/badge-frame-2.svg" alt="">
         <img class="pz-frame" src="numberpuzzle/assets/badge-frame-3.svg" alt="">
+      </div>
+    </a>
+
+    <a class="tile" href="memory/" aria-label="Memory">
+      <div class="badge memory-badge">
+        <div class="mem-cell"></div>
+        <div class="mem-cell mem-flip mem-flip-a">
+          <div class="mem-inner">
+            <div class="mem-face back"></div>
+            <div class="mem-face front"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="32" fill="var(--glyph)"/></svg></div>
+          </div>
+        </div>
+        <div class="mem-cell mem-flip mem-flip-b">
+          <div class="mem-inner">
+            <div class="mem-face back"></div>
+            <div class="mem-face front"><svg viewBox="0 0 100 100"><polygon points="50,14 90,86 10,86" fill="var(--glyph)"/></svg></div>
+          </div>
+        </div>
+        <div class="mem-cell"></div>
       </div>
     </a>
   </div>
