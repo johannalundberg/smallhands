@@ -223,33 +223,46 @@
     82%, 100%{ transform:rotateY(0deg); }
   }
 
-  /* Othello: cross-fades through 3 board states — the classic diagonal opening,
-     black capturing three of the four, then a full black sweep — before looping
-     back to the opening. Sharp-cornered green cells + black gap-lines match the
-     exported badge assets (Figma node 45:2489); the 3-way crossfade reuses the
-     same pz-fade3 timing as the number-puzzle badge. */
-  .othello-badge{ position:relative; }
-  .oth-frame{
-    position:absolute; inset:0;
+  /* Othello: the green cells and black gap-lines (matching the exported badge
+     assets, Figma node 45:2489) stay completely solid/static — only the two
+     discs that actually change (top-right, bottom-left) animate, flipping from
+     white to black in sequence (same rotateY technique as the real game) before
+     snapping back to the opening on loop. The other two discs never change, so
+     they're just plain static circles. */
+  .othello-badge{
     display:grid;
     grid-template-columns:repeat(2, 1fr);
     grid-template-rows:repeat(2, 1fr);
     gap:2px;
     background:#000;
-    opacity:0;
-    animation: pz-fade3 4.5s ease-in-out infinite;
   }
-  /* pz-fade3's peak-visible moment for a given delay -d lands at real time (period
-     - d), not at d itself — so the more-negative delay actually peaks earlier.
-     These are swapped from the naive 0/-1.5/-3 order for that reason, to make the
-     real visible sequence genuinely 1 -> 2 -> 3, not 1 -> 3 -> 2. */
-  .oth-frame:nth-child(1){ animation-delay:0s; }
-  .oth-frame:nth-child(2){ animation-delay:-3s; }
-  .oth-frame:nth-child(3){ animation-delay:-1.5s; }
   .oth-cell{ background:#04D052; display:flex; align-items:center; justify-content:center; }
-  .oth-disc{ width:88.7%; aspect-ratio:1; border-radius:50%; }
-  .oth-disc.black{ background:#111111; }
-  .oth-disc.white{ background:#E4E4E4; }
+  .oth-disc-static{ width:88.7%; aspect-ratio:1; border-radius:50%; background:#111111; }
+  .oth-disc-flip{ position:relative; width:88.7%; aspect-ratio:1; perspective:300px; }
+  .oth-disc-flip-inner{
+    position:absolute; inset:0;
+    transform-style:preserve-3d;
+    animation-duration:4.5s;
+    animation-timing-function:cubic-bezier(0.45, 0.05, 0.55, 0.95);
+    animation-iteration-count:infinite;
+  }
+  .oth-disc-tr .oth-disc-flip-inner{ animation-name:oth-flip-tr; }
+  .oth-disc-bl .oth-disc-flip-inner{ animation-name:oth-flip-bl; }
+  .oth-disc-face{ position:absolute; inset:0; border-radius:50%; backface-visibility:hidden; }
+  .oth-disc-face.white{ background:#E4E4E4; }
+  .oth-disc-face.black{ background:#111111; transform:rotateY(180deg); }
+
+  /* Top-right flips first (opening -> three captured), bottom-left flips later
+     (three captured -> full sweep); both hold black the rest of the loop, then
+     the animation's own loop restart snaps each straight back to white. */
+  @keyframes oth-flip-tr{
+    0%, 32%{ transform:rotateY(0deg); }
+    38%, 100%{ transform:rotateY(180deg); }
+  }
+  @keyframes oth-flip-bl{
+    0%, 64%{ transform:rotateY(0deg); }
+    70%, 100%{ transform:rotateY(180deg); }
+  }
 </style>
 </head>
 <body>
@@ -329,24 +342,24 @@
 
     <a class="tile" href="othello/" aria-label="Othello">
       <div class="badge othello-badge">
-        <div class="oth-frame">
-          <div class="oth-cell"><div class="oth-disc black"></div></div>
-          <div class="oth-cell"><div class="oth-disc white"></div></div>
-          <div class="oth-cell"><div class="oth-disc white"></div></div>
-          <div class="oth-cell"><div class="oth-disc black"></div></div>
+        <div class="oth-cell"><div class="oth-disc-static"></div></div>
+        <div class="oth-cell">
+          <div class="oth-disc-flip oth-disc-tr">
+            <div class="oth-disc-flip-inner">
+              <div class="oth-disc-face white"></div>
+              <div class="oth-disc-face black"></div>
+            </div>
+          </div>
         </div>
-        <div class="oth-frame">
-          <div class="oth-cell"><div class="oth-disc black"></div></div>
-          <div class="oth-cell"><div class="oth-disc black"></div></div>
-          <div class="oth-cell"><div class="oth-disc white"></div></div>
-          <div class="oth-cell"><div class="oth-disc black"></div></div>
+        <div class="oth-cell">
+          <div class="oth-disc-flip oth-disc-bl">
+            <div class="oth-disc-flip-inner">
+              <div class="oth-disc-face white"></div>
+              <div class="oth-disc-face black"></div>
+            </div>
+          </div>
         </div>
-        <div class="oth-frame">
-          <div class="oth-cell"><div class="oth-disc black"></div></div>
-          <div class="oth-cell"><div class="oth-disc black"></div></div>
-          <div class="oth-cell"><div class="oth-disc black"></div></div>
-          <div class="oth-cell"><div class="oth-disc black"></div></div>
-        </div>
+        <div class="oth-cell"><div class="oth-disc-static"></div></div>
       </div>
     </a>
   </div>
