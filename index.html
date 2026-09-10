@@ -222,6 +222,29 @@
     30%, 70%{ transform:rotateY(180deg); }
     82%, 100%{ transform:rotateY(0deg); }
   }
+
+  /* Othello: the classic 2x2 opening, with one disc periodically flipping to the
+     other color and back — previewing the core "outflank and flip" mechanic,
+     same rotateY front/back-face technique as the memory badge and the real game. */
+  .othello-badge{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    grid-template-rows:repeat(2, 1fr);
+    gap: 4%;
+  }
+  .oth-cell{ background:#04D052; border-radius:14%; display:flex; align-items:center; justify-content:center; }
+  .oth-disc{ position:relative; width:66%; aspect-ratio:1; perspective:300px; }
+  .oth-disc-inner{ position:absolute; inset:0; transform-style:preserve-3d; }
+  .oth-disc.oth-flip .oth-disc-inner{ animation: oth-flip 4.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite; }
+  .oth-face{ position:absolute; inset:0; border-radius:50%; backface-visibility:hidden; }
+  .oth-face.white{ background:var(--glyph); }
+  .oth-face.black{ background:#141414; transform:rotateY(180deg); }
+
+  @keyframes oth-flip{
+    0%, 40%{ transform:rotateY(0deg); }
+    55%, 85%{ transform:rotateY(180deg); }
+    100%{ transform:rotateY(0deg); }
+  }
 </style>
 </head>
 <body>
@@ -296,6 +319,15 @@
           </div>
         </div>
         <div class="mem-cell"></div>
+      </div>
+    </a>
+
+    <a class="tile" href="othello/" aria-label="Othello">
+      <div class="badge othello-badge">
+        <div class="oth-cell"><div class="oth-disc"><div class="oth-disc-inner"><div class="oth-face white"></div><div class="oth-face black"></div></div></div></div>
+        <div class="oth-cell"><div class="oth-disc"><div class="oth-disc-inner"><div class="oth-face black"></div><div class="oth-face white"></div></div></div></div>
+        <div class="oth-cell"><div class="oth-disc"><div class="oth-disc-inner"><div class="oth-face black"></div><div class="oth-face white"></div></div></div></div>
+        <div class="oth-cell"><div class="oth-disc oth-flip"><div class="oth-disc-inner"><div class="oth-face white"></div><div class="oth-face black"></div></div></div></div>
       </div>
     </a>
   </div>

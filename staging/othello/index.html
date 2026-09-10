@@ -313,8 +313,8 @@
   </div>
 
   <div class="score-row" id="scoreRow">
-    <div class="score-pill white-pill" id="scorePillWhite"><span class="num" id="scoreValWhite">2</span></div>
     <div class="score-pill black-pill" id="scorePillBlack"><span class="num" id="scoreValBlack">2</span></div>
+    <div class="score-pill white-pill" id="scorePillWhite"><span class="num" id="scoreValWhite">2</span></div>
   </div>
 
   <div class="board-wrap" id="boardWrap">
@@ -345,6 +345,7 @@
     [120,-20,20,5,5,20,-20,120]
   ];
 
+  var EASY_GREEDY_CHANCE = 0.4; // easy AI mostly plays randomly, but sometimes grabs the biggest flip — real (if occasional) resistance, not a total pushover
   var HARD_MISTAKE_CHANCE = 0.15; // hard AI occasionally plays the greedy move instead of the minimax-best one
 
   var state = {
@@ -644,6 +645,7 @@
     if (moves.length === 0) return null;
 
     if (state.difficulty === 'easy') {
+      if (Math.random() < EASY_GREEDY_CHANCE) return greedyMove(moves);
       return moves[Math.floor(Math.random() * moves.length)];
     }
     if (state.difficulty === 'medium') {
