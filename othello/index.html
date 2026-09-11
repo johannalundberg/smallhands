@@ -518,7 +518,7 @@
     state.busy = false;
     state.over = false;
     els.boardWrap.classList.remove('busy');
-    els.board.classList.remove('pass-flash');
+    els.board.classList.remove('pass-flash', 'pass-dim-black', 'pass-dim-white');
     buildBoardDom();
     updateScore();
     renderAll();
@@ -546,9 +546,11 @@
   function advanceTurn(justMoved){
     var opponent = other(justMoved);
     if (legalMoves(state.board, opponent).length > 0) {
+      undimPass();
       setTurn(opponent);
     } else if (legalMoves(state.board, justMoved).length > 0) {
-      dimPass(opponent, function(){ setTurn(justMoved); });
+      dimPass(opponent);
+      setTurn(justMoved);
     } else {
       endGame();
     }
@@ -575,13 +577,15 @@
     }, 700);
   }
 
-  function dimPass(skippedColor, after){
-    var cls = skippedColor === 'B' ? 'pass-dim-black' : 'pass-dim-white';
-    els.board.classList.add(cls);
-    setTimeout(function(){
-      els.board.classList.remove(cls);
-      after();
-    }, 700);
+  // Dims the skipped side's discs and leaves them dimmed — through as many
+  // consecutive rounds as it takes — until that side has a legal move again
+  // (undimPass, called from advanceTurn once legalMoves finds one).
+  function dimPass(skippedColor){
+    els.board.classList.add(skippedColor === 'B' ? 'pass-dim-black' : 'pass-dim-white');
+  }
+
+  function undimPass(){
+    els.board.classList.remove('pass-dim-black', 'pass-dim-white');
   }
 
   function endGame(){
