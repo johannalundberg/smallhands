@@ -463,25 +463,33 @@
   // document.activeElement alone can't tell us whether the on-screen keyboard is
   // actually visible: tapping an icon button never blurs the answer input (by design,
   // see the mousedown handler below), so it stays the "active element" forever once
-  // focused once, even after the keyboard has been dismissed. Compare the layout
-  // viewport (window.innerHeight, which an on-screen keyboard never changes — that's
-  // the whole point of the layout/visual viewport split) against the live visual
-  // viewport instead of any recorded "tallest height seen" baseline: a baseline can
-  // only ever grow or shrink in one direction from wherever it started, so ordinary
-  // mobile-browser chrome resizing (Safari's URL bar collapsing on scroll, then
-  // re-expanding later) that happens to land on the wrong side of it still misreads
-  // as "keyboard open" — which was intermittently re-applying the typing-state layout
-  // (and hiding the tray with it) after a plain tap on a tray icon, keyboard never
-  // involved. Layout vs. visual viewport doesn't have that direction problem: browser
-  // chrome resizes both together, keeping their difference near zero, while only a
-  // real keyboard opens a gap between them.
+  // focused once, even after the keyboard has been dismissed. Compare the live visual
+  // viewport height against the tallest height seen so far with no keyboard open.
+  // This can't just be captured once at load: mobile browsers grow/shrink their own
+  // chrome (URL bar collapsing on scroll, etc.) well after the page loads, and a
+  // stale baseline can then read as "keyboard open" from browser-chrome changes alone
+  // — which was intermittently re-applying the typing-state layout after a plain tap
+  // on a tray icon, with the keyboard already closed.
+  //
+  // (window.innerHeight - visualViewport.height, the layout-vs-visual-viewport
+  // comparison, looks like the textbook-correct fix for that same false positive —
+  // but real iOS Safari doesn't reliably keep window.innerHeight fixed while the
+  // keyboard is up the way the spec implies, so that version made this function
+  // undercount "yes the keyboard is genuinely open" on real devices too. That
+  // silently broke the mousedown guard below (submit-btn is a .icon-btn, and this
+  // is the only thing stopping tapping it from blurring the input): tapping the
+  // submit button while typing started blurring the field and dismissing the
+  // keyboard instead of submitting with it still open. Reverted to the baseline
+  // comparison, which is what real devices were actually tested against.
+  var noKeyboardHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   function isKeyboardOpen(){
     if (!window.visualViewport) return false;
-    return (window.innerHeight - window.visualViewport.height) > 150;
+    return (noKeyboardHeight - window.visualViewport.height) > 150;
   }
 
   function updateAppHeight(){
     var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    if (h > noKeyboardHeight) noKeyboardHeight = h;
     document.documentElement.style.setProperty('--app-height', h + 'px');
   }
   updateAppHeight();
