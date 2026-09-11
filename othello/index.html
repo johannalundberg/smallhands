@@ -251,7 +251,7 @@
     }
   }
 
-  @media (max-height: 500px) and (orientation: landscape){
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
     :root{
       --unit: clamp(8px, 3.5vh, 14px);
       --icon-size: clamp(40px, 14vh, 64px);
@@ -268,7 +268,7 @@
     justify-content:center;
   }
   .rotate-block svg{ width:min(50vh, 320px); height:auto; }
-  @media (max-height: 500px) and (orientation: landscape){
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
     .rotate-block{ display:flex; }
   }
 </style>
@@ -376,7 +376,7 @@
     window.addEventListener('resize', updateAppHeight);
   }
 
-  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (orientation:landscape)');
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
     if (wasInLandscapeBlock && !e.matches) {

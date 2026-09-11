@@ -286,7 +286,7 @@
      phone), so on a short, wide landscape screen it overshoots badly — the reserved
      top+bottom padding alone can exceed the entire viewport height. Switch to
      vh-based sizing here so everything scales against the constrained dimension. */
-  @media (max-height: 500px) and (orientation: landscape){
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
     :root{
       --hero-size: clamp(2.2rem, 30vh, 140px);
       --unit: clamp(8px, 3.5vh, 14px);
@@ -297,7 +297,13 @@
   /* No game here is designed to work in phone landscape — rather than a half-broken
      cramped layout, block it outright with a plain "please rotate" screen. Matches
      the same phone-landscape condition already used elsewhere (a landscape tablet has
-     enough height to stay excluded and keeps its normal, working layout). */
+     enough height to stay excluded and keeps its normal, working layout).
+     The min-width guards against a false positive from the on-screen keyboard: opening
+     it shrinks the visual viewport's height (not its width), and on a narrow-enough
+     portrait phone that alone can flip CSS's width>height "orientation:landscape" test
+     true without the device actually rotating — instantly covering the answer input
+     with this block the moment it's tapped. Real landscape phones are all well past
+     500px wide; a keyboard-shrunk portrait viewport never is. */
   .rotate-block{
     display:none;
     position:fixed;
@@ -308,7 +314,7 @@
     justify-content:center;
   }
   .rotate-block svg{ width:min(50vh, 320px); height:auto; }
-  @media (max-height: 500px) and (orientation: landscape){
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
     .rotate-block{ display:flex; }
   }
 </style>
@@ -478,7 +484,7 @@
   // the viewport meta wasn't enough to unstick it, so instead: reload outright
   // the moment the device leaves that blocked landscape state. A fresh load
   // can't inherit a stuck scale — there's nothing left to get stuck.
-  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (orientation:landscape)');
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
     if (wasInLandscapeBlock && !e.matches) {
