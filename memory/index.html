@@ -146,7 +146,7 @@
   .tile-inner{
     position:absolute; inset:0;
     transform-style:preserve-3d;
-    transition: transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 700ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .tile.open .tile-inner, .tile.matched .tile-inner{ transform:rotateY(180deg); }
   .tile-face{
@@ -299,10 +299,14 @@
 (function(){
   "use strict";
 
+  // mobileWidthPct caps the grid width to this percent of the viewport on the
+  // phone breakpoint specifically (Figma phone frames 39:318/39:950/39:1110)
+  // — easy's tiles read noticeably smaller there, medium slightly smaller, hard
+  // is unrestricted (already right, per Johanna).
   var TIERS = {
-    easy:   { cols:4, rows:2, maxW:1000 },
-    medium: { cols:6, rows:3, maxW:1200 },
-    hard:   { cols:7, rows:4, maxW:1200 }
+    easy:   { cols:4, rows:2, maxW:1000, mobileWidthPct:58 },
+    medium: { cols:6, rows:3, maxW:1200, mobileWidthPct:83 },
+    hard:   { cols:7, rows:4, maxW:1200, mobileWidthPct:null }
   };
 
   // Placeholder pair art until real tile drawings are ready: a flat CSS shape
@@ -436,7 +440,11 @@
 
     els.grid.style.setProperty('--cols', cols);
     els.grid.style.setProperty('--aspect', cols / rows);
-    els.grid.style.setProperty('--grid-max', tier.maxW + 'px');
+    var gridMax = tier.maxW;
+    if (mobileMQ.matches && tier.mobileWidthPct) {
+      gridMax = Math.min(gridMax, window.innerWidth * (tier.mobileWidthPct / 100));
+    }
+    els.grid.style.setProperty('--grid-max', gridMax + 'px');
 
     // Match the Figma sketch's gap-to-tile-size ratio (~8%) exactly at every tier and
     // breakpoint, rather than a flat gap that balloons proportionally on tiers with
