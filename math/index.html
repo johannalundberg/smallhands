@@ -245,9 +245,6 @@
     .equation-tap.active .submit-btn{
       bottom:0;
     }
-    /* position:fixed (not absolute) so it stays anchored to the true viewport,
-       ignoring the keyboard-aware shrinking body height — it simply sits behind the
-       keyboard when one is open, rather than trying to track above it. */
     .controls-slider{
       display:flex;
       align-items:flex-end;
@@ -264,15 +261,22 @@
       scrollbar-width:none;
     }
     .controls-slider::-webkit-scrollbar{ display:none; }
+    /* position:fixed alone doesn't reliably stay pinned to the layout viewport (and
+       so hidden behind the keyboard) on current mobile WebKit — in practice it
+       tracks the shrunk visual viewport instead, landing right on top of the
+       keyboard. Hide it outright instead of counting on that. */
+    body:has(.equation-tap.active) .controls-slider{
+      display:none;
+    }
     .op-group, .diff-group, .btn-row{ display:contents; }
     .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
     /* Reserve room at the top for the progress dots in both states, so centering
        the remaining space always centers the equation below the dots.
        Idle: also reserve room at the bottom for the slider tray + independently-
-       floating submit button. Typing: the tray is hidden behind the keyboard now
-       (position:fixed, ignores the keyboard-aware body height), and the submit
-       button's own space is reserved inside .equation-tap itself — so body only
-       needs a small buffer to clear the keyboard, not the whole tray+button stack. */
+       floating submit button. Typing: the tray is now display:none (see above), and
+       the submit button's own space is reserved inside .equation-tap itself — so
+       body only needs a small buffer to clear the keyboard, not the whole
+       tray+button stack. */
     body{
       padding-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
       padding-bottom: calc(var(--unit) * 3 + var(--icon-size) * 2);
