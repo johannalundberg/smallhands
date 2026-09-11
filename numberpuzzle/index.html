@@ -388,13 +388,17 @@
       if (remaining === 0) done();
     }
     // Every digit SVG has a full-canvas stroke rect (stroke="#E4E4E4", the shared
-    // --bright color) meant to blend into whatever background it sits on — but a
-    // stroke that only approximately matches its background is never quite
-    // invisible, and on some screens (mobile especially) it shows as a faint
-    // border. So it's recolored to an exact match per variant: the piece-blue
-    // background for the normal in-play piece, success-green for the solved
-    // overlay (which also needs its fill rect recolored blue -> green, since
-    // that's the actual background swap for that variant).
+    // --bright color). Every piece's <img> is the SAME whole-board bitmap
+    // (getDigitBitmap renders the full board, not one piece), just cropped into
+    // place per cell via translate + overflow:hidden — so this stroke only ever
+    // falls at the true outer edge of the whole assembled board, against the
+    // page's own background, never at a seam between two pieces. For the normal
+    // in-play piece that backdrop is the page bg (yellow here), which the stroke
+    // was never a match for, so it's dropped entirely (stroke="none"). The solved
+    // overlay is the one case where recoloring instead of dropping is correct:
+    // its fill rect swaps blue -> green, and the page background is switched to
+    // that same green for the whole time it's shown, so a green stroke actually
+    // does blend into its real backdrop.
     function loadRecolored(svgText, replacements, onImg){
       var recolored = svgText;
       replacements.forEach(function(r){ recolored = recolored.replace(r[0], r[1]); });
@@ -408,7 +412,7 @@
     DIGIT_SRC.forEach(function(src, d){
       fetch(src).then(function(r){ return r.text(); }).then(function(svgText){
         loadRecolored(svgText, [
-          [/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1#707EFF$2']
+          [/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1none$2']
         ], function(img){
           DIGIT_IMG[d] = img; // kept for on-demand bitmap rendering, see getDigitBitmap()
           var canvas = document.createElement('canvas');
