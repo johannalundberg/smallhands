@@ -537,6 +537,18 @@
   function syncEquationActiveState(){
     if (!isKeyboardOpen()) {
       els.equationTap.classList.remove('active');
+      // Dismissing the keyboard this way never blurs the input (that's the whole
+      // reason this listener exists — see above), so document.activeElement is
+      // still the answer input at this point, keyboard or not. Left alone, the
+      // very next tap on a tray button lands as a touch on a still-focused text
+      // input, and iOS can silently resurrect the keyboard from that alone —
+      // reopening it (and re-hiding the tray) right as the user picks a new
+      // operator, with nothing about that tap ever reaching this input directly.
+      // Release focus for real once the keyboard is confirmed gone, so later taps
+      // have nothing residual to resurrect it from.
+      if (document.activeElement === els.answerInput) {
+        els.answerInput.blur();
+      }
     }
   }
   if (window.visualViewport) {
