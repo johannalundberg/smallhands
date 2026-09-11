@@ -332,7 +332,6 @@
     [120,-20,20,5,5,20,-20,120]
   ];
 
-  var EASY_GREEDY_CHANCE = 0.2; // easy AI mostly plays randomly, but sometimes grabs the biggest flip — real (if occasional) resistance, not a total pushover. Kept low because greedy in Othello is an aggressive maximizing move (unlike tictactoe's purely defensive block), so it reads as tougher at the same probability.
   var HARD_MISTAKE_CHANCE = 0.15; // hard AI occasionally plays the greedy move instead of the minimax-best one
 
   var state = {
@@ -589,6 +588,19 @@
     return best;
   }
 
+  // Deliberately weak: picks the move that captures the fewest discs (ties broken
+  // randomly) instead of just playing randomly — Othello's own complexity already
+  // makes it feel much harder than tic-tac-toe at a comparable "mostly random" AI
+  // strength, so easy needs a bigger, clearer handicap than that.
+  function weakestMove(moves){
+    var min = moves[0].flips.length;
+    for (var i = 1; i < moves.length; i++) {
+      if (moves[i].flips.length < min) min = moves[i].flips.length;
+    }
+    var weakest = moves.filter(function(m){ return m.flips.length === min; });
+    return weakest[Math.floor(Math.random() * weakest.length)];
+  }
+
   function evaluate(board){
     var score = 0;
     for (var r = 0; r < N; r++) {
@@ -632,8 +644,7 @@
     if (moves.length === 0) return null;
 
     if (state.difficulty === 'easy') {
-      if (Math.random() < EASY_GREEDY_CHANCE) return greedyMove(moves);
-      return moves[Math.floor(Math.random() * moves.length)];
+      return weakestMove(moves);
     }
     if (state.difficulty === 'medium') {
       return greedyMove(moves);
