@@ -181,9 +181,17 @@
   .disc-face.white{ background:var(--bright); }
   .disc-face.black{ background:var(--ink); transform:rotateY(180deg); }
 
-  /* No text anywhere on these sites — when a side has no legal move and must
-     pass (either player), the board flashes this orange instead of a message. */
+  /* No text anywhere on these sites. The orange flash is reserved for the game
+     truly ending early (neither side has a legal move, board isn't full yet) —
+     shown once, right before the win/lose/tie reveal. */
   .board.pass-flash .cell{ background:#F37745; }
+
+  /* A single side skipping its turn mid-game (the other side still has a legal
+     move) is common in Othello and isn't the end of anything — instead of
+     flashing the whole board, just dim that side's own discs to show they're
+     sitting this round out. */
+  .board.pass-dim-black .disc.placed.is-black{ opacity:0.4; }
+  .board.pass-dim-white .disc.placed:not(.is-black){ opacity:0.4; }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -540,7 +548,7 @@
     if (legalMoves(state.board, opponent).length > 0) {
       setTurn(opponent);
     } else if (legalMoves(state.board, justMoved).length > 0) {
-      flashPass(function(){ setTurn(justMoved); });
+      dimPass(opponent, function(){ setTurn(justMoved); });
     } else {
       endGame();
     }
@@ -567,14 +575,34 @@
     }, 700);
   }
 
+  function dimPass(skippedColor, after){
+    var cls = skippedColor === 'B' ? 'pass-dim-black' : 'pass-dim-white';
+    els.board.classList.add(cls);
+    setTimeout(function(){
+      els.board.classList.remove(cls);
+      after();
+    }, 700);
+  }
+
   function endGame(){
     state.over = true;
     var counts = countDiscs(state.board);
-    if (counts.B === counts.W) {
-      // A tie is genuinely neutral, not a loss — no fanfare either way.
-      setTimeout(startGame, 1200);
+    var full = (counts.B + counts.W) === N * N;
+    function reveal(){
+      if (counts.B === counts.W) {
+        // A tie is genuinely neutral, not a loss — no fanfare either way.
+        setTimeout(startGame, 1200);
+      } else {
+        setTimeout(function(){ showCelebration(counts.B > counts.W); }, 400);
+      }
+    }
+    // Neither side has a legal move — the game is over. If the board still has
+    // empty cells, that's an early/unusual end, so flash orange once before the
+    // reveal; a normal full-board finish goes straight to it.
+    if (full) {
+      reveal();
     } else {
-      setTimeout(function(){ showCelebration(counts.B > counts.W); }, 400);
+      flashPass(reveal);
     }
   }
 
