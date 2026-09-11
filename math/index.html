@@ -51,7 +51,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    transition: background 80ms ease;
+    transition: background 80ms ease, padding-bottom 250ms ease;
   }
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
@@ -229,13 +229,21 @@
       bottom: calc(var(--unit) * 2 + var(--icon-size));
       top:auto;
       transform: translateZ(0);
+      transition: transform 120ms ease, bottom 250ms ease;
     }
     .submit-btn:active{ transform: translateZ(0) scale(0.94); }
     /* Typing: let body's own flex-centering (below) place this, same mechanism as
        idle — reserving space below the equation for the button so the pair centers
        as a group. The button stays position:absolute in both states (never switches
        schemes) — aspect-ratio on .icon-btn now guarantees its rendered size exactly
-       matches --icon-size, so this reservation can't under/overshoot the real size. */
+       matches --icon-size, so this reservation can't under/overshoot the real size.
+       padding-bottom transitions on the base class (not just .active) so it animates
+       both entering and leaving the typing state, in step with body's own padding
+       transition below — otherwise the equation+button pair snapped straight to its
+       new centered position the instant the keyboard opened or closed. */
+    .equation-tap{
+      transition: padding-bottom 250ms ease;
+    }
     .equation-tap.active{
       position:relative;
       width:100%;
@@ -455,22 +463,25 @@
   // document.activeElement alone can't tell us whether the on-screen keyboard is
   // actually visible: tapping an icon button never blurs the answer input (by design,
   // see the mousedown handler below), so it stays the "active element" forever once
-  // focused once, even after the keyboard has been dismissed. Compare the live visual
-  // viewport height against the tallest height seen so far with no keyboard open.
-  // This can't just be captured once at load: mobile browsers grow/shrink their own
-  // chrome (URL bar collapsing on scroll, etc.) well after the page loads, and a
-  // stale baseline can then read as "keyboard open" from browser-chrome changes alone
-  // — which was intermittently re-applying the typing-state layout after a plain tap
-  // on a tray icon, with the keyboard already closed.
-  var noKeyboardHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  // focused once, even after the keyboard has been dismissed. Compare the layout
+  // viewport (window.innerHeight, which an on-screen keyboard never changes — that's
+  // the whole point of the layout/visual viewport split) against the live visual
+  // viewport instead of any recorded "tallest height seen" baseline: a baseline can
+  // only ever grow or shrink in one direction from wherever it started, so ordinary
+  // mobile-browser chrome resizing (Safari's URL bar collapsing on scroll, then
+  // re-expanding later) that happens to land on the wrong side of it still misreads
+  // as "keyboard open" — which was intermittently re-applying the typing-state layout
+  // (and hiding the tray with it) after a plain tap on a tray icon, keyboard never
+  // involved. Layout vs. visual viewport doesn't have that direction problem: browser
+  // chrome resizes both together, keeping their difference near zero, while only a
+  // real keyboard opens a gap between them.
   function isKeyboardOpen(){
     if (!window.visualViewport) return false;
-    return (noKeyboardHeight - window.visualViewport.height) > 150;
+    return (window.innerHeight - window.visualViewport.height) > 150;
   }
 
   function updateAppHeight(){
     var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    if (h > noKeyboardHeight) noKeyboardHeight = h;
     document.documentElement.style.setProperty('--app-height', h + 'px');
   }
   updateAppHeight();
@@ -556,7 +567,15 @@
     els.answerInput.value = '';
     els.answerInput.maxLength = String(state.answerValue).length;
     render();
-    if (isKeyboardOpen()) focusInput();
+    // Re-derived from .active itself (already the reliable, event-driven signal for
+    // "currently typing" — see focus/blur below), not a fresh isKeyboardOpen() call:
+    // that viewport-height heuristic can momentarily misread true from ordinary
+    // browser-chrome changes (Safari's address bar expanding, say) that have nothing
+    // to do with the keyboard — which used to be harmless when this only decided
+    // whether to refocus, but now also decides whether the tray is hidden, so a
+    // false positive here would hide it right after an operator/difficulty tap made
+    // with the keyboard closed.
+    if (els.equationTap.classList.contains('active')) focusInput();
   }
 
   function focusInput(){
