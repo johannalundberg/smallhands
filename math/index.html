@@ -526,8 +526,18 @@
   // in the typing state. Re-sync it directly off actual keyboard visibility whenever
   // the viewport changes, so it snaps back to the idle layout regardless of how the
   // keyboard was dismissed.
+  // One-directional on purpose: only ever clears .active, never sets it. The keyboard
+  // can't appear without the input being focused first, so focus (below) is always
+  // what turns typing state on — this only needs to catch it turning off without a
+  // blur. Toggling both ways using isKeyboardOpen()'s baseline-height heuristic (see
+  // its own comment — needed as-is for the mousedown guard below) meant an ordinary
+  // browser-chrome resize alone could flip .active back on here too, with nothing
+  // clicked and no keyboard involved — hiding the tray and, worse, fighting the real
+  // dismissal's own transition into a jerky double-step instead of one smooth pass.
   function syncEquationActiveState(){
-    els.equationTap.classList.toggle('active', isKeyboardOpen());
+    if (!isKeyboardOpen()) {
+      els.equationTap.classList.remove('active');
+    }
   }
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', syncEquationActiveState);
