@@ -347,9 +347,9 @@
   // Loaded Image per digit, kept around so getDigitBitmap() (defined further down)
   // can re-rasterize on demand at whatever size the board currently needs.
   var DIGIT_IMG = {};
-  // Each digit SVG has its own faint 1px decorative border stroke around the full
-  // image, which bleeds a slight (~29 delta) tint into perimeter cells when sliced —
-  // not real glyph content (that reads ~116 delta). Tolerance sits between the two.
+  // Anti-aliasing at cell boundaries can bleed a slight tint into an otherwise-
+  // blank perimeter cell — not real glyph content (that reads ~116 delta).
+  // Tolerance stays generous enough to absorb that without masking real ink.
   var BLANK_TOLERANCE = 60;
 
   function computeBlanksForDigit(ctx, size, n){
@@ -387,44 +387,46 @@
       remaining -= 1;
       if (remaining === 0) done();
     }
-    DIGIT_SRC.forEach(function(src, d){
+    // Every digit SVG has a full-canvas stroke rect (stroke="#E4E4E4", the shared
+    // --bright color) meant to blend into whatever background it sits on — but a
+    // stroke that only approximately matches its background is never quite
+    // invisible, and on some screens (mobile especially) it shows as a faint
+    // border. So it's recolored to an exact match per variant: the piece-blue
+    // background for the normal in-play piece, success-green for the solved
+    // overlay (which also needs its fill rect recolored blue -> green, since
+    // that's the actual background swap for that variant).
+    function loadRecolored(svgText, replacements, onImg){
+      var recolored = svgText;
+      replacements.forEach(function(r){ recolored = recolored.replace(r[0], r[1]); });
+      var blob = new Blob([recolored], { type: 'image/svg+xml' });
+      var url = URL.createObjectURL(blob);
       var img = new Image();
-      img.onload = function(){
-        DIGIT_IMG[d] = img; // kept for on-demand bitmap rendering, see getDigitBitmap()
-        var canvas = document.createElement('canvas');
-        canvas.width = BLANK_SAMPLE_SIZE;
-        canvas.height = BLANK_SAMPLE_SIZE;
-        var ctx = canvas.getContext('2d', { willReadFrequently: true });
-        ctx.drawImage(img, 0, 0, BLANK_SAMPLE_SIZE, BLANK_SAMPLE_SIZE);
-        [2, 3, 4].forEach(function(n){
-          BLANK_CACHE[d + '_' + n] = computeBlanksForDigit(ctx, BLANK_SAMPLE_SIZE, n);
-        });
-        finish();
-      };
+      img.onload = function(){ onImg(img); URL.revokeObjectURL(url); finish(); };
       img.onerror = finish;
-      img.src = src;
-
+      img.src = url;
+    }
+    DIGIT_SRC.forEach(function(src, d){
       fetch(src).then(function(r){ return r.text(); }).then(function(svgText){
-        // the only piece-blue fill in the file is this single full-canvas rect —
-        // recoloring it to success-green keeps the rect (so the image stays opaque)
-        // while swapping the background color the glyph sits on. The file also has a
-        // full-canvas stroke rect (stroke="#E4E4E4", the shared --bright color) meant
-        // to blend into the piece-blue background; on green it reads as a visible
-        // border, so recolor that too so it keeps blending in rather than standing out.
-        var recolored = svgText
-          .replace(/(<rect[^>]*fill=")#707EFF("[^>]*\/>)/, '$1#04D052$2')
-          .replace(/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1#04D052$2');
-        var blob = new Blob([recolored], { type: 'image/svg+xml' });
-        var url = URL.createObjectURL(blob);
-        var timg = new Image();
-        timg.onload = function(){
-          DIGIT_IMG_GREEN[d] = timg;
-          URL.revokeObjectURL(url);
-          finish();
-        };
-        timg.onerror = finish;
-        timg.src = url;
-      }).catch(finish);
+        loadRecolored(svgText, [
+          [/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1#707EFF$2']
+        ], function(img){
+          DIGIT_IMG[d] = img; // kept for on-demand bitmap rendering, see getDigitBitmap()
+          var canvas = document.createElement('canvas');
+          canvas.width = BLANK_SAMPLE_SIZE;
+          canvas.height = BLANK_SAMPLE_SIZE;
+          var ctx = canvas.getContext('2d', { willReadFrequently: true });
+          ctx.drawImage(img, 0, 0, BLANK_SAMPLE_SIZE, BLANK_SAMPLE_SIZE);
+          [2, 3, 4].forEach(function(n){
+            BLANK_CACHE[d + '_' + n] = computeBlanksForDigit(ctx, BLANK_SAMPLE_SIZE, n);
+          });
+        });
+        loadRecolored(svgText, [
+          [/(<rect[^>]*fill=")#707EFF("[^>]*\/>)/, '$1#04D052$2'],
+          [/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1#04D052$2']
+        ], function(img){
+          DIGIT_IMG_GREEN[d] = img;
+        });
+      }).catch(function(){ finish(); finish(); });
     });
   }
 
