@@ -110,6 +110,29 @@
     50%{ opacity:0.5; transform:scale(1.12); }
   }
 
+  /* Previews connecting A -> B -> C: each segment draws in (stroke-dasharray sized
+     to its own exact length) in turn, and the pulsating ring-group (still just
+     breathing in place via ring-breathe, unchanged) hops to whichever dot is
+     current — B once A->B finishes, C once B->C finishes — before the whole
+     loop resets straight back to A. */
+  .dots-badge .connect-line.seg-ab{ stroke-dasharray:148; animation: dots-draw-ab 4.5s ease-in-out infinite; }
+  .dots-badge .connect-line.seg-bc{ stroke-dasharray:96; animation: dots-draw-bc 4.5s ease-in-out infinite; }
+  .dots-badge .ring-group{ animation: dots-ring-move 4.5s ease-in-out infinite; }
+
+  @keyframes dots-draw-ab{
+    0%, 4%{ stroke-dashoffset:148; }
+    22%, 100%{ stroke-dashoffset:0; }
+  }
+  @keyframes dots-draw-bc{
+    0%, 48%{ stroke-dashoffset:96; }
+    66%, 100%{ stroke-dashoffset:0; }
+  }
+  @keyframes dots-ring-move{
+    0%, 18%{ transform:translate(0,0); }
+    24%, 62%{ transform:translate(125px,79px); }
+    68%, 100%{ transform:translate(45px,132px); }
+  }
+
   .puzzle-badge .pz-frame{ position:absolute; inset:0; width:100%; height:100%; display:block; opacity:0; animation: pz-fade3 4.5s ease-in-out infinite; }
   .puzzle-badge .pz-frame:nth-child(1){ animation-delay:0s; }
   .puzzle-badge .pz-frame:nth-child(2){ animation-delay:-1.5s; }
@@ -305,11 +328,15 @@
     <a class="tile" href="connectthedots/" aria-label="Connect the Dots">
       <div class="badge dots-badge">
         <svg viewBox="0 0 200 200">
-          <line class="connect-line" x1="150" y1="112" x2="25" y2="34"/>
-          <circle class="ring outer" cx="25" cy="33" r="12.5"/>
-          <circle class="ring" cx="25" cy="33" r="9.5"/>
+          <line class="connect-line seg-ab" x1="25" y1="33" x2="150" y2="112"/>
+          <line class="connect-line seg-bc" x1="150" y1="112" x2="70" y2="165"/>
+          <g class="ring-group">
+            <circle class="ring outer" cx="25" cy="33" r="12.5"/>
+            <circle class="ring" cx="25" cy="33" r="9.5"/>
+          </g>
           <circle class="dot" cx="25" cy="33" r="6"/>
           <circle class="dot" cx="150" cy="112" r="6"/>
+          <circle class="dot" cx="70" cy="165" r="6"/>
         </svg>
       </div>
     </a>
