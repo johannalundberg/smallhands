@@ -142,12 +142,17 @@
      one unsliced image — slicing the same picture across several elements left a
      persistent hairline seam at the shared edge no matter the technique (confirmed
      down to device-pixel-matched, nearest-neighbor-rendered <img> crops); a single
-     image has nothing left to disagree with itself about. */
+     image has nothing left to disagree with itself about. Sized 1px larger than its
+     box on every side (rather than a flush inset:0) so it fully covers the board
+     underneath even when the board's own fractional CSS width rounds to a slightly
+     smaller device-pixel box than this element gets — seen on mobile Safari as a
+     hairline of the piece grid peeking through along the right and bottom edges,
+     where that rounding shortfall lands. */
   .board-solved-img{
     position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
+    top:-1px; left:-1px;
+    width:calc(100% + 2px);
+    height:calc(100% + 2px);
     opacity:0;
     pointer-events:none;
     transition: opacity 300ms ease;
