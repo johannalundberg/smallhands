@@ -373,7 +373,7 @@
       <div class="equation" id="equation">
         <span class="num" id="numA">--</span><span class="num" id="opSign">+</span><span class="num" id="numB">--</span><span class="num">=</span><span class="answer-slots" id="answerSlots"></span>
       </div>
-      <input class="answer-input" id="answerInput" type="number" inputmode="numeric" autocomplete="off" enterkeyhint="next" aria-label="Type your answer">
+      <input class="answer-input" id="answerInput" type="number" inputmode="numeric" autocomplete="off" enterkeyhint="done" aria-label="Type your answer">
     </div>
     <button class="icon-btn submit-btn" id="submitBtn" aria-label="Check answer" disabled>
       <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="fill-glyph" d="M113.9717 79.8692L117 77.207L114.1475 74.3565L83.7705 43.999L78.4268 49.3467L102.0029 72.9082L34 72.9082L34 80.1953L102.1533 80.1953L78.6025 100.906L83.5947 106.584L113.9717 79.8692Z"/></svg>
@@ -595,7 +595,7 @@
       btn.classList.toggle('active', state.difficulty === tier);
     });
 
-    els.submitBtn.disabled = state.busy || state.input.length === 0;
+    els.submitBtn.disabled = state.busy || state.input.length < String(state.answerValue).length;
     fitEquationText();
   }
 
@@ -688,7 +688,8 @@
   }
 
   function submitAnswer(){
-    if (state.busy || state.input.length === 0) return;
+    var maxLen = String(state.answerValue).length;
+    if (state.busy || state.input.length < maxLen) return;
     var guess = parseInt(state.input, 10);
     if (guess === state.answerValue) {
       flashCorrect();
