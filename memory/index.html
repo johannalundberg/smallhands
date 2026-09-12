@@ -442,10 +442,10 @@
       '</g>'
     ) },
     { name: 'cloud', bg: '#3DB2C9', svg: iconSvg(
-      '<circle fill="' + ICON_FILL + '" cx="9.5" cy="6.5" r="3.5"/>' +
-      '<circle fill="' + ICON_FILL + '" cx="4.5" cy="8.5" r="2.5"/>' +
-      '<circle fill="' + ICON_FILL + '" cx="14.6" cy="8.4" r="3.6"/>' +
-      '<rect fill="' + ICON_FILL + '" x="2" y="8.5" width="16.2" height="3.5"/>' +
+      '<circle fill="' + ICON_FILL + '" cx="9.5" cy="7.5" r="3.5"/>' +
+      '<circle fill="' + ICON_FILL + '" cx="4.5" cy="9.5" r="2.5"/>' +
+      '<circle fill="' + ICON_FILL + '" cx="14.6" cy="9.4" r="3.6"/>' +
+      '<rect fill="' + ICON_FILL + '" x="2" y="9.5" width="16.2" height="3.5"/>' +
       '<g class="frame-a"></g>' +
       '<g class="frame-b">' +
         '<rect fill="' + ICON_FILL + '" x="5" y="14" width="1" height="1"/>' +
@@ -461,9 +461,24 @@
     ) }
   ];
 
-  function pairArt(i){
-    if (i < REAL_ICONS.length) return { icon: REAL_ICONS[i] };
-    return { shape: SHAPES[i % SHAPES.length], color: COLORS[i % COLORS.length] };
+  // Picks which pair art appears this game, and in what order pair ids are
+  // handed out -- both randomized per build, so easy/medium don't always
+  // show the same subset of finished icons (when there are more finished
+  // icons than a tier needs, e.g. easy's 4 pairs from 5 icons, a different
+  // one sits out each time) or the same placeholder shapes.
+  function buildPairArts(pairsNeeded){
+    if (pairsNeeded <= REAL_ICONS.length) {
+      return shuffle(REAL_ICONS.slice()).slice(0, pairsNeeded).map(function(icon){
+        return { icon: icon };
+      });
+    }
+    var placeholderPool = [];
+    for (var i = 0; i < COLORS.length; i++) {
+      placeholderPool.push({ shape: SHAPES[i % SHAPES.length], color: COLORS[i] });
+    }
+    var placeholders = shuffle(placeholderPool).slice(0, pairsNeeded - REAL_ICONS.length);
+    var reals = REAL_ICONS.map(function(icon){ return { icon: icon }; });
+    return shuffle(reals.concat(placeholders));
   }
 
   var state = {
@@ -471,6 +486,7 @@
     open: [],
     matched: 0,
     pairsNeeded: 4,
+    arts: [],
     busy: false
   };
 
@@ -525,7 +541,7 @@
   }
 
   function makeTile(pairId){
-    var art = pairArt(pairId);
+    var art = state.arts[pairId];
     var tile = document.createElement('div');
     tile.className = 'tile';
     tile.dataset.pair = pairId;
@@ -582,6 +598,7 @@
     if (mobileMQ.matches) { cols = tier.rows; rows = tier.cols; }
     var total = cols * rows;
     state.pairsNeeded = total / 2;
+    state.arts = buildPairArts(state.pairsNeeded);
     state.open = [];
     state.matched = 0;
     state.busy = false;
