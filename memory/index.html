@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <style>
   :root{
-    --bg:#3632F6;
+    --bg:#707EFF;
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
@@ -158,10 +158,10 @@
     align-items:center;
     justify-content:center;
   }
-  /* card back: flat placeholder orange (matches the Figma sketch) on every
-     tile until it's flipped — the actual pair art only exists on the front
-     face, so nothing here can leak which tile is which before a player picks it. */
-  .tile-face.back{ background:#F37745; }
+  /* card back: flat near-black (matches the Figma colourway) on every tile
+     until it's flipped — the actual pair art only exists on the front face,
+     so nothing here can leak which tile is which before a player picks it. */
+  .tile-face.back{ background:#111111; }
   .tile-face.front{ transform:rotateY(180deg); }
 
   .tile-shape{ position:relative; width:62%; height:62%; background:currentColor; }
@@ -193,7 +193,7 @@
     96%{ transform:scaleY(0.12); }
   }
 
-  /* ---------- finished pair art (robot / snail / dino) ---------- */
+  /* ---------- finished pair art (robot / snail / ghost) ---------- */
   .tile-face.front svg{ width:100%; height:100%; display:block; }
   /* Adjacent 1x1 grid squares (antennae, legs, stalks) can show a hairline seam
      from anti-aliasing at the shared sub-pixel edge -- crisp (non-anti-aliased)
@@ -346,7 +346,7 @@
   function iconSvg(inner){ return '<svg viewBox="0 0 20 20">' + inner + '</svg>'; }
 
   var REAL_ICONS = [
-    { name: 'robot', bg: '#707EFF', svg: iconSvg(
+    { name: 'robot', bg: '#F37745', svg: iconSvg(
       '<rect fill="' + ICON_FILL + '" x="3" y="7" width="14" height="9" rx="0.8"/>' +
       '<rect fill="' + ICON_FILL + '" x="8" y="6" width="1" height="1"/>' +
       '<rect fill="' + ICON_FILL + '" x="11" y="6" width="1" height="1"/>' +
@@ -387,46 +387,12 @@
         '<rect fill="' + ICON_FILL + '" x="3" y="12" width="1" height="1.1"/>' +
       '</g>'
     ) },
-    { name: 'dino', bg: '#A7CF56', svg: iconSvg(
-      '<path fill="' + ICON_FILL + '" d="M19,5 C19,5.55229 18.5523,6 18,6 L8,6 L8,2 C8,1.44772 8.44771,1 9,1 L18,1 C18.5523,1 19,1.44772 19,2 L19,5 Z"/>' +
-      '<rect fill="' + ICON_FILL + '" x="13" y="7" width="4" height="1" rx="0.5"/>' +
-      '<rect fill="' + ICON_FILL + '" x="8" y="5" width="6" height="3"/>' +
-      '<rect fill="' + ICON_FILL + '" x="8" y="7.5" width="5" height="5"/>' +
-      '<rect fill="' + ICON_FILL + '" x="7" y="8" width="5" height="5"/>' +
-      '<rect fill="' + ICON_FILL + '" x="6" y="9" width="5" height="5"/>' +
-      '<path fill="' + ICON_FILL + '" d="M12,15 C12,15.5523 11.5523,16 11,16 L5,16 L5,10 L12,10 L12,15 Z"/>' +
-      '<path fill="' + ICON_FILL + '" d="M8,16 L4,16 C3.44771,16 3,15.5523 3,15 L3,11 L8,11 L8,16 Z"/>' +
-      '<rect fill="' + ICON_FILL + '" x="1" y="10" width="2" height="3"/>' +
-      '<rect fill="' + ICON_FILL + '" x="1" y="9" width="1" height="3"/>' +
-      '<rect fill="' + ICON_FILL + '" x="2" y="11" width="2" height="2"/>' +
-      '<rect fill="' + ICON_FILL + '" x="13" y="10" width="3" height="1"/>' +
-      '<rect fill="' + ICON_FILL + '" x="15" y="11" width="1" height="1"/>' +
-      '<circle fill="#FFFFFF" cx="11" cy="3" r="1"/>' +
-      '<g class="frame-a">' +
-        '<rect fill="' + ICON_FILL + '" x="3" y="17" width="3" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="4" y="15.85" width="3" height="1.15"/>' +
-        '<rect fill="' + ICON_FILL + '" x="3" y="18" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="3" y="19" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="4" y="19" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="8" y="15" width="1" height="2"/>' +
-        '<rect fill="' + ICON_FILL + '" x="9" y="15" width="1" height="2"/>' +
-        '<rect fill="' + ICON_FILL + '" x="9" y="17" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="9" y="18" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="10" y="18" width="1" height="1"/>' +
-      '</g>' +
-      '<g class="frame-b">' +
-        '<rect fill="' + ICON_FILL + '" x="4" y="15.2" width="3" height="1.8"/>' +
-        '<rect fill="' + ICON_FILL + '" x="4" y="17" width="2" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="4" y="18" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="4" y="19" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="5" y="19" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="8" y="15.85" width="1" height="1.15"/>' +
-        '<rect fill="' + ICON_FILL + '" x="9" y="15.85" width="1" height="1.15"/>' +
-        '<rect fill="' + ICON_FILL + '" x="9" y="17" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="10" y="17" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="10" y="18" width="1" height="1"/>' +
-        '<rect fill="' + ICON_FILL + '" x="11" y="18" width="1" height="1"/>' +
-      '</g>'
+    { name: 'ghost', bg: '#FFC93C', svg: iconSvg(
+      '<path fill="#FFFFFF" d="M4,6.7 C4,4.10426 6.10426,2 8.7,2 H11.3 C13.8957,2 16,4.10426 16,6.7 V15 H4 V6.7 Z"/>' +
+      '<g class="frame-a"><path fill="#FFFFFF" d="M7,17.8876 L6.59797,17.4404 C6.27852,17.085 5.72148,17.085 5.40203,17.4404 C4.90923,17.9886 4,17.64 4,16.9028 V6.71145 C4,4.10939 6.10939,2 8.71145,2 H11.2886 C13.8906,2 16,4.10939 16,6.71145 V16.9108 C16,17.6451 15.0942,17.9924 14.6033,17.4463 C14.2824,17.0893 13.7216,17.0928 13.4052,17.4538 L13.019,17.8945 C12.5014,18.485 11.586,18.4964 11.0538,17.9189 L11.0073,17.8684 C10.467,17.282 9.53619,17.2911 9.0031,17.8841 C8.4687,18.4784 7.53423,18.4819 7,17.8876 Z"/></g>' +
+      '<g class="frame-b"><path fill="#FFFFFF" d="M15.2,13.1392 C15.6418,13.1392 16,13.4973 16,13.9392 V16.9134 C16,17.6468 15.0936,17.9917 14.6033,17.4463 C14.2828,17.0897 13.722,17.0924 13.406,17.453 L12.6367,18.3306 C12.3233,18.6882 11.769,18.6951 11.4468,18.3454 L10.5956,17.4216 C10.2761,17.0749 9.72757,17.0782 9.41236,17.4289 L8.59494,18.3382 C8.27711,18.6917 7.72289,18.6917 7.40506,18.3382 L6.59494,17.437 C6.27711,17.0835 5.71987,17.0868 5.40203,17.4404 C4.91172,17.9858 4,17.6468 4,16.9134 V13.9392 C4,13.4973 4.35817,13.1392 4.8,13.1392 H15.2 Z"/></g>' +
+      '<circle fill="var(--bg)" cx="7.5" cy="8.5" r="1.5"/>' +
+      '<circle fill="var(--bg)" cx="12.5" cy="8.5" r="1.5"/>'
     ) }
   ];
 
