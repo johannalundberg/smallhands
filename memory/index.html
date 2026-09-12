@@ -193,6 +193,24 @@
     96%{ transform:scaleY(0.12); }
   }
 
+  /* ---------- finished pair art (robot / bee / snail / ghost / dino) ---------- */
+  .tile-face.front svg{ width:100%; height:100%; display:block; }
+  /* Adjacent 1x1 grid squares (antennae, legs, stalks) can show a hairline seam
+     from anti-aliasing at the shared sub-pixel edge -- crisp (non-anti-aliased)
+     edges remove it, and suit these blocky pixel-art shapes better anyway.
+     Left off circles/ellipses/paths so eyes, wings and the ghost's body stay
+     smoothly curved. */
+  .tile-face.front svg rect{ shape-rendering:crispEdges; }
+  @keyframes frameA{ 0%,49%{ opacity:1; } 50%,100%{ opacity:0; } }
+  @keyframes frameB{ 0%,49%{ opacity:0; } 50%,100%{ opacity:1; } }
+  .frame-a{ animation: frameA 0.7s steps(1) infinite; }
+  .frame-b{ animation: frameB 0.7s steps(1) infinite; }
+  /* Same idea as the placeholder eyes above: only animate while the tile is
+     actually face-up, so a full board isn't cycling 28 animations at once. */
+  .frame-a, .frame-b{ animation-play-state:paused; }
+  .tile.open .frame-a, .tile.open .frame-b,
+  .tile.matched .frame-a, .tile.matched .frame-b{ animation-play-state:running; }
+
   /* ---------- phone: single scrollable slider-menu bar ---------- */
   @media (max-width: 767px), (max-height: 500px){
     :root{
@@ -309,15 +327,142 @@
     hard:   { cols:7, rows:4, maxW:1200, mobileWidthPct:null }
   };
 
-  // Placeholder pair art until real tile drawings are ready: a flat CSS shape
-  // (no SVG assets to swap later) plus a pair of eyes that blink while the
-  // tile is face-up. 7 shapes x up to 2 colors each covers all 14 pairs the
-  // hardest tier needs without repeating a shape+color combo.
+  // Placeholder pair art for the pairs that don't have finished artwork yet: a
+  // flat CSS shape (no SVG assets to swap later) plus a pair of eyes that
+  // blink while the tile is face-up. 7 shapes x up to 2 colors each covers all
+  // remaining pairs the hardest tier needs without repeating a shape+color combo.
   var SHAPES = ['circle', 'square', 'triangle', 'diamond', 'star', 'blob1', 'blob2'];
   var COLORS = ['#F37745', '#04D052', '#FFC93C', '#4FD3DA', '#B98BF2', '#FF6F91', '#8CE38C',
                 '#F2789F', '#5FB0FF', '#FFA94D', '#6EE7B7', '#C084FC', '#FDBA74', '#67E8F9'];
 
+  // Finished pair art: hand-drawn, animated SVGs on a 20x20 grid (one Figma
+  // square = one unit), each on its own assigned background color. Every
+  // shape is exact Figma source geometry, not an approximation -- where a
+  // pair genuinely animates between two hand-authored states (not a uniform
+  // transform), both frames are drawn in full and swapped with a hard cut via
+  // the .frame-a/.frame-b classes above, since nothing simpler stays exact to
+  // both. FILL is the icon's foreground; var(--bg) is swapped for the tile's
+  // own background color below so an eye/cutout reads as "see-through".
+  var ICON_FILL = '#181818';
+  function iconSvg(inner){ return '<svg viewBox="0 0 20 20">' + inner + '</svg>'; }
+
+  var REAL_ICONS = [
+    { name: 'robot', bg: '#707EFF', svg: iconSvg(
+      '<rect fill="' + ICON_FILL + '" x="3" y="7" width="14" height="9" rx="0.8"/>' +
+      '<rect fill="' + ICON_FILL + '" x="8" y="6" width="1" height="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="11" y="6" width="1" height="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="12" y="5" width="1" height="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="13" y="4" width="1" height="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="14" y="3" width="1" height="1"/>' +
+      '<g class="frame-a">' +
+        '<rect fill="' + ICON_FILL + '" x="7" y="5" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="6" y="4" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="5" y="3" width="1" height="1"/>' +
+      '</g>' +
+      '<g class="frame-b">' +
+        '<rect fill="' + ICON_FILL + '" x="9" y="5" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="10" y="4" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="11" y="3" width="1" height="1"/>' +
+      '</g>' +
+      '<circle fill="#FFFFFF" cx="7.5" cy="11.5" r="1.5"/>' +
+      '<circle fill="#FFFFFF" cx="12.5" cy="11.5" r="1.5"/>'
+    ) },
+    { name: 'bee', bg: '#E2C226', svg: iconSvg(
+      '<rect fill="' + ICON_FILL + '" x="13" y="2" width="1" height="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="12" y="3" width="1" height="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="11" y="4" width="1" height="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="6" y="2" width="1" height="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="7" y="3" width="1" height="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="8" y="4" width="1" height="1"/>' +
+      '<g class="frame-a">' +
+        '<circle fill="' + ICON_FILL + '" cx="16.5" cy="7.5" r="2.5"/>' +
+        '<circle fill="' + ICON_FILL + '" cx="3.5" cy="7.5" r="2.5"/>' +
+      '</g>' +
+      '<g class="frame-b">' +
+        '<ellipse fill="' + ICON_FILL + '" cx="16.5" cy="7.5" rx="2.5" ry="1.5"/>' +
+        '<ellipse fill="' + ICON_FILL + '" cx="3.5" cy="7.5" rx="2.5" ry="1.5"/>' +
+      '</g>' +
+      '<rect fill="' + ICON_FILL + '" x="5" y="5" width="10" height="5" rx="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="5" y="7" width="10" height="3"/>' +
+      '<rect fill="' + ICON_FILL + '" x="5" y="11" width="10" height="2"/>' +
+      '<rect fill="' + ICON_FILL + '" x="5" y="14" width="10" height="4" rx="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="5" y="14" width="10" height="3"/>' +
+      '<circle fill="#FFFFFF" cx="7.5" cy="7.5" r="1.5"/>' +
+      '<circle fill="#FFFFFF" cx="12.5" cy="7.5" r="1.5"/>'
+    ) },
+    { name: 'snail', bg: '#E4E4E4', svg: iconSvg(
+      '<circle fill="' + ICON_FILL + '" cx="13.5" cy="10.5" r="5.5"/>' +
+      '<circle fill="var(--bg)" cx="13.5" cy="10.5" r="1.5"/>' +
+      '<rect fill="' + ICON_FILL + '" x="2" y="15" width="17" height="4" rx="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="5" y="14" width="1" height="1"/>' +
+      '<circle fill="#FFFFFF" cx="4" cy="16.5" r="0.5"/>' +
+      '<g class="frame-a">' +
+        '<rect fill="' + ICON_FILL + '" x="3" y="14" width="1" height="1.2"/>' +
+        '<rect fill="' + ICON_FILL + '" x="5" y="13" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="5" y="12" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="2" y="13" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="1" y="12" width="1" height="1"/>' +
+      '</g>' +
+      '<g class="frame-b">' +
+        '<rect fill="' + ICON_FILL + '" x="3" y="14" width="1" height="1.2"/>' +
+        '<rect fill="' + ICON_FILL + '" x="6" y="13" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="7" y="12" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="3" y="13" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="3" y="12" width="1" height="1"/>' +
+      '</g>'
+    ) },
+    { name: 'ghost', bg: '#111111', svg: iconSvg(
+      '<path fill="#FFFFFF" d="M4,6.7 C4,4.10426 6.10426,2 8.7,2 H11.3 C13.8957,2 16,4.10426 16,6.7 V15 H4 V6.7 Z"/>' +
+      '<g class="frame-a"><path fill="#FFFFFF" d="M7,17.8876 L6.59797,17.4404 C6.27852,17.085 5.72148,17.085 5.40203,17.4404 C4.90923,17.9886 4,17.64 4,16.9028 V6.71145 C4,4.10939 6.10939,2 8.71145,2 H11.2886 C13.8906,2 16,4.10939 16,6.71145 V16.9108 C16,17.6451 15.0942,17.9924 14.6033,17.4463 C14.2824,17.0893 13.7216,17.0928 13.4052,17.4538 L13.019,17.8945 C12.5014,18.485 11.586,18.4964 11.0538,17.9189 L11.0073,17.8684 C10.467,17.282 9.53619,17.2911 9.0031,17.8841 C8.4687,18.4784 7.53423,18.4819 7,17.8876 Z"/></g>' +
+      '<g class="frame-b"><path fill="#FFFFFF" d="M15.2,13.1392 C15.6418,13.1392 16,13.4973 16,13.9392 V16.9134 C16,17.6468 15.0936,17.9917 14.6033,17.4463 C14.2828,17.0897 13.722,17.0924 13.406,17.453 L12.6367,18.3306 C12.3233,18.6882 11.769,18.6951 11.4468,18.3454 L10.5956,17.4216 C10.2761,17.0749 9.72757,17.0782 9.41236,17.4289 L8.59494,18.3382 C8.27711,18.6917 7.72289,18.6917 7.40506,18.3382 L6.59494,17.437 C6.27711,17.0835 5.71987,17.0868 5.40203,17.4404 C4.91172,17.9858 4,17.6468 4,16.9134 V13.9392 C4,13.4973 4.35817,13.1392 4.8,13.1392 H15.2 Z"/></g>' +
+      '<circle fill="var(--bg)" cx="7.5" cy="8.5" r="1.5"/>' +
+      '<circle fill="var(--bg)" cx="12.5" cy="8.5" r="1.5"/>'
+    ) },
+    { name: 'dino', bg: '#A7CF56', svg: iconSvg(
+      '<path fill="' + ICON_FILL + '" d="M19,5 C19,5.55229 18.5523,6 18,6 L8,6 L8,2 C8,1.44772 8.44771,1 9,1 L18,1 C18.5523,1 19,1.44772 19,2 L19,5 Z"/>' +
+      '<rect fill="' + ICON_FILL + '" x="13" y="7" width="4" height="1" rx="0.5"/>' +
+      '<rect fill="' + ICON_FILL + '" x="8" y="5" width="6" height="3"/>' +
+      '<rect fill="' + ICON_FILL + '" x="8" y="7.5" width="5" height="5"/>' +
+      '<rect fill="' + ICON_FILL + '" x="7" y="8" width="5" height="5"/>' +
+      '<rect fill="' + ICON_FILL + '" x="6" y="9" width="5" height="5"/>' +
+      '<path fill="' + ICON_FILL + '" d="M12,15 C12,15.5523 11.5523,16 11,16 L5,16 L5,10 L12,10 L12,15 Z"/>' +
+      '<path fill="' + ICON_FILL + '" d="M8,16 L4,16 C3.44771,16 3,15.5523 3,15 L3,11 L8,11 L8,16 Z"/>' +
+      '<rect fill="' + ICON_FILL + '" x="1" y="10" width="2" height="3"/>' +
+      '<rect fill="' + ICON_FILL + '" x="1" y="9" width="1" height="3"/>' +
+      '<rect fill="' + ICON_FILL + '" x="2" y="11" width="2" height="2"/>' +
+      '<rect fill="' + ICON_FILL + '" x="13" y="10" width="3" height="1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="15" y="11" width="1" height="1"/>' +
+      '<circle fill="#FFFFFF" cx="11" cy="3" r="1"/>' +
+      '<g class="frame-a">' +
+        '<rect fill="' + ICON_FILL + '" x="3" y="17" width="3" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="4" y="15.85" width="3" height="1.15"/>' +
+        '<rect fill="' + ICON_FILL + '" x="3" y="18" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="3" y="19" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="4" y="19" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="8" y="15" width="1" height="2"/>' +
+        '<rect fill="' + ICON_FILL + '" x="9" y="15" width="1" height="2"/>' +
+        '<rect fill="' + ICON_FILL + '" x="9" y="17" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="9" y="18" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="10" y="18" width="1" height="1"/>' +
+      '</g>' +
+      '<g class="frame-b">' +
+        '<rect fill="' + ICON_FILL + '" x="4" y="15.2" width="3" height="1.8"/>' +
+        '<rect fill="' + ICON_FILL + '" x="4" y="17" width="2" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="4" y="18" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="4" y="19" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="5" y="19" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="8" y="15.85" width="1" height="1.15"/>' +
+        '<rect fill="' + ICON_FILL + '" x="9" y="15.85" width="1" height="1.15"/>' +
+        '<rect fill="' + ICON_FILL + '" x="9" y="17" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="10" y="17" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="10" y="18" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="11" y="18" width="1" height="1"/>' +
+      '</g>'
+    ) }
+  ];
+
   function pairArt(i){
+    if (i < REAL_ICONS.length) return { icon: REAL_ICONS[i] };
     return { shape: SHAPES[i % SHAPES.length], color: COLORS[i % COLORS.length] };
   }
 
@@ -393,23 +538,30 @@
 
     var front = document.createElement('div');
     front.className = 'tile-face front';
-    front.style.color = art.color;
 
-    var shape = document.createElement('div');
-    shape.className = 'tile-shape shape-' + art.shape;
+    if (art.icon) {
+      front.style.background = art.icon.bg;
+      front.innerHTML = art.icon.svg.replace(/var\(--bg\)/g, art.icon.bg);
+    } else {
+      front.style.color = art.color;
 
-    var eyes = document.createElement('div');
-    eyes.className = 'tile-eyes';
-    var delay = ((pairId * 0.53) % 4).toFixed(2) + 's';
-    for (var e = 0; e < 2; e++) {
-      var eye = document.createElement('div');
-      eye.className = 'tile-eye';
-      eye.style.animationDelay = delay;
-      eyes.appendChild(eye);
+      var shape = document.createElement('div');
+      shape.className = 'tile-shape shape-' + art.shape;
+
+      var eyes = document.createElement('div');
+      eyes.className = 'tile-eyes';
+      var delay = ((pairId * 0.53) % 4).toFixed(2) + 's';
+      for (var e = 0; e < 2; e++) {
+        var eye = document.createElement('div');
+        eye.className = 'tile-eye';
+        eye.style.animationDelay = delay;
+        eyes.appendChild(eye);
+      }
+
+      front.appendChild(shape);
+      front.appendChild(eyes);
     }
 
-    front.appendChild(shape);
-    front.appendChild(eyes);
     inner.appendChild(back);
     inner.appendChild(front);
     tile.appendChild(inner);
