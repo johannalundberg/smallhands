@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <style>
   :root{
-    --bg:#707EFF;
+    --bg:#2C2E2E;
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
@@ -165,10 +165,10 @@
     align-items:center;
     justify-content:center;
   }
-  /* card back: flat near-black (matches the Figma colourway) on every tile
-     until it's flipped — the actual pair art only exists on the front face,
-     so nothing here can leak which tile is which before a player picks it. */
-  .tile-face.back{ background:#111111; }
+  /* card back: matches the Figma colourway on every tile until it's flipped
+     — the actual pair art only exists on the front face, so nothing here
+     can leak which tile is which before a player picks it. */
+  .tile-face.back{ background:#707EFF; }
   .tile-face.front{ transform:rotateY(180deg); }
 
   .tile-shape{ position:relative; width:62%; height:62%; background:currentColor; }
@@ -438,9 +438,9 @@
     { name: 'dino', bg: '#A7CF56', svg: iconSvg(
       '<path fill="' + ICON_FILL + '" d="M19,6 C19,6.55229 18.5523,7 18,7 L8,7 L8,3 C8,2.44772 8.44771,2 9,2 L18,2 C18.5523,2 19,2.44772 19,3 L19,6 Z"/>' +
       '<path fill="' + ICON_FILL + '" d="M12,15 C12,15.5523 11.5523,16 11,16 L5,16 C4.44772,16 4,15.5523 4,15 L4,11 L12,11 L12,15 Z"/>' +
-      '<rect fill="' + ICON_FILL + '" x="5" y="9" width="6" height="3"/>' +
-      '<rect fill="' + ICON_FILL + '" x="6" y="7.9" width="6" height="3.1"/>' +
-      '<rect fill="' + ICON_FILL + '" x="7" y="7" width="4" height="3"/>' +
+      '<rect fill="' + ICON_FILL + '" x="5" y="8.9" width="6" height="3.2"/>' +
+      '<rect fill="' + ICON_FILL + '" x="6" y="7.8" width="6" height="3.3"/>' +
+      '<rect fill="' + ICON_FILL + '" x="7" y="7" width="4" height="3.1"/>' +
       '<rect fill="' + ICON_FILL + '" x="4" y="10" width="6" height="3"/>' +
       '<rect fill="' + ICON_FILL + '" x="2" y="11" width="7" height="3"/>' +
       '<rect fill="' + ICON_FILL + '" x="2" y="10" width="1" height="3"/>' +
