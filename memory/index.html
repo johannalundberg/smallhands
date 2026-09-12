@@ -200,7 +200,7 @@
     96%{ transform:scaleY(0.12); }
   }
 
-  /* ---------- finished pair art (robot / snail / ghost) ---------- */
+  /* ---------- finished pair art (robot / snail / ghost / dino / cloud) ---------- */
   .tile-face.front svg{ width:100%; height:100%; display:block; }
   /* Adjacent 1x1 grid squares (antennae, legs, stalks) can show a hairline seam
      from anti-aliasing at the shared sub-pixel edge -- crisp (non-anti-aliased)
@@ -418,6 +418,46 @@
       '</g>' +
       '<circle fill="var(--bg)" cx="7.5" cy="9.5" r="1.5"/>' +
       '<circle fill="var(--bg)" cx="12.5" cy="9.5" r="1.5"/>'
+    ) },
+    { name: 'dino', bg: '#A7CF56', svg: iconSvg(
+      '<path fill="' + ICON_FILL + '" d="M19,6 C19,6.55229 18.5523,7 18,7 L8,7 L8,3 C8,2.44772 8.44771,2 9,2 L18,2 C18.5523,2 19,2.44772 19,3 L19,6 Z"/>' +
+      '<path fill="' + ICON_FILL + '" d="M12,15 C12,15.5523 11.5523,16 11,16 L5,16 C4.44772,16 4,15.5523 4,15 L4,11 L12,11 L12,15 Z"/>' +
+      '<rect fill="' + ICON_FILL + '" x="5" y="9" width="6" height="3"/>' +
+      '<rect fill="' + ICON_FILL + '" x="6" y="7.9" width="6" height="3.1"/>' +
+      '<rect fill="' + ICON_FILL + '" x="7" y="7" width="4" height="3"/>' +
+      '<rect fill="' + ICON_FILL + '" x="4" y="10" width="6" height="3"/>' +
+      '<rect fill="' + ICON_FILL + '" x="2" y="11" width="7" height="3"/>' +
+      '<rect fill="' + ICON_FILL + '" x="2" y="10" width="1" height="3"/>' +
+      '<path fill="' + ICON_FILL + '" d="M2,12 L1,12 L1,9.5 C1,9.22386 1.22386,9 1.5,9 V9 C1.77614,9 2,9.22386 2,9.5 L2,12 Z"/>' +
+      '<rect fill="' + ICON_FILL + '" x="6" y="15" width="1" height="3" rx="0.5"/>' +
+      '<rect fill="' + ICON_FILL + '" x="9" y="15" width="1" height="3" rx="0.5"/>' +
+      '<circle fill="#FFFFFF" cx="11" cy="4" r="1"/>' +
+      '<g class="frame-a">' +
+        '<rect fill="' + ICON_FILL + '" x="8" y="6" width="6" height="3"/>' +
+        '<rect fill="' + ICON_FILL + '" x="13" y="8" width="4" height="1" rx="0.5"/>' +
+      '</g>' +
+      '<g class="frame-b">' +
+        '<rect fill="' + ICON_FILL + '" x="8" y="6" width="6" height="2"/>' +
+        '<rect fill="' + ICON_FILL + '" x="13" y="7" width="4" height="1" rx="0.5"/>' +
+      '</g>'
+    ) },
+    { name: 'cloud', bg: '#3DB2C9', svg: iconSvg(
+      '<circle fill="' + ICON_FILL + '" cx="9.5" cy="6.5" r="3.5"/>' +
+      '<circle fill="' + ICON_FILL + '" cx="4.5" cy="8.5" r="2.5"/>' +
+      '<circle fill="' + ICON_FILL + '" cx="14.6" cy="8.4" r="3.6"/>' +
+      '<rect fill="' + ICON_FILL + '" x="2" y="8.5" width="16.2" height="3.5"/>' +
+      '<g class="frame-a"></g>' +
+      '<g class="frame-b">' +
+        '<rect fill="' + ICON_FILL + '" x="5" y="14" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="4" y="15" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="3" y="16" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="10" y="14" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="9" y="15" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="8" y="16" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="15" y="14" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="14" y="15" width="1" height="1"/>' +
+        '<rect fill="' + ICON_FILL + '" x="13" y="16" width="1" height="1"/>' +
+      '</g>'
     ) }
   ];
 
