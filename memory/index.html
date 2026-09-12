@@ -130,6 +130,13 @@
     perspective:600px;
     transition: opacity 300ms ease, transform 300ms ease;
   }
+  /* Same press/hover feedback as tictactoe's cells -- an instant snap, no
+     easing, so it overrides the tile's own transform transition above
+     (which exists for the .gone shrink-away, not for this). */
+  .tile:active{ transform:scale(0.96); transition: opacity 300ms ease; }
+  @media (hover:hover) and (pointer:fine){
+    .tile:hover{ transform:scale(1.035); transition: opacity 300ms ease; }
+  }
   /* A matched pair clears away entirely a beat after the match (see onTileClick)
      so only the tiles still in play stay on screen, instead of sitting there
      dimmed as done. */
