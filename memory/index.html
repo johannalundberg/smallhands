@@ -200,7 +200,7 @@
     96%{ transform:scaleY(0.12); }
   }
 
-  /* ---------- finished pair art (robot / snail / ghost / dino / cloud) ---------- */
+  /* ---------- finished pair art (robot / snail / ghost / dino / cloud / sun) ---------- */
   .tile-face.front svg{ width:100%; height:100%; display:block; }
   /* Adjacent 1x1 grid squares (antennae, legs, stalks) can show a hairline seam
      from anti-aliasing at the shared sub-pixel edge -- crisp (non-anti-aliased)
@@ -217,19 +217,19 @@
   .tile.open .frame-a, .tile.open .frame-b,
   .tile.matched .frame-a, .tile.matched .frame-b{ animation-play-state:running; }
 
-  /* Cloud: a 4-stage rising sequence (no rain -> top row -> top+middle ->
-     all three), not a simple two-state toggle, so each row of drops gets its
-     own step-in point instead of reusing frame-a/frame-b. All three reset to
-     hidden together at the end of the cycle. */
-  @keyframes rainRowTop{ 0%,24%{ opacity:0; } 25%,100%{ opacity:1; } }
-  @keyframes rainRowMid{ 0%,49%{ opacity:0; } 50%,100%{ opacity:1; } }
-  @keyframes rainRowBot{ 0%,74%{ opacity:0; } 75%,100%{ opacity:1; } }
-  .rain-row-top{ animation: rainRowTop 1.4s steps(1) infinite; }
-  .rain-row-mid{ animation: rainRowMid 1.4s steps(1) infinite; }
-  .rain-row-bot{ animation: rainRowBot 1.4s steps(1) infinite; }
-  .rain-row-top, .rain-row-mid, .rain-row-bot{ animation-play-state:paused; }
-  .tile.open .rain-row-top, .tile.open .rain-row-mid, .tile.open .rain-row-bot,
-  .tile.matched .rain-row-top, .tile.matched .rain-row-mid, .tile.matched .rain-row-bot{
+  /* Shared by any icon that builds up in three cumulative stages instead of
+     a simple two-state toggle (cloud's rain, sun's rays): each stage group
+     steps in at its own point in the cycle and all reset to hidden together
+     at the end -- a hard loop back to the bare icon. */
+  @keyframes revealStage1{ 0%,24%{ opacity:0; } 25%,100%{ opacity:1; } }
+  @keyframes revealStage2{ 0%,49%{ opacity:0; } 50%,100%{ opacity:1; } }
+  @keyframes revealStage3{ 0%,74%{ opacity:0; } 75%,100%{ opacity:1; } }
+  .reveal-1{ animation: revealStage1 1.4s steps(1) infinite; }
+  .reveal-2{ animation: revealStage2 1.4s steps(1) infinite; }
+  .reveal-3{ animation: revealStage3 1.4s steps(1) infinite; }
+  .reveal-1, .reveal-2, .reveal-3{ animation-play-state:paused; }
+  .tile.open .reveal-1, .tile.open .reveal-2, .tile.open .reveal-3,
+  .tile.matched .reveal-1, .tile.matched .reveal-2, .tile.matched .reveal-3{
     animation-play-state:running;
   }
 
@@ -462,20 +462,41 @@
       '<circle fill="' + ICON_FILL + '" cx="4.5" cy="9.5" r="2.5"/>' +
       '<circle fill="' + ICON_FILL + '" cx="14.6" cy="9.4" r="3.6"/>' +
       '<rect fill="' + ICON_FILL + '" x="2" y="9.5" width="16.2" height="3.5"/>' +
-      '<g class="rain-row-top">' +
+      '<g class="reveal-1">' +
         '<rect fill="' + ICON_FILL + '" x="5" y="14" width="1" height="1"/>' +
         '<rect fill="' + ICON_FILL + '" x="10" y="14" width="1" height="1"/>' +
         '<rect fill="' + ICON_FILL + '" x="15" y="14" width="1" height="1"/>' +
       '</g>' +
-      '<g class="rain-row-mid">' +
+      '<g class="reveal-2">' +
         '<rect fill="' + ICON_FILL + '" x="4" y="15" width="1" height="1"/>' +
         '<rect fill="' + ICON_FILL + '" x="9" y="15" width="1" height="1"/>' +
         '<rect fill="' + ICON_FILL + '" x="14" y="15" width="1" height="1"/>' +
       '</g>' +
-      '<g class="rain-row-bot">' +
+      '<g class="reveal-3">' +
         '<rect fill="' + ICON_FILL + '" x="3" y="16" width="1" height="1"/>' +
         '<rect fill="' + ICON_FILL + '" x="8" y="16" width="1" height="1"/>' +
         '<rect fill="' + ICON_FILL + '" x="13" y="16" width="1" height="1"/>' +
+      '</g>'
+    ) },
+    { name: 'sun', bg: '#EBB133', svg: iconSvg(
+      '<circle fill="#D9D9D9" cx="10" cy="10" r="6"/>' +
+      '<g class="reveal-1">' +
+        '<rect fill="#D9D9D9" x="3.9" y="3.9" width="1.2" height="1.2"/>' +
+        '<rect fill="#D9D9D9" x="14.9" y="3.9" width="1.2" height="1.2"/>' +
+        '<rect fill="#D9D9D9" x="3.9" y="14.9" width="1.2" height="1.2"/>' +
+        '<rect fill="#D9D9D9" x="14.9" y="14.9" width="1.2" height="1.2"/>' +
+      '</g>' +
+      '<g class="reveal-2">' +
+        '<rect fill="#D9D9D9" x="2.9" y="2.9" width="1.2" height="1.2"/>' +
+        '<rect fill="#D9D9D9" x="15.9" y="2.9" width="1.2" height="1.2"/>' +
+        '<rect fill="#D9D9D9" x="2.9" y="15.9" width="1.2" height="1.2"/>' +
+        '<rect fill="#D9D9D9" x="15.9" y="15.9" width="1.2" height="1.2"/>' +
+      '</g>' +
+      '<g class="reveal-3">' +
+        '<rect fill="#D9D9D9" x="1.9" y="1.9" width="1.2" height="1.2"/>' +
+        '<rect fill="#D9D9D9" x="16.9" y="1.9" width="1.2" height="1.2"/>' +
+        '<rect fill="#D9D9D9" x="1.9" y="16.9" width="1.2" height="1.2"/>' +
+        '<rect fill="#D9D9D9" x="16.9" y="16.9" width="1.2" height="1.2"/>' +
       '</g>'
     ) }
   ];
