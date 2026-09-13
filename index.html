@@ -233,7 +233,7 @@
   /* Each revealed face uses that finished icon's own tile background from
      the real game, not a shared placeholder color. */
   .mem-flip-a .mem-face.front{ background:#E4E4E4; }
-  .mem-flip-b .mem-face.front{ background:#F8753D; }
+  .mem-flip-b .mem-face.front{ background:#E88CE5; }
   /* Overrides every property the generic .badge svg rule sets (position/inset/
      margin/opacity, meant for the math-badge's fade sequence) — it cascades onto
      any svg inside .badge, including this one, and would otherwise leave the
@@ -307,52 +307,17 @@
   </div>
 
   <div class="tiles">
-    <a class="tile" href="memory/" aria-label="Memory">
-      <div class="badge memory-badge">
-        <div class="mem-cell"></div>
-        <div class="mem-cell mem-flip mem-flip-a">
-          <div class="mem-inner">
-            <div class="mem-face back"></div>
-            <div class="mem-face front"><svg viewBox="0 0 20 20">
-              <circle fill="#181818" cx="13.5" cy="10.5" r="5.5"/>
-              <circle fill="#E4E4E4" cx="13.5" cy="10.5" r="1.5"/>
-              <rect fill="#181818" x="2" y="15" width="17" height="4" rx="1"/>
-              <rect fill="#181818" x="5" y="14" width="1" height="1.2"/>
-              <circle fill="#FFFFFF" cx="4" cy="16.5" r="0.5"/>
-              <rect fill="#181818" x="3" y="14" width="1" height="1.2"/>
-              <rect fill="#181818" x="5" y="13" width="1" height="1.1"/>
-              <rect fill="#181818" x="5" y="12" width="1" height="1.1"/>
-              <rect fill="#181818" x="2" y="13" width="1" height="1"/>
-              <rect fill="#181818" x="1" y="12" width="1" height="1"/>
-            </svg></div>
-          </div>
-        </div>
-        <div class="mem-cell mem-flip mem-flip-b">
-          <div class="mem-inner">
-            <div class="mem-face back"></div>
-            <div class="mem-face front"><svg viewBox="0 0 20 20">
-              <rect fill="#181818" x="6.5" y="4" width="7" height="10" rx="1"/>
-              <rect fill="#181818" x="7.5" y="3" width="5" height="1"/>
-              <rect fill="#181818" x="8.5" y="2" width="3" height="1"/>
-              <rect fill="#181818" x="9.5" y="1" width="1" height="1"/>
-              <rect fill="#181818" x="5.5" y="12" width="1" height="3"/>
-              <rect fill="#181818" x="4.5" y="13" width="1" height="3"/>
-              <rect fill="#181818" x="3.5" y="14" width="1" height="3"/>
-              <rect fill="#181818" x="13.5" y="12" width="1" height="3"/>
-              <rect fill="#181818" x="14.5" y="13" width="1" height="3"/>
-              <rect fill="#181818" x="15.5" y="14" width="1" height="3"/>
-              <rect fill="#181818" x="6.5" y="11" width="1" height="3"/>
-              <rect fill="#181818" x="12.5" y="11" width="1" height="3"/>
-              <circle fill="#E4E4E4" cx="10" cy="8" r="2"/>
-              <rect fill="#181818" x="8" y="13.9" width="4" height="1.1"/>
-              <rect fill="#181818" x="9" y="14.9" width="2" height="1.1"/>
-              <rect fill="#181818" x="9" y="17" width="1" height="1"/>
-              <rect fill="#181818" x="10" y="18" width="1" height="1"/>
-              <rect fill="#181818" x="11" y="16" width="1" height="1"/>
-            </svg></div>
-          </div>
-        </div>
-        <div class="mem-cell"></div>
+    <a class="tile" href="tictactoe/" aria-label="Tic-Tac-Toe">
+      <div class="mini-board">
+        <div class="mini-cell mc-diag-bg"><svg viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
+        <div class="mini-cell"><svg viewBox="0 0 63.13 63.13"><circle cx="31.5652" cy="31.5648" r="18.5676" fill="none" stroke="var(--glyph)" stroke-width="5.30504"/></svg></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell"><svg class="mc-o3-appear" viewBox="0 0 63.13 63.13"><circle cx="31.5652" cy="31.5648" r="18.5676" fill="none" stroke="var(--glyph)" stroke-width="5.30504"/></svg></div>
+        <div class="mini-cell mc-diag-bg"><svg viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell mc-diag-bg"><svg class="mc-x8-appear" viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
       </div>
     </a>
 
@@ -396,6 +361,48 @@
       </div>
     </a>
 
+    <a class="tile" href="memory/" aria-label="Memory">
+      <div class="badge memory-badge">
+        <div class="mem-cell"></div>
+        <div class="mem-cell mem-flip mem-flip-a">
+          <div class="mem-inner">
+            <div class="mem-face back"></div>
+            <div class="mem-face front"><svg viewBox="0 0 20 20">
+              <circle fill="#181818" cx="13.5" cy="10.5" r="5.5"/>
+              <circle fill="#E4E4E4" cx="13.5" cy="10.5" r="1.5"/>
+              <rect fill="#181818" x="2" y="15" width="17" height="4" rx="1"/>
+              <rect fill="#181818" x="5" y="14" width="1" height="1.2"/>
+              <circle fill="#FFFFFF" cx="4" cy="16.5" r="0.5"/>
+              <rect fill="#181818" x="3" y="14" width="1" height="1.2"/>
+              <rect fill="#181818" x="5" y="13" width="1" height="1.1"/>
+              <rect fill="#181818" x="5" y="12" width="1" height="1.1"/>
+              <rect fill="#181818" x="2" y="13" width="1" height="1"/>
+              <rect fill="#181818" x="1" y="12" width="1" height="1"/>
+            </svg></div>
+          </div>
+        </div>
+        <div class="mem-cell mem-flip mem-flip-b">
+          <div class="mem-inner">
+            <div class="mem-face back"></div>
+            <div class="mem-face front"><svg viewBox="0 0 20 20">
+              <rect fill="#181818" x="4" y="7" width="12" height="9" rx="1"/>
+              <rect fill="#181818" x="8" y="6" width="1" height="1"/>
+              <rect fill="#181818" x="11" y="6" width="1" height="1"/>
+              <rect fill="#181818" x="12" y="5" width="1" height="1"/>
+              <rect fill="#181818" x="13" y="4" width="1" height="1"/>
+              <rect fill="#181818" x="14" y="3" width="1" height="1"/>
+              <rect fill="#181818" x="7" y="5" width="1" height="1"/>
+              <rect fill="#181818" x="6" y="4" width="1" height="1"/>
+              <rect fill="#181818" x="5" y="3" width="1" height="1"/>
+              <circle fill="#FFFFFF" cx="7.5" cy="11.5" r="1.5"/>
+              <circle fill="#FFFFFF" cx="12.5" cy="11.5" r="1.5"/>
+            </svg></div>
+          </div>
+        </div>
+        <div class="mem-cell"></div>
+      </div>
+    </a>
+
     <a class="tile" href="connectthedots/" aria-label="Connect the Dots">
       <div class="badge dots-badge">
         <svg viewBox="0 0 200 200">
@@ -409,20 +416,6 @@
           <circle class="dot" cx="150" cy="112" r="6"/>
           <circle class="dot" cx="70" cy="165" r="6"/>
         </svg>
-      </div>
-    </a>
-
-    <a class="tile" href="tictactoe/" aria-label="Tic-Tac-Toe">
-      <div class="mini-board">
-        <div class="mini-cell mc-diag-bg"><svg viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
-        <div class="mini-cell"><svg viewBox="0 0 63.13 63.13"><circle cx="31.5652" cy="31.5648" r="18.5676" fill="none" stroke="var(--glyph)" stroke-width="5.30504"/></svg></div>
-        <div class="mini-cell"></div>
-        <div class="mini-cell"><svg class="mc-o3-appear" viewBox="0 0 63.13 63.13"><circle cx="31.5652" cy="31.5648" r="18.5676" fill="none" stroke="var(--glyph)" stroke-width="5.30504"/></svg></div>
-        <div class="mini-cell mc-diag-bg"><svg viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
-        <div class="mini-cell"></div>
-        <div class="mini-cell"></div>
-        <div class="mini-cell"></div>
-        <div class="mini-cell mc-diag-bg"><svg class="mc-x8-appear" viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
       </div>
     </a>
   </div>
