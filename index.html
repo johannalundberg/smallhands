@@ -232,13 +232,13 @@
   .mem-face.front{ transform:rotateY(180deg); }
   /* Each revealed face uses that finished icon's own tile background from
      the real game, not a shared placeholder color. */
-  .mem-flip-a .mem-face.front{ background:#111111; }
+  .mem-flip-a .mem-face.front{ background:#516666; }
   .mem-flip-b .mem-face.front{ background:#74D5CA; }
   /* Overrides every property the generic .badge svg rule sets (position/inset/
      margin/opacity, meant for the math-badge's fade sequence) — it cascades onto
      any svg inside .badge, including this one, and would otherwise leave the
      glyph permanently invisible and stripped out of flow. */
-  .mem-face.front svg{ position:static; inset:auto; margin:0; opacity:1; display:block; width:70%; height:70%; }
+  .mem-face.front svg{ position:static; inset:auto; margin:0; opacity:1; display:block; width:100%; height:100%; }
 
   @keyframes mem-flip-a{
     0%, 4%{ transform:rotateY(0deg); }
@@ -361,20 +361,11 @@
           <div class="mem-inner">
             <div class="mem-face back"></div>
             <div class="mem-face front"><svg viewBox="0 0 20 20">
-              <path fill="#E4E4E4" d="M5,7.5 C5,5.01472 7.01472,3 9.5,3 H10.5 C12.9853,3 15,5.01472 15,7.5 V16 H5 V7.5 Z"/>
-              <path fill="#E4E4E4" d="M5,16 H7 C7,16.5523 6.55228,17 6,17 C5.44772,17 5,16.5523 5,16 Z"/>
-              <path fill="#E4E4E4" d="M7,16 H9 C9,16.5523 8.55228,17 8,17 C7.44772,17 7,16.5523 7,16 Z"/>
-              <path fill="#E4E4E4" d="M9,16 H11 C11,16.5523 10.55228,17 10,17 C9.44772,17 9,16.5523 9,16 Z"/>
-              <path fill="#E4E4E4" d="M11,16 H13 C13,16.5523 12.55228,17 12,17 C11.44772,17 11,16.5523 11,16 Z"/>
-              <path fill="#E4E4E4" d="M13,16 H15 C15,16.5523 14.55228,17 14,17 C13.44772,17 13,16.5523 13,16 Z"/>
-              <rect fill="#E4E4E4" x="14.9" y="10" width="1.1" height="1"/>
-              <rect fill="#E4E4E4" x="4" y="10" width="1.1" height="1"/>
-              <rect fill="#E4E4E4" x="16" y="9" width="1" height="1"/>
-              <rect fill="#E4E4E4" x="17" y="8" width="1" height="1"/>
-              <rect fill="#E4E4E4" x="3" y="9" width="1" height="1"/>
-              <rect fill="#E4E4E4" x="2" y="8" width="1" height="1"/>
-              <circle fill="#111111" cx="7.8" cy="9" r="1.5"/>
-              <circle fill="#111111" cx="12.1" cy="9" r="1.5"/>
+              <circle fill="#181818" cx="10" cy="10" r="7"/>
+              <circle fill="#E4E4E4" cx="7.5" cy="9.5" r="1.5"/>
+              <circle fill="#E4E4E4" cx="12.5" cy="9.5" r="1.5"/>
+              <rect fill="#181818" x="8" y="9" width="1.05" height="1"/>
+              <rect fill="#181818" x="13" y="9" width="1.05" height="1"/>
             </svg></div>
           </div>
         </div>
