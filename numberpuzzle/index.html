@@ -23,7 +23,7 @@
     --piece:#707EFF;
     --bright:#E4E4E4;
     --ink-muted:rgba(32,32,32,0.4);
-    --success:#00B573;
+    --success:#00BA94;
     --incorrect:#F2383B;
     /* Figma frame: 1728x1117 */
     --board-size: min(76vmin, 76vw, 570px);
@@ -445,8 +445,8 @@
           });
         });
         loadRecolored(svgText, [
-          [/(<rect[^>]*fill=")#707EFF("[^>]*\/>)/, '$1#00B573$2'],
-          [/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1#00B573$2']
+          [/(<rect[^>]*fill=")#707EFF("[^>]*\/>)/, '$1#00BA94$2'],
+          [/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1#00BA94$2']
         ], function(img){
           DIGIT_IMG_GREEN[d] = img;
         });
