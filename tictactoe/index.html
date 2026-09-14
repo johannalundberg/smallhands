@@ -171,9 +171,13 @@
   }
   /* Touch has no hover state to preview a tap with, so give tapping a cell
      the same slight grow hover gives a mouse on desktop -- a plain shrink-only
-     press felt static next to that. */
+     press felt static next to that. Driven by a JS class (see bindPressFeedback),
+     not :active -- :active stopped re-triggering after the first tap on iOS
+     Safari, since .board-wrap's pointer-events is toggled on/off every move
+     (see 'busy' below) and that leaves :active's hit-testing stuck stale on
+     WebKit. A plain class toggle on real pointer events isn't affected by that. */
   @media (hover:none){
-    .cell:active{ transform:scale(1.035); }
+    .cell.tap-active{ transform:scale(1.035); }
   }
 
   .cell.fade{ background: var(--fade-color, var(--cell)); }
@@ -397,6 +401,15 @@
     landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
   }
 
+  function bindPressFeedback(cell){
+    cell.addEventListener('pointerdown', function(e){
+      if (e.pointerType === 'touch') cell.classList.add('tap-active');
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function(evt){
+      cell.addEventListener(evt, function(){ cell.classList.remove('tap-active'); });
+    });
+  }
+
   function buildCells(){
     els.board.innerHTML = '';
     for(var i=0;i<9;i++){
@@ -405,6 +418,7 @@
       cell.dataset.i = i;
       cell.setAttribute('aria-label', 'Cell ' + (i+1));
       cell.addEventListener('click', onCellClick);
+      bindPressFeedback(cell);
       els.board.appendChild(cell);
     }
   }
