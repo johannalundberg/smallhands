@@ -723,6 +723,7 @@
 
   // Flash the shared success-green on a win, the shared --incorrect red on a loss.
   function showCelebration(isWin){
+    updateAppHeight();
     els.celebration.innerHTML = isWin ? CELEBRATION_FACE_SVG : SAD_FACE_SVG;
     document.body.style.background = isWin ? 'var(--success)' : 'var(--incorrect)';
     els.boardWrap.style.display = 'none';

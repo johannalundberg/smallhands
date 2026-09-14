@@ -553,11 +553,13 @@
   }
 
   function showComputerMilestone(){
+    updateAppHeight();
     els.loseOverlay.classList.add('show');
     dismissTimer = setTimeout(finishMilestone, 3000);
   }
 
   function showYay(){
+    updateAppHeight();
     els.yayOverlay.classList.add('show');
     dismissTimer = setTimeout(finishMilestone, 3000);
   }

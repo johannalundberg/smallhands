@@ -930,6 +930,7 @@
     '</svg>';
 
   function showCelebration(){
+    updateAppHeight();
     document.body.style.background = 'var(--success)';
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
     els.boardWrap.style.display = 'none';
