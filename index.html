@@ -83,11 +83,13 @@
     grid-template-columns:repeat(2, minmax(0, 1fr));
     gap:var(--tile-gap);
   }
-  /* Experimental: on tablet/desktop, the About text sits in the grid itself,
-     occupying the space of 2x2 tiles (4 tiles' worth, gaps included) --
-     dense packing then lets the game tiles flow into place around it instead
-     of leaving a gap where it sits. Hidden on phone: not enough width for a
-     readable column there, so it stays a separate page reached via "?" only. */
+  /* Experimental: on tablet/desktop, clicking "?" reveals the About text right
+     in the grid (see the click handler below) instead of navigating away --
+     occupying the space of 2x2 tiles (4 tiles' worth, gaps included), with
+     dense packing letting the game tiles flow into place around it instead of
+     leaving a gap. Closed by default, and stays closed on phone (not enough
+     width for a readable column there) -- "?" just navigates to the About
+     page normally at that size. */
   .about-card{
     display:none;
     /* A grid item spanning multiple columns defaults to min-width:auto, so its
@@ -110,7 +112,7 @@
   .about-card a{ color:#707EFF; text-decoration:none; }
   .about-card a:hover{ text-decoration:underline; }
   @media (min-width:768px){
-    .about-card{
+    .about-card.open{
       display:block;
       grid-column: 2 / span 2;
       grid-row: 1 / span 2;
@@ -555,6 +557,18 @@
   } else {
     window.addEventListener('resize', updateAppHeight);
   }
+
+  // On tablet/desktop, "?" reveals the About text in the grid instead of
+  // navigating away -- below that width there's no card to reveal (not enough
+  // room for a readable column), so it just follows the link as normal.
+  var infoBtn = document.querySelector('.info-btn');
+  var aboutCard = document.querySelector('.about-card');
+  var cardBreakpoint = window.matchMedia('(min-width:768px)');
+  infoBtn.addEventListener('click', function(e){
+    if (!cardBreakpoint.matches) return;
+    e.preventDefault();
+    aboutCard.classList.toggle('open');
+  });
 
   // Rotating out of the phone-landscape rotate-block and back to portrait can
   // leave iOS's WebKit engine (Safari, Chrome, any iOS browser — Apple requires
