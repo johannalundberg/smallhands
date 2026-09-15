@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-45ZK78NND7');
+</script>
+
+<title>About</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<style>
+  @font-face{
+    font-family:'ABC Areal';
+    src: url('../fonts/ABCAreal-Regular.woff2') format('woff2');
+    font-weight:400;
+    font-style:normal;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    min-height: var(--app-height, 100vh);
+    background:#111111;
+    -webkit-tap-highlight-color: transparent;
+    padding: 20px;
+    padding-bottom: 120px;
+  }
+
+  .about-text{
+    font-family:'ABC Areal', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight:400;
+    font-style:normal;
+    color:#E4E4E4;
+    font-size:21px;
+    letter-spacing:0.42px;
+    line-height:1.15;
+    max-width:333px;
+  }
+  .about-text p{ margin:0; }
+  .about-text p + p{ margin-top:1.15em; }
+  .about-text a{ color:#707EFF; text-decoration:none; }
+  .about-text a:hover{ text-decoration:underline; }
+
+  @media (min-width:768px) and (max-width:1023px) and (min-height:501px){
+    .about-text{ font-size:26px; letter-spacing:0.52px; max-width:574px; }
+  }
+  @media (min-width:1024px){
+    .about-text{ font-size:26px; letter-spacing:0.52px; max-width:663px; }
+  }
+
+  /* Fixed bottom-left, tied to the viewport corner exactly like the homepage's
+     own info button and every game page's back button -- same hover/active feel. */
+  .back-btn{
+    position:fixed;
+    left:20px;
+    bottom:20px;
+    width:80px;
+    height:80px;
+    display:flex;
+    cursor:pointer;
+    transition:transform 120ms ease;
+  }
+  .back-btn svg{ width:100%; height:100%; display:block; transform:rotate(-90deg); }
+  .back-btn:active{ transform:scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .back-btn:hover{ transform:scale(1.035); }
+  }
+  @media (min-width:768px) and (max-width:1023px) and (min-height:501px){
+    .back-btn{ width:96px; height:96px; }
+  }
+  @media (min-width:1024px){
+    .back-btn{ width:150px; height:150px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="about-text">
+    <p>This site started as a project with my son. He's six, just started school, and had gotten curious about math and logic games &ndash; so as his mom, and a designer by trade, I wanted to build something with him and for him.</p>
+    <p>It's visually direct and language-free by design. My son has been its most honest tester from day one, and the site keeps growing right alongside him.</p>
+    <p>I hope you enjoy it too. Feel free to <a href="mailto:johannalundberg@gmail.com">email me</a> if you'd like to say hello or share a thought.</p>
+  </div>
+
+  <a class="back-btn" href="../" aria-label="Back">
+    <svg viewBox="0 0 150 150">
+      <circle cx="75" cy="75" r="75" fill="#212121"/>
+      <path fill="#E4E4E4" d="M69.8479 33.4658L72.6653 30.2627L75.6809 33.2803L107.803 65.4228L104.974 68.25L102.145 71.0781L77.2073 46.124L77.2072 118.086L69.4963 118.086L69.4963 45.9795L47.5881 70.8916L41.5803 65.6084L69.8479 33.4658Z"/>
+    </svg>
+  </a>
+
+<script>
+(function(){
+  "use strict";
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+})();
+</script>
+
+</body>
+</html>
