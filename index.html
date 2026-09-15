@@ -45,7 +45,7 @@
   }
 
   *{ box-sizing:border-box; }
-  html,body{ height:100%; }
+  html{ height:100%; }
   body{
     position:relative;
     margin:0;
@@ -54,7 +54,7 @@
     -webkit-tap-highlight-color: transparent;
     -webkit-user-select:none;
     user-select:none;
-    padding: 20px;
+    padding: 20px 20px 120px 20px;
   }
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
@@ -341,9 +341,11 @@
   }
   @media (min-width:768px) and (max-width:1023px) and (min-height:501px){
     .info-btn{ width:96px; height:96px; }
+    body{ padding-bottom:136px; }
   }
   @media (min-width:1024px){
     .info-btn{ width:150px; height:150px; }
+    body{ padding-bottom:190px; }
   }
 </style>
 </head>
