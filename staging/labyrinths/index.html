@@ -19,7 +19,7 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#614118;
+    --bg:#4D341B;
     --wall:#E88CE5;
     --bright:#E4E4E4;
     --ink:#202020;
@@ -28,7 +28,6 @@
     --incorrect:#F2383B;
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
-    --board-size: min(88vmin, 88vw, 720px);
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
@@ -101,7 +100,10 @@
   .controls-slider{ display:contents; }
 
   /* ---------- the maze ---------- */
-  .board-wrap{ position:relative; width:var(--board-size); height:var(--board-size); }
+  /* width/height are set inline by sizeBoardWrap() -- the hard tier's grid is
+     rectangular (wide on desktop, tall on mobile) so a single CSS aspect
+     ratio can't describe it. */
+  .board-wrap{ position:relative; }
   .board-wrap.busy{ pointer-events:none; }
   .maze-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; display:block; }
   .wall-line{ stroke:var(--wall); stroke-width:4px; stroke-linecap:round; vector-effect:non-scaling-stroke; }
@@ -122,7 +124,6 @@
   }
   .tap-cell.reachable::after{ opacity:0.35; transform:translate(-50%,-50%) scale(1); }
 
-  .player-token{ transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1); }
   .player-token circle{ fill:var(--bright); }
   @keyframes bump-wall{
     0%, 100%{ transform:translate(var(--tx, 0px), var(--ty, 0px)); }
@@ -264,14 +265,31 @@
   var DELTA = { 1: [-1, 0], 2: [0, 1], 4: [1, 0], 8: [0, -1] };
   var ALL_DIRS = [1, 2, 4, 8];
 
+  // Hard is rectangular rather than a bigger square: it extends along
+  // whichever axis the screen itself is long on (columns on a wide desktop
+  // window, rows on a narrow phone) via hardDims() below, so it gains real
+  // length/complexity without cells shrinking past a comfortable tap target
+  // on the axis that's already constrained.
+  var HARD_LONG = 18, HARD_SHORT = 11;
+
   var TIER_MAZE = {
-    easy:   { n: 6,  braid: 0 },
-    medium: { n: 8,  braid: 0.12 },
-    hard:   { n: 10, braid: 0.25 }
+    easy:   { cols: 10, rows: 10, braid: 0 },
+    medium: { cols: 13, rows: 13, braid: 0.12 },
+    hard:   { braid: 0.22 }
   };
 
+  // Matches the CSS breakpoint the phone control tray switches on
+  // (`@media (max-width: 767px), (max-height: 500px)`), so "vertical on
+  // mobile" lines up with the same layout the page is already using.
+  function hardDims(){
+    var vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    var mobile = window.innerWidth <= 767 || vh <= 500;
+    return mobile ? { cols: HARD_SHORT, rows: HARD_LONG } : { cols: HARD_LONG, rows: HARD_SHORT };
+  }
+
   var state = {
-    n: 6,
+    cols: 10,
+    rows: 10,
     walls: null,
     player: 0,
     exit: 0,
@@ -293,6 +311,7 @@
   function updateAppHeight(){
     var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     document.documentElement.style.setProperty('--app-height', h + 'px');
+    if (state.cols) sizeBoardWrap(state.cols, state.rows);
   }
   updateAppHeight();
   if (window.visualViewport) {
@@ -318,8 +337,8 @@
 
   // ---------- maze generation ----------
 
-  function idx(r, c, n){ return r * n + c; }
-  function inBounds(r, c, n){ return r >= 0 && r < n && c >= 0 && c < n; }
+  function idx(r, c, cols){ return r * cols + c; }
+  function inBounds(r, c, cols, rows){ return r >= 0 && r < rows && c >= 0 && c < cols; }
 
   function shuffle(arr){
     for (var i = arr.length - 1; i > 0; i--) {
@@ -330,17 +349,17 @@
   }
 
   // Recursive backtracking (iterative, randomized-neighbor DFS): returns a
-  // Uint8Array(n*n) of per-cell open-passage bitmasks with exactly one path
-  // between any two cells (a "perfect" maze, zero loops).
-  function generatePerfectMaze(n){
-    var walls = new Uint8Array(n * n);
-    var visited = new Uint8Array(n * n);
+  // Uint8Array(cols*rows) of per-cell open-passage bitmasks with exactly one
+  // path between any two cells (a "perfect" maze, zero loops).
+  function generatePerfectMaze(cols, rows){
+    var walls = new Uint8Array(cols * rows);
+    var visited = new Uint8Array(cols * rows);
     var stack = [0];
     visited[0] = 1;
 
     while (stack.length) {
       var current = stack[stack.length - 1];
-      var r = Math.floor(current / n), c = current % n;
+      var r = Math.floor(current / cols), c = current % cols;
       var dirs = shuffle(ALL_DIRS.slice());
       var advanced = false;
 
@@ -348,8 +367,8 @@
         var dir = dirs[k];
         var d = DELTA[dir];
         var nr = r + d[0], nc = c + d[1];
-        if (!inBounds(nr, nc, n)) continue;
-        var ni = idx(nr, nc, n);
+        if (!inBounds(nr, nc, cols, rows)) continue;
+        var ni = idx(nr, nc, cols);
         if (visited[ni]) continue;
 
         walls[current] |= dir;
@@ -368,10 +387,10 @@
 
   // Rejoins some dead ends into loops so a maze has more than one route through
   // a stretch of it, without needing a bigger (harder-to-tap) grid.
-  function braid(walls, n, chance){
-    for (var r = 0; r < n; r++) {
-      for (var c = 0; c < n; c++) {
-        var i = idx(r, c, n);
+  function braid(walls, cols, rows, chance){
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var i = idx(r, c, cols);
         if (popcount4(walls[i]) !== 1) continue;
         if (Math.random() > chance) continue;
 
@@ -381,8 +400,8 @@
           if (walls[i] & dir) continue;
           var d = DELTA[dir];
           var nr = r + d[0], nc = c + d[1];
-          if (!inBounds(nr, nc, n)) continue;
-          candidates.push({ dir: dir, ni: idx(nr, nc, n) });
+          if (!inBounds(nr, nc, cols, rows)) continue;
+          candidates.push({ dir: dir, ni: idx(nr, nc, cols) });
         }
         if (!candidates.length) continue;
 
@@ -399,9 +418,9 @@
 
   var SVG_NS = 'http://www.w3.org/2000/svg';
 
-  function renderWalls(n){
+  function renderWalls(cols, rows){
     var svg = els.mazeSvg;
-    svg.setAttribute('viewBox', '0 0 ' + n + ' ' + n);
+    svg.setAttribute('viewBox', '0 0 ' + cols + ' ' + rows);
     svg.innerHTML = '';
 
     function line(x1, y1, x2, y2){
@@ -412,21 +431,21 @@
       svg.appendChild(l);
     }
 
-    line(0, 0, n, 0);
-    line(0, n, n, n);
-    line(0, 0, 0, n);
-    line(n, 0, n, n);
+    line(0, 0, cols, 0);
+    line(0, rows, cols, rows);
+    line(0, 0, 0, rows);
+    line(cols, 0, cols, rows);
 
-    for (var r = 0; r < n; r++) {
-      for (var c = 0; c < n; c++) {
-        var i = idx(r, c, n);
-        if (!(state.walls[i] & DIR.S) && r < n - 1) line(c, r + 1, c + 1, r + 1);
-        if (!(state.walls[i] & DIR.E) && c < n - 1) line(c + 1, r, c + 1, r + 1);
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var i = idx(r, c, cols);
+        if (!(state.walls[i] & DIR.S) && r < rows - 1) line(c, r + 1, c + 1, r + 1);
+        if (!(state.walls[i] & DIR.E) && c < cols - 1) line(c + 1, r, c + 1, r + 1);
       }
     }
 
     // exit ring (static breathing marker, same visual language as Connect the Dots)
-    var er = Math.floor(state.exit / n), ec = state.exit % n;
+    var er = Math.floor(state.exit / cols), ec = state.exit % cols;
     var ring1 = document.createElementNS(SVG_NS, 'circle');
     ring1.setAttribute('class', 'target-ring r1');
     ring1.setAttribute('cx', ec + 0.5); ring1.setAttribute('cy', er + 0.5); ring1.setAttribute('r', 0.16);
@@ -445,14 +464,14 @@
     svg.appendChild(token);
     els.playerToken = token;
 
-    setTokenPosition(0, 0, true);
+    setTokenPosition(0, 0);
   }
 
-  function buildTapGridDom(n){
-    els.tapGrid.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
-    els.tapGrid.style.gridTemplateRows = 'repeat(' + n + ', 1fr)';
+  function buildTapGridDom(cols, rows){
+    els.tapGrid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+    els.tapGrid.style.gridTemplateRows = 'repeat(' + rows + ', 1fr)';
     els.tapGrid.innerHTML = '';
-    for (var i = 0; i < n * n; i++) {
+    for (var i = 0; i < cols * rows; i++) {
       var cell = document.createElement('div');
       cell.className = 'tap-cell';
       cell.dataset.i = i;
@@ -461,14 +480,19 @@
     }
   }
 
-  function setTokenPosition(r, c, instant){
-    if (instant) els.playerToken.style.transition = 'none';
+  function setTokenPosition(r, c){
     els.playerToken.style.transform = 'translate(' + c + 'px, ' + r + 'px)';
-    if (instant) {
-      // force layout so the next real move animates instead of inheriting "none"
-      els.playerToken.getBoundingClientRect();
-      els.playerToken.style.transition = '';
-    }
+  }
+
+  // The hard tier is rectangular, so the board can't just be a square capped
+  // to the viewport -- size cells so the LONGER grid axis fits the available
+  // budget and the shorter axis follows proportionally, keeping cells square.
+  function sizeBoardWrap(cols, rows){
+    var vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    var budget = Math.min(window.innerWidth * 0.88, vh * 0.88, 720);
+    var cell = budget / Math.max(cols, rows);
+    els.boardWrap.style.width = (cell * cols) + 'px';
+    els.boardWrap.style.height = (cell * rows) + 'px';
   }
 
   // ---------- interaction ----------
@@ -490,13 +514,13 @@
   // point. Tapping any dot along this trail, or pressing an arrow key, travels
   // the whole way in one move instead of one tap per single cell.
   function traceCorridor(fromCell, dir){
-    var n = state.n;
+    var cols = state.cols;
     var path = [];
     var cur = fromCell;
     while (true) {
       var d = DELTA[dir];
-      var r = Math.floor(cur / n) + d[0], c = cur % n + d[1];
-      var next = idx(r, c, n);
+      var r = Math.floor(cur / cols) + d[0], c = cur % cols + d[1];
+      var next = idx(r, c, cols);
       path.push(next);
       cur = next;
       if (cur === state.exit) break;
@@ -532,9 +556,9 @@
     // Not reachable via any open corridor -- if it's the immediate neighbor
     // just blocked by a wall, bump; otherwise it's not adjacent at all, so
     // there's no near-miss worth acknowledging and the tap is silently ignored.
-    var n = state.n;
-    var r1 = Math.floor(state.player / n), c1 = state.player % n;
-    var r2 = Math.floor(j / n), c2 = j % n;
+    var cols = state.cols;
+    var r1 = Math.floor(state.player / cols), c1 = state.player % cols;
+    var r2 = Math.floor(j / cols), c2 = j % cols;
     var dr = r2 - r1, dc = c2 - c1;
     if (Math.abs(dr) + Math.abs(dc) === 1) {
       var blockedDir = dr === -1 ? DIR.N : dr === 1 ? DIR.S : dc === 1 ? DIR.E : DIR.W;
@@ -559,24 +583,33 @@
     }
   }
 
-  var STEP_MS = 190;
+  // One continuous glide from the current cell through every cell in `path`
+  // to the next decision point, instead of a discrete stop-start hop per
+  // cell -- the token visually follows the corridor's own turns (each cell
+  // center is a keyframe), but plays as a single smooth motion.
+  var STEP_MS = 150;
   function animateAlongPath(path){
+    if (!path.length) return;
     state.busy = true;
-    var i = 0;
-    function stepNext(){
-      if (i >= path.length) {
-        state.busy = false;
-        updateReachableHints();
-        if (state.player === state.exit) showCelebration();
-        return;
-      }
-      var cell = path[i++];
-      state.player = cell;
-      var r = Math.floor(cell / state.n), c = cell % state.n;
-      setTokenPosition(r, c, false);
-      setTimeout(stepNext, STEP_MS);
-    }
-    stepNext();
+
+    var cells = [state.player].concat(path);
+    var keyframes = cells.map(function(cell){
+      var r = Math.floor(cell / state.cols), c = cell % state.cols;
+      return { transform: 'translate(' + c + 'px, ' + r + 'px)' };
+    });
+
+    var lastCell = path[path.length - 1];
+    var lastR = Math.floor(lastCell / state.cols), lastC = lastCell % state.cols;
+    var duration = Math.max(220, path.length * STEP_MS);
+
+    var anim = els.playerToken.animate(keyframes, { duration: duration, easing: 'ease-in-out' });
+    anim.onfinish = function(){
+      state.player = lastCell;
+      setTokenPosition(lastR, lastC);
+      state.busy = false;
+      updateReachableHints();
+      if (state.player === state.exit) showCelebration();
+    };
   }
 
   // Arrow keys work as a bonus, unadvertised alternative to tapping -- moves
@@ -595,15 +628,18 @@
 
   function startGame(){
     var tier = TIER_MAZE[state.difficulty];
-    state.n = tier.n;
-    state.walls = generatePerfectMaze(tier.n);
-    braid(state.walls, tier.n, tier.braid);
+    var dims = state.difficulty === 'hard' ? hardDims() : { cols: tier.cols, rows: tier.rows };
+    state.cols = dims.cols;
+    state.rows = dims.rows;
+    state.walls = generatePerfectMaze(dims.cols, dims.rows);
+    braid(state.walls, dims.cols, dims.rows, tier.braid);
     state.player = 0;
-    state.exit = tier.n * tier.n - 1;
+    state.exit = dims.cols * dims.rows - 1;
     state.busy = false;
     els.boardWrap.classList.remove('busy');
-    buildTapGridDom(tier.n);
-    renderWalls(tier.n);
+    sizeBoardWrap(dims.cols, dims.rows);
+    buildTapGridDom(dims.cols, dims.rows);
+    renderWalls(dims.cols, dims.rows);
     updateReachableHints();
   }
 
