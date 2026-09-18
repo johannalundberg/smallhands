@@ -467,9 +467,14 @@
     var token = document.createElementNS(SVG_NS, 'g');
     token.setAttribute('id', 'playerToken');
     token.setAttribute('class', 'player-token');
+    // The icon's own face circle (r=7 of a 20-unit viewBox) only fills 70% of
+    // whatever box it's given, so the box is sized up to 0.64/0.7 -- that
+    // makes the face itself (not the nested <svg>'s own bounds) match the
+    // previous plain circle's diameter (r=0.32) instead of rendering smaller.
+    var iconSize = 0.64 / 0.7;
     var icon = document.createElementNS(SVG_NS, 'svg');
-    icon.setAttribute('x', 0.18); icon.setAttribute('y', 0.18);
-    icon.setAttribute('width', 0.64); icon.setAttribute('height', 0.64);
+    icon.setAttribute('x', 0.5 - iconSize / 2); icon.setAttribute('y', 0.5 - iconSize / 2);
+    icon.setAttribute('width', iconSize); icon.setAttribute('height', iconSize);
     icon.setAttribute('viewBox', '0 0 20 20');
     icon.innerHTML =
       '<circle fill="#181818" cx="10" cy="10" r="7"/>' +
