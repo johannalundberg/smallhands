@@ -633,10 +633,25 @@
     }
   }
 
+  // Dots mark only the single cell immediately next to the player in each
+  // open direction -- never anything further down a corridor. A dot planted
+  // out at the next junction previews that junction's shape (how many ways
+  // it branches) before the player has actually walked there, which gives
+  // away information the maze is supposed to reveal by exploring, not by
+  // looking at the hints. Tapping still auto-runs the whole corridor via
+  // reachableTargets()/onCellClick() -- only what's drawn on screen changes.
   function updateReachableHints(){
     var cells = els.tapGrid.children;
     for (var i = 0; i < cells.length; i++) cells[i].classList.remove('reachable');
-    reachableTargets().forEach(function(t){ cells[t.cell].classList.add('reachable'); });
+    var cols = state.cols;
+    var r = Math.floor(state.player / cols), c = state.player % cols;
+    for (var k = 0; k < ALL_DIRS.length; k++) {
+      var dir = ALL_DIRS[k];
+      if (!(state.walls[state.player] & dir)) continue;
+      var d = DELTA[dir];
+      var ni = idx(r + d[0], c + d[1], cols);
+      cells[ni].classList.add('reachable');
+    }
   }
 
   // One continuous glide from the current cell through every cell in `path`
