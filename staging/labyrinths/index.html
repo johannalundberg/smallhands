@@ -106,7 +106,7 @@
   .board-wrap{ position:relative; }
   .board-wrap.busy{ pointer-events:none; }
   .maze-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; display:block; }
-  .wall-line{ stroke:var(--wall); stroke-width:4px; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+  .wall-line{ stroke:var(--wall); stroke-width:4px; stroke-linecap:square; vector-effect:non-scaling-stroke; }
 
   .tap-grid{ position:absolute; inset:0; display:grid; }
   .tap-cell{ position:relative; background:transparent; cursor:pointer; }
@@ -176,6 +176,9 @@
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
     }
+    /* Matches Number Puzzle's own grid-line weight on phone -- 4px reads
+       heavy at the smaller cell sizes mobile mazes render at. */
+    .wall-line{ stroke-width:2px; }
     .controls-slider{
       display:flex;
       align-items:flex-end;
@@ -194,6 +197,10 @@
     .controls-slider::-webkit-scrollbar{ display:none; }
     .diff-group, .btn-row{ display:contents; }
     body{
+      /* Matches Memory's own mobile top reserve: no header content up there
+         either, but a bare --unit of breathing room is still kept above the
+         board rather than letting it run flush to the very top edge. */
+      padding-top: var(--unit);
       padding-bottom: calc(var(--unit) * 2 + var(--icon-size));
     }
   }
@@ -542,9 +549,10 @@
     // being capped at 720 itself and falling short of the square tiers.
     if (mobile) {
       var trayRect = els.controlsSlider.getBoundingClientRect();
-      var reserveBottom = parseFloat(getComputedStyle(document.body).paddingBottom);
+      var bodyStyle = getComputedStyle(document.body);
+      var reserveV = parseFloat(bodyStyle.paddingTop) + parseFloat(bodyStyle.paddingBottom);
       widthBudget = Math.min(window.innerWidth - trayRect.left * 2, 720);
-      heightBudget = vh - reserveBottom;
+      heightBudget = vh - reserveV;
     } else {
       var r = els.diffGroup.getBoundingClientRect();
       var reserve = r.top * 2 + r.height; // icon row height + gap above + matching gap below
