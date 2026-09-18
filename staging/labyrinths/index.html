@@ -502,19 +502,24 @@
     var mobile = window.innerWidth <= 767 || vh <= 500;
     var widthBudget, heightBudget;
 
+    // The 720 sanity cap only applies to the axis each layout always fills
+    // (height on desktop, width on mobile) -- the other, "follower" axis is
+    // left to its own natural budget so a wide/tall rectangular grid can
+    // still grow to actually reach that filled axis's full size, instead of
+    // being capped at 720 itself and falling short of the square tiers.
     if (mobile) {
       var trayRect = els.controlsSlider.getBoundingClientRect();
       var reserveBottom = parseFloat(getComputedStyle(document.body).paddingBottom);
-      widthBudget = window.innerWidth - trayRect.left * 2;
+      widthBudget = Math.min(window.innerWidth - trayRect.left * 2, 720);
       heightBudget = vh - reserveBottom;
     } else {
       var r = els.diffGroup.getBoundingClientRect();
       var reserve = r.top * 2 + r.height; // icon row height + gap above + matching gap below
-      widthBudget = Math.min(window.innerWidth * 0.94, 720);
-      heightBudget = vh - reserve * 2;
+      widthBudget = window.innerWidth * 0.94;
+      heightBudget = Math.min(vh - reserve * 2, 720);
     }
 
-    var cell = Math.min(widthBudget / cols, heightBudget / rows, 720 / Math.max(cols, rows));
+    var cell = Math.min(widthBudget / cols, heightBudget / rows);
     els.boardWrap.style.width = (cell * cols) + 'px';
     els.boardWrap.style.height = (cell * rows) + 'px';
   }
@@ -535,8 +540,10 @@
   // `dir`, keeps walking forward through plain pass-through cells (exactly 2
   // open sides) and returns every cell up to (and including) the first dead
   // end, junction (3-4 open sides), or the exit -- i.e. the next real decision
-  // point. Tapping any dot along this trail, or pressing an arrow key, travels
-  // the whole way in one move instead of one tap per single cell.
+  // point -- plus the direction of that final step (so a caller can tell which
+  // side of the decision point it arrived from). Tapping any dot along this
+  // trail, or pressing an arrow key, travels the whole way in one move instead
+  // of one tap per single cell.
   function traceCorridor(fromCell, dir){
     var cols = state.cols;
     var path = [];
@@ -558,7 +565,45 @@
       if (forward === null) break;
       dir = forward;
     }
-    return path;
+    return { path: path, dir: dir };
+  }
+
+  // For each open direction from the player, trace to the next real decision
+  // point (skipping plain pass-through cells). A dead end or the exit is
+  // itself the target -- there's nothing further to choose. A junction's
+  // target is each branch one step beyond it, in every open direction except
+  // the one just arrived from -- so the hint shows the upcoming choice itself
+  // (e.g. "left or straight ahead") rather than just a single dot marking
+  // that the junction is reachable. Each target carries the FULL path from
+  // the player to it (through the junction, not stopping there), so tapping
+  // a branch dot animates the whole way in one move.
+  function reachableTargets(){
+    var cols = state.cols;
+    var targets = [];
+    for (var k = 0; k < ALL_DIRS.length; k++) {
+      var dir = ALL_DIRS[k];
+      if (!(state.walls[state.player] & dir)) continue;
+      var trace = traceCorridor(state.player, dir);
+      var endCell = trace.path[trace.path.length - 1];
+      var deg = degree(state.walls[endCell]);
+
+      if (endCell === state.exit || deg <= 2) {
+        targets.push({ cell: endCell, path: trace.path });
+        continue;
+      }
+
+      var cameFromDir = OPPOSITE[trace.dir];
+      var er = Math.floor(endCell / cols), ec = endCell % cols;
+      for (var j = 0; j < ALL_DIRS.length; j++) {
+        var branchDir = ALL_DIRS[j];
+        if (branchDir === cameFromDir) continue;
+        if (!(state.walls[endCell] & branchDir)) continue;
+        var bd = DELTA[branchDir];
+        var ni = idx(er + bd[0], ec + bd[1], cols);
+        targets.push({ cell: ni, path: trace.path.concat([ni]) });
+      }
+    }
+    return targets;
   }
 
   function onCellClick(e){
@@ -566,13 +611,11 @@
     var j = Number(e.currentTarget.dataset.i);
     if (j === state.player) return;
 
-    for (var k = 0; k < ALL_DIRS.length; k++) {
-      var dir = ALL_DIRS[k];
-      if (!(state.walls[state.player] & dir)) continue;
-      var path = traceCorridor(state.player, dir);
-      var tapIndex = path.indexOf(j);
+    var targets = reachableTargets();
+    for (var i = 0; i < targets.length; i++) {
+      var tapIndex = targets[i].path.indexOf(j);
       if (tapIndex !== -1) {
-        animateAlongPath(path.slice(0, tapIndex + 1));
+        animateAlongPath(targets[i].path.slice(0, tapIndex + 1));
         return;
       }
     }
@@ -590,21 +633,10 @@
     }
   }
 
-  // Dots trailing every reachable corridor from the player's position (not
-  // just the immediate neighbor) -- previews exactly how far a single tap will
-  // carry the token, same idea as other maze games' "click the dots to move."
-  // Only the decision point itself gets a dot (the next dead end, fork, or
-  // the exit) -- not every cell along the way there, which read as far too
-  // many dots for a plain corridor with no actual choice in it.
   function updateReachableHints(){
     var cells = els.tapGrid.children;
     for (var i = 0; i < cells.length; i++) cells[i].classList.remove('reachable');
-    for (var k = 0; k < ALL_DIRS.length; k++) {
-      var dir = ALL_DIRS[k];
-      if (!(state.walls[state.player] & dir)) continue;
-      var path = traceCorridor(state.player, dir);
-      cells[path[path.length - 1]].classList.add('reachable');
-    }
+    reachableTargets().forEach(function(t){ cells[t.cell].classList.add('reachable'); });
   }
 
   // One continuous glide from the current cell through every cell in `path`
@@ -645,7 +677,7 @@
     if (!dir || state.busy) return;
     e.preventDefault();
     if (!(state.walls[state.player] & dir)) { bumpWall(dir); return; }
-    animateAlongPath(traceCorridor(state.player, dir));
+    animateAlongPath(traceCorridor(state.player, dir).path);
   });
 
   // ---------- flow ----------
