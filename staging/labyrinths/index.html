@@ -279,7 +279,11 @@
   // window, rows on a narrow phone) via hardDims() below, so it gains real
   // length/complexity without cells shrinking past a comfortable tap target
   // on the axis that's already constrained.
-  var HARD_LONG = 18, HARD_SHORT = 11;
+  // The short axis must be bigger than medium's own 13, or hard's cells end
+  // up coarser (bigger) than medium's on whatever axis is actually binding
+  // the board size -- more total cells from the extra length doesn't help if
+  // each cell is still larger than medium's.
+  var HARD_LONG = 28, HARD_SHORT = 16;
 
   var TIER_MAZE = {
     easy:   { cols: 10, rows: 10, braid: 0 },
