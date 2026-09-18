@@ -19,7 +19,7 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#5D401F;
+    --bg:#583813;
     --wall:#E88CE5;
     --bright:#E4E4E4;
     --ink:#202020;
@@ -184,7 +184,6 @@
     .controls-slider::-webkit-scrollbar{ display:none; }
     .diff-group, .btn-row{ display:contents; }
     body{
-      padding-top: calc(var(--unit) * 2 + var(--icon-size));
       padding-bottom: calc(var(--unit) * 2 + var(--icon-size));
     }
   }
@@ -485,12 +484,37 @@
   }
 
   // The hard tier is rectangular, so the board can't just be a square capped
-  // to the viewport -- size cells so the LONGER grid axis fits the available
-  // budget and the shorter axis follows proportionally, keeping cells square.
+  // to the viewport -- size cells so both grid axes fit their own available
+  // budget, keeping cells square. Budgets are measured off the real rendered
+  // icon rows/tray rather than recomputed from --unit/--icon-size, so this
+  // stays correct at every breakpoint without duplicating that math.
+  //
+  // Desktop: same technique as othello/tictactoe's own "fill the height"
+  // boards -- the board fills all available height between the top and
+  // bottom icon rows (their own real position, not a fixed guess), with the
+  // width capped like theirs (94vw, max 720px).
+  //
+  // Mobile: no top reserve at all (the board is centered between the very
+  // top of the page and the tray, since body's padding-top was dropped),
+  // and the board's width matches the tray's own side inset ("site margin").
   function sizeBoardWrap(cols, rows){
     var vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    var budget = Math.min(window.innerWidth * 0.88, vh * 0.88, 720);
-    var cell = budget / Math.max(cols, rows);
+    var mobile = window.innerWidth <= 767 || vh <= 500;
+    var widthBudget, heightBudget;
+
+    if (mobile) {
+      var trayRect = els.controlsSlider.getBoundingClientRect();
+      var reserveBottom = parseFloat(getComputedStyle(document.body).paddingBottom);
+      widthBudget = window.innerWidth - trayRect.left * 2;
+      heightBudget = vh - reserveBottom;
+    } else {
+      var r = els.diffGroup.getBoundingClientRect();
+      var reserve = r.top * 2 + r.height; // icon row height + gap above + matching gap below
+      widthBudget = Math.min(window.innerWidth * 0.94, 720);
+      heightBudget = vh - reserve * 2;
+    }
+
+    var cell = Math.min(widthBudget / cols, heightBudget / rows, 720 / Math.max(cols, rows));
     els.boardWrap.style.width = (cell * cols) + 'px';
     els.boardWrap.style.height = (cell * rows) + 'px';
   }
