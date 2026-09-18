@@ -105,7 +105,12 @@
      ratio can't describe it. */
   .board-wrap{ position:relative; }
   .board-wrap.busy{ pointer-events:none; }
-  .maze-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; display:block; }
+  /* Painted after (on top of) .tap-grid in the markup, so the player token
+     always draws over the translucent reachable-dots instead of being
+     covered by one when it lands right next to the token. All the actual
+     clicks still land on .tap-grid underneath since the maze itself has no
+     interactive parts of its own. */
+  .maze-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; display:block; pointer-events:none; }
   .wall-line{ stroke:var(--wall); stroke-width:4px; stroke-linecap:square; vector-effect:non-scaling-stroke; }
 
   .tap-grid{ position:absolute; inset:0; display:grid; }
@@ -266,8 +271,8 @@
   </div>
 
   <div class="board-wrap" id="boardWrap">
-    <svg class="maze-svg" id="mazeSvg" overflow="visible"></svg>
     <div class="tap-grid" id="tapGrid"></div>
+    <svg class="maze-svg" id="mazeSvg" overflow="visible"></svg>
   </div>
 
   <div class="celebration" id="celebration"></div>
