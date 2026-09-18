@@ -19,7 +19,8 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#B5651D;
+    --bg:#614118;
+    --wall:#E88CE5;
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
@@ -103,7 +104,7 @@
   .board-wrap{ position:relative; width:var(--board-size); height:var(--board-size); }
   .board-wrap.busy{ pointer-events:none; }
   .maze-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; display:block; }
-  .wall-line{ stroke:var(--bright); stroke-width:4px; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+  .wall-line{ stroke:var(--wall); stroke-width:4px; stroke-linecap:round; vector-effect:non-scaling-stroke; }
 
   .tap-grid{ position:absolute; inset:0; display:grid; }
   .tap-cell{ position:relative; background:transparent; cursor:pointer; }
