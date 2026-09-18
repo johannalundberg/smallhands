@@ -124,7 +124,22 @@
   }
   .tap-cell.reachable::after{ opacity:0.35; transform:translate(-50%,-50%) scale(1); }
 
-  .player-token circle{ fill:var(--bright); }
+  .player-token .token-face{ fill:var(--bright); }
+  /* Same placeholder "eyes" motif as the Memory tiles -- a blinking pair of
+     dots -- reused here as the player token's face instead of a plain
+     circle. transform-box:fill-box is required for the same reason as the
+     exit ring above: an SVG element's transform-origin otherwise resolves
+     against the whole SVG viewport's corner, not the eye's own center. */
+  .player-token .token-eye{
+    fill:var(--ink);
+    transform-box:fill-box;
+    transform-origin:center;
+    animation: token-blink 4.2s ease-in-out infinite;
+  }
+  @keyframes token-blink{
+    0%, 92%, 100%{ transform:scaleY(1); }
+    96%{ transform:scaleY(0.12); }
+  }
   @keyframes bump-wall{
     0%, 100%{ transform:translate(var(--tx, 0px), var(--ty, 0px)); }
     50%{ transform:translate(calc(var(--tx, 0px) + var(--bx, 0px)), calc(var(--ty, 0px) + var(--by, 0px))); }
@@ -458,8 +473,15 @@
     token.setAttribute('id', 'playerToken');
     token.setAttribute('class', 'player-token');
     var dot = document.createElementNS(SVG_NS, 'circle');
+    dot.setAttribute('class', 'token-face');
     dot.setAttribute('cx', 0.5); dot.setAttribute('cy', 0.5); dot.setAttribute('r', 0.32);
     token.appendChild(dot);
+    [0.398, 0.602].forEach(function(ex){
+      var eye = document.createElementNS(SVG_NS, 'circle');
+      eye.setAttribute('class', 'token-eye');
+      eye.setAttribute('cx', ex); eye.setAttribute('cy', 0.43); eye.setAttribute('r', 0.045);
+      token.appendChild(eye);
+    });
     svg.appendChild(token);
     els.playerToken = token;
 
