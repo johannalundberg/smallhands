@@ -145,10 +145,6 @@
     .goal-icon.hover-lit{ color:var(--bright); }
   }
 
-  @keyframes bounce-in{
-    0%{ transform:scale(0); opacity:0; }
-    100%{ transform:scale(var(--final-scale)); opacity:1; }
-  }
   .celebration{
     position:absolute;
     inset:0;
@@ -157,10 +153,31 @@
     justify-content:center;
     z-index:4;
   }
-  .celebration-face{
-    width:min(70vmin, 700px);
+  .celebration-robot{
+    width:min(50vmin, 400px);
     height:auto;
-    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  /* One jump, not a loop: starts already standing (down pose visible), cuts
+     instantly to the arms-out-up pose while the wrapper bobs upward (a
+     smooth arc, not a cut), then cuts back to standing as it lands, then
+     the game returns. The pose swap itself is a hard cut (steps(1), same
+     technique as the bat/eyes pair-icons' own frame flip) rather than a
+     cross-fade -- only the jump's own motion eases. */
+  .robot-jump{ animation: robot-bob 1.4s ease-in-out 1 both; }
+  .robot-pose-down, .robot-pose-up{ transform-box:fill-box; }
+  .robot-pose-down{ animation: robot-pose-down 1.4s steps(1) 1 both; }
+  .robot-pose-up{ animation: robot-pose-up 1.4s steps(1) 1 both; }
+  @keyframes robot-bob{
+    0%, 100%{ transform:translateY(0); }
+    45%, 65%{ transform:translateY(-10%); }
+  }
+  @keyframes robot-pose-down{
+    0%, 100%{ opacity:1; }
+    30%, 80%{ opacity:0; }
+  }
+  @keyframes robot-pose-up{
+    0%, 100%{ opacity:0; }
+    30%, 80%{ opacity:1; }
   }
 
   /* ---------- phone: single scrollable slider-menu bar ---------- */
@@ -732,27 +749,98 @@
 
   // ---------- celebration ----------
 
-  var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 786.799 291.08" style="--final-scale:1;">' +
-    '<path fill="var(--bright)" d="M583 101C583 127.56 578.2 152.2 568.6 174.92C558.68 197.96 545.08 218.12 527.8 235.4C510.2 253 489.88 266.6 466.84 276.2C443.8 286.12 419.16 291.08 392.92 291.08C366.36 291.08 341.72 286.12 319 276.2C295.96 266.6 275.8 253 258.52 235.4C240.92 218.12 227.32 197.96 217.72 174.92C207.8 152.2 202.84 127.56 202.84 101L223 101C223 124.68 227.48 146.76 236.44 167.24C245.08 187.72 257.24 205.64 272.92 221C288.28 236.68 306.2 248.84 326.68 257.48C347.16 266.44 369.24 270.92 392.92 270.92C416.6 270.92 438.68 266.44 459.16 257.48C479.64 248.84 497.72 236.68 513.4 221C528.76 205.64 540.92 187.72 549.88 167.24C558.52 146.76 562.84 124.68 562.84 101L583 101Z"/>' +
-    '<path fill="var(--bright)" d="M751.759 72.96C741.999 72.96 733.679 69.6 726.799 62.88C720.079 56.16 716.719 47.44 716.719 36.72C716.719 25.84 720.079 17.04 726.799 10.32C733.679 3.44001 741.999 0 751.759 0C761.519 0 769.759 3.44001 776.479 10.32C783.359 17.04 786.799 25.84 786.799 36.72C786.799 47.44 783.359 56.16 776.479 62.88C769.759 69.6 761.519 72.96 751.759 72.96Z"/>' +
-    '<path fill="var(--bright)" d="M35.04 72.96C25.28 72.96 16.96 69.6 10.08 62.88C3.36002 56.16 0 47.44 0 36.72C0 25.84 3.36002 17.04 10.08 10.32C16.96 3.44001 25.28 0 35.04 0C44.8 0 53.04 3.44001 59.76 10.32C66.64 17.04 70.08 25.84 70.08 36.72C70.08 47.44 66.64 56.16 59.76 62.88C53.04 69.6 44.8 72.96 35.04 72.96Z"/>' +
+  // Test icon (Figma frames 198:1163 "down"/crouch and 198:1217 "up"/jump,
+  // arms-out) -- geometry pulled from the two downloaded SVG assets, /10 to
+  // a 29x29 viewBox. Body/limbs use --bright as a placeholder color (the
+  // plan is a per-game color once this lands); eye-holes cut through to
+  // --bg and the pupil is drawn back in --bright, mirroring the original
+  // white-hole/dark-pupil contrast with this site's own tokens instead of
+  // literal white/black.
+  var ROBOT_DOWN =
+    '<rect fill="var(--bright)" x="7" y="11" width="14" height="9" rx="1"/>' +
+    '<rect fill="var(--bright)" x="12" y="10" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="15" y="10" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="16" y="9" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="17" y="8" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="18" y="7" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="11" y="9" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="10" y="8" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="9" y="7" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="21" y="15" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="22" y="14" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="23" y="13" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="6" y="15" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="5" y="14" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="4" y="13" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="12" y="20" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="12" y="21" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="12" y="22" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="12" y="23" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="11" y="23" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="10" y="23" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="15" y="20" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="15" y="21" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="15" y="22" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="15" y="23" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="16" y="23" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="17" y="23" width="1" height="1"/>' +
+    '<circle fill="var(--bg)" cx="11.5" cy="15.5" r="1.5"/>' +
+    '<circle fill="var(--bg)" cx="16.5" cy="15.5" r="1.5"/>' +
+    '<circle fill="var(--bright)" cx="11.5" cy="15.5" r="1"/>' +
+    '<circle fill="var(--bright)" cx="16.5" cy="15.5" r="1"/>';
+  var ROBOT_UP =
+    '<rect fill="var(--bright)" x="7" y="8" width="14" height="9" rx="1"/>' +
+    '<rect fill="var(--bright)" x="12" y="7" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="15" y="7" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="16" y="6" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="17" y="5" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="18" y="4" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="11" y="6" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="10" y="5" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="9" y="4" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="21" y="12" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="22" y="13" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="23" y="14" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="6" y="12" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="5" y="13" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="4" y="14" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="12" y="17" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="12" y="18" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="12" y="19" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="12" y="20" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="11" y="21" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="10" y="22" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="15" y="17" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="15" y="18" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="15" y="19" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="15" y="20" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="16" y="21" width="1" height="1"/>' +
+    '<rect fill="var(--bright)" x="17" y="22" width="1" height="1"/>' +
+    '<circle fill="var(--bg)" cx="11.5" cy="12.5" r="1.5"/>' +
+    '<circle fill="var(--bg)" cx="16.5" cy="12.5" r="1.5"/>' +
+    '<circle fill="var(--bright)" cx="11.5" cy="12.5" r="1"/>' +
+    '<circle fill="var(--bright)" cx="16.5" cy="12.5" r="1"/>';
+  var CELEBRATION_ROBOT_SVG = '<svg class="celebration-robot" viewBox="0 0 29 29">' +
+    '<g class="robot-jump">' +
+      '<g class="robot-pose-down">' + ROBOT_DOWN + '</g>' +
+      '<g class="robot-pose-up">' + ROBOT_UP + '</g>' +
+    '</g>' +
     '</svg>';
 
-  // A maze has no lose state -- reaching the exit is the only outcome, so this
-  // always shows the win face on the shared success-green, unlike the two-outcome
-  // showCelebration(isWin) other games use.
+  // A maze has no lose state -- reaching the exit is the only outcome. The
+  // page's own background never changes (no more flashing to --success) --
+  // that flash was the source of several Chrome-iOS/keyboard-less-viewport
+  // bugs on other games; the robot just jumps once on top of it instead.
   function showCelebration(){
     updateAppHeight();
-    els.celebration.innerHTML = CELEBRATION_FACE_SVG;
-    document.body.style.background = 'var(--success)';
+    els.celebration.innerHTML = CELEBRATION_ROBOT_SVG;
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
       els.celebration.style.display = 'none';
       els.boardWrap.style.display = '';
-      document.body.style.background = '';
       startGame();
-    }, 3000);
+    }, 1800);
   }
 
   els.diffGroup.addEventListener('click', function(e){
