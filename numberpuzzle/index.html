@@ -806,10 +806,10 @@
     setTimeout(function(){
       state.progress += 1;
       updateProgressDots();
-      document.body.style.background = '';
       if (state.progress >= ROUND_SIZE) {
-        showCelebration();
+        showCelebration(); // background stays green through the celebration; reset there instead
       } else {
+        document.body.style.background = '';
         nextPuzzle();
       }
     }, 1600);
@@ -833,6 +833,7 @@
     setTimeout(function(){
       els.celebration.style.display = 'none';
       els.boardWrap.style.display = '';
+      document.body.style.background = '';
       state.progress = 0;
       updateProgressDots();
       state.digitOrder = shuffleDigits();
