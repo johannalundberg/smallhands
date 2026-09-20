@@ -146,15 +146,16 @@
   }
   .player-token.bump{ animation: bump-wall 180ms ease; }
 
-  /* transform-box:fill-box is required here -- an SVG element's transform-origin
-     otherwise resolves against the whole SVG viewport's corner, not its own
-     center, so the scale() below would visibly drift the ring toward/away from
-     the top-left of the maze instead of just pulsing in place. */
-  .target-ring{ fill:none; stroke:var(--bright); vector-effect:non-scaling-stroke; transform-box:fill-box; transform-origin:center; animation: ring-breathe 1.8s ease-in-out infinite; }
-  .target-ring.r2{ animation-delay:0.3s; }
-  @keyframes ring-breathe{
-    0%,100%{ opacity:0.9; transform:scale(1); }
-    50%{ opacity:0.5; transform:scale(1.12); }
+  /* transform-box:fill-box is required here for the same reason as the old
+     exit ring -- an SVG element's transform-origin otherwise resolves
+     against the whole SVG viewport's corner, not the heart's own center. */
+  .heart-beat{ transform-box:fill-box; transform-origin:center; animation: heart-thump 1.2s ease-in-out infinite; }
+  @keyframes heart-thump{
+    0%, 100%{ transform:scale(1); }
+    15%{ transform:scale(1.18); }
+    30%{ transform:scale(1); }
+    45%{ transform:scale(1.12); }
+    60%{ transform:scale(1); }
   }
 
   @keyframes bounce-in{
@@ -469,16 +470,33 @@
       }
     }
 
-    // exit ring (static breathing marker, same visual language as Connect the Dots)
+    // exit marker: a pixel-art heart (Figma node 195:945), same coordinates
+    // verbatim in their own 44x36.667 viewBox so no scaling math is needed
+    // here -- just centered and sized as a unit within the exit cell, then
+    // given a simple heartbeat pulse (see .heart-beat below) so it reads as
+    // alive rather than a static goal marker.
     var er = Math.floor(state.exit / cols), ec = state.exit % cols;
-    var ring1 = document.createElementNS(SVG_NS, 'circle');
-    ring1.setAttribute('class', 'target-ring r1');
-    ring1.setAttribute('cx', ec + 0.5); ring1.setAttribute('cy', er + 0.5); ring1.setAttribute('r', 0.16);
-    var ring2 = document.createElementNS(SVG_NS, 'circle');
-    ring2.setAttribute('class', 'target-ring r2');
-    ring2.setAttribute('cx', ec + 0.5); ring2.setAttribute('cy', er + 0.5); ring2.setAttribute('r', 0.22);
-    svg.appendChild(ring1);
-    svg.appendChild(ring2);
+    var heartW = 0.6, heartH = heartW * (36.667 / 44);
+    var heart = document.createElementNS(SVG_NS, 'svg');
+    heart.setAttribute('x', ec + (1 - heartW) / 2); heart.setAttribute('y', er + (1 - heartH) / 2);
+    heart.setAttribute('width', heartW); heart.setAttribute('height', heartH);
+    heart.setAttribute('viewBox', '0 0 44 36.667');
+    heart.innerHTML =
+      '<g class="heart-beat">' +
+        '<rect fill="#A7CF56" x="27.500" y="0" width="9.167" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="7.334" y="0" width="9.167" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="3.668" y="3.664" width="16.5" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="23.832" y="3.664" width="16.5" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="0" y="7.332" width="44" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="0" y="11" width="44" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="0" y="14.668" width="44" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="3.668" y="18.332" width="36.667" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="9.166" y="21.996" width="25.667" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="12.834" y="25.668" width="18.333" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="16.5" y="29.332" width="11" height="3.667"/>' +
+        '<rect fill="#A7CF56" x="20.166" y="33" width="3.667" height="3.667"/>' +
+      '</g>';
+    svg.appendChild(heart);
 
     var token = document.createElementNS(SVG_NS, 'g');
     token.setAttribute('id', 'playerToken');
@@ -493,16 +511,16 @@
     icon.setAttribute('width', iconSize); icon.setAttribute('height', iconSize);
     icon.setAttribute('viewBox', '0 0 20 20');
     icon.innerHTML =
-      '<circle fill="#E4E4E4" cx="10" cy="10" r="7"/>' +
-      '<circle fill="#181818" cx="7.5" cy="9.5" r="1.5"/>' +
-      '<circle fill="#181818" cx="12.5" cy="9.5" r="1.5"/>' +
+      '<circle fill="var(--wall)" cx="10" cy="10" r="7"/>' +
+      '<circle fill="#E4E4E4" cx="7.5" cy="9.5" r="1.5"/>' +
+      '<circle fill="#E4E4E4" cx="12.5" cy="9.5" r="1.5"/>' +
       '<g class="frame-a">' +
-        '<rect fill="#E4E4E4" x="8" y="9" width="1.05" height="1"/>' +
-        '<rect fill="#E4E4E4" x="13" y="9" width="1.05" height="1"/>' +
+        '<rect fill="#111111" x="8" y="9" width="1.05" height="1"/>' +
+        '<rect fill="#111111" x="13" y="9" width="1.05" height="1"/>' +
       '</g>' +
       '<g class="frame-b">' +
-        '<rect fill="#E4E4E4" x="5.95" y="9" width="1.05" height="1"/>' +
-        '<rect fill="#E4E4E4" x="10.95" y="9" width="1.05" height="1"/>' +
+        '<rect fill="#111111" x="5.95" y="9" width="1.05" height="1"/>' +
+        '<rect fill="#111111" x="10.95" y="9" width="1.05" height="1"/>' +
       '</g>';
     token.appendChild(icon);
     svg.appendChild(token);
