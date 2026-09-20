@@ -734,6 +734,14 @@
     '</svg>';
 
   function showCelebration(){
+    // Called right after the round's last correct answer, while the keyboard
+    // (and its shrunken visualViewport height) may still be up -- centering
+    // the overlay against the live --app-height here would place it high,
+    // then visibly slide down to true center once the keyboard's async
+    // dismiss animation finishes and the next resize event corrects it.
+    // The round is over and the keyboard is about to close regardless, so
+    // center against the known full-height value instead of waiting for it.
+    document.documentElement.style.setProperty('--app-height', noKeyboardHeight + 'px');
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
     els.equationTap.style.display = 'none';
     els.celebration.style.display = 'flex';
