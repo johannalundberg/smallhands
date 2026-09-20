@@ -144,6 +144,14 @@
      (non-anti-aliased) edges remove it, matching Memory's own fix for the
      same issue on its own pixel-art icons. */
   .heart-beat rect{ shape-rendering:crispEdges; }
+  /* Desktop-only affordance: the exit cell's own tap-cell listens for hover
+     (see updateReachableHints()) and toggles this class only while the exit
+     is actually one step away and open -- i.e. exactly when clicking it
+     would win. Gated to real hover devices so a tap on mobile can't leave it
+     stuck green. */
+  @media (hover:hover) and (pointer:fine){
+    .heart-beat.hover-green rect{ fill:#52A973; }
+  }
   @keyframes heart-thump{
     0%, 100%{ transform:scale(1); }
     15%{ transform:scale(1.18); }
@@ -475,6 +483,10 @@
     heart.setAttribute('x', ec + (1 - heartW) / 2); heart.setAttribute('y', er + (1 - heartH) / 2);
     heart.setAttribute('width', heartW); heart.setAttribute('height', heartH);
     heart.setAttribute('viewBox', '0 0 44 36.667');
+    // A nested <svg> clips to its own viewport by default, so the beat's
+    // scale-up was getting cropped square at this box's edges instead of
+    // growing freely -- overflow:visible lets the whole heart grow past it.
+    heart.setAttribute('overflow', 'visible');
     heart.innerHTML =
       '<g class="heart-beat">' +
         '<rect fill="#E4E4E4" x="27.500" y="0" width="9.167" height="3.667"/>' +
@@ -491,6 +503,20 @@
         '<rect fill="#E4E4E4" x="20.166" y="33" width="3.667" height="3.667"/>' +
       '</g>';
     svg.appendChild(heart);
+
+    // Green-on-hover only while the exit is actually reachable in one tap
+    // (its own tap-cell carries the 'reachable' class exactly then, same as
+    // any other hint dot -- see updateReachableHints()). Checked live at
+    // hover time rather than once here, so it stays correct as the player
+    // moves without needing to re-attach anything.
+    var heartGroup = heart.querySelector('.heart-beat');
+    var exitCell = els.tapGrid.children[state.exit];
+    exitCell.addEventListener('mouseenter', function(){
+      if (exitCell.classList.contains('reachable')) heartGroup.classList.add('hover-green');
+    });
+    exitCell.addEventListener('mouseleave', function(){
+      heartGroup.classList.remove('hover-green');
+    });
 
     var token = document.createElementNS(SVG_NS, 'g');
     token.setAttribute('id', 'playerToken');
