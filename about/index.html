@@ -59,6 +59,25 @@
     .about-text{ font-size:26px; letter-spacing:0.52px; max-width:663px; }
   }
 
+  /* Phone-landscape "please rotate" block, matching the homepage and every
+     game page's own approach instead of trying to reflow the text sideways. */
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:#EE3B3B;
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height:500px) and (min-width:500px) and (orientation:landscape){
+    .rotate-block{ display:flex; }
+  }
+
   /* Fixed bottom-left, tied to the viewport corner exactly like the homepage's
      own info button and every game page's back button -- same hover/active feel. */
   .back-btn{
@@ -99,6 +118,18 @@
     </svg>
   </a>
 
+  <div class="rotate-block">
+    <!-- Pixel-art sad face (Figma node 198:1914), matching the site's other
+         lose-state faces. -->
+    <svg viewBox="0 0 973 366">
+      <circle fill="#202020" cx="65" cy="65" r="65"/>
+      <circle fill="#202020" cx="908" cy="65" r="65"/>
+      <rect fill="#202020" x="291" y="171" width="392" height="65"/>
+      <rect fill="#202020" x="161" y="236" width="130" height="130"/>
+      <rect fill="#202020" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
 <script>
 (function(){
   "use strict";
@@ -112,6 +143,25 @@
     window.visualViewport.addEventListener('scroll', updateAppHeight);
   } else {
     window.addEventListener('resize', updateAppHeight);
+  }
+
+  // Rotating out of the phone-landscape rotate-block and back to portrait can
+  // leave iOS's WebKit engine (Safari, Chrome, any iOS browser — Apple requires
+  // them all to use it) rendering at the previous orientation's zoom/scale.
+  // Reload outright the moment the device leaves that blocked landscape state,
+  // matching the homepage's own fix for the same issue.
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) {
+      location.reload();
+    }
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) {
+    landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  } else if (landscapeBlockMQ.addListener) {
+    landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
   }
 })();
 </script>
