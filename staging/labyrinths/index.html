@@ -111,7 +111,7 @@
      clicks still land on .tap-grid underneath since the maze itself has no
      interactive parts of its own. */
   .maze-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; display:block; pointer-events:none; }
-  .wall-line{ stroke:var(--wall); stroke-width:4px; stroke-linecap:square; vector-effect:non-scaling-stroke; }
+  .wall-line{ stroke:var(--wall); stroke-width:3.5px; stroke-linecap:square; vector-effect:non-scaling-stroke; }
 
   .tap-grid{ position:absolute; inset:0; display:grid; }
   .tap-cell{ position:relative; background:transparent; cursor:pointer; }
@@ -150,6 +150,11 @@
      exit ring -- an SVG element's transform-origin otherwise resolves
      against the whole SVG viewport's corner, not the heart's own center. */
   .heart-beat{ transform-box:fill-box; transform-origin:center; animation: heart-thump 1.2s ease-in-out infinite; }
+  /* Adjacent pixel rows sharing an exact edge can show a hairline seam from
+     anti-aliasing, worse while the scale animation is moving -- crisp
+     (non-anti-aliased) edges remove it, matching Memory's own fix for the
+     same issue on its own pixel-art icons. */
+  .heart-beat rect{ shape-rendering:crispEdges; }
   @keyframes heart-thump{
     0%, 100%{ transform:scale(1); }
     15%{ transform:scale(1.18); }
@@ -184,7 +189,7 @@
     }
     /* Matches Number Puzzle's own grid-line weight on phone -- 4px reads
        heavy at the smaller cell sizes mobile mazes render at. */
-    .wall-line{ stroke-width:3px; }
+    .wall-line{ stroke-width:2.5px; }
     .controls-slider{
       display:flex;
       align-items:flex-end;
