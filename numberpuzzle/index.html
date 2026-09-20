@@ -445,8 +445,8 @@
           });
         });
         loadRecolored(svgText, [
-          [/(<rect[^>]*fill=")#707EFF("[^>]*\/>)/, '$1#0DC754$2'],
-          [/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1#0DC754$2']
+          [/(<rect[^>]*fill=")#707EFF("[^>]*\/>)/, '$1#02B269$2'],
+          [/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1#02B269$2']
         ], function(img){
           DIGIT_IMG_GREEN[d] = img;
         });
@@ -818,11 +818,11 @@
   // Pixel-art smiley (Figma node 198:1809) instead of the earlier curved-path
   // one -- two round eyes and a stepped-block smile.
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
-    '<circle fill="#583813" cx="65" cy="65" r="65"/>' +
-    '<circle fill="#583813" cx="908" cy="65" r="65"/>' +
-    '<rect fill="#583813" x="161" y="171" width="130" height="130"/>' +
-    '<rect fill="#583813" x="683" y="171" width="130" height="130"/>' +
-    '<rect fill="#583813" x="291" y="301" width="392" height="65"/>' +
+    '<circle fill="var(--bright)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--bright)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--bright)" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="291" y="301" width="392" height="65"/>' +
     '</svg>';
 
   function showCelebration(){
