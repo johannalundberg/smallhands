@@ -153,37 +153,14 @@
     justify-content:center;
     z-index:4;
   }
-  /* Figma node 198:1613 (Tic-Tac-Toe/Success, the site's 1728x1117 desktop
-     frame): the robot's own bounding box there is ~496px wide, i.e. 28.7% of
-     that frame's width -- 28.7vw matches that proportion at any width up to
-     1728px, capped at the literal 496px from there on, same "fluid then
-     capped at the Figma pixel value" pattern as this site's other
-     Figma-derived sizes (e.g. tictactoe's --hero-size). */
-  .celebration-robot{
-    width:min(28.7vw, 496px);
+  @keyframes bounce-in{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(var(--final-scale)); opacity:1; }
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
     height:auto;
-  }
-  /* One jump, not a loop: starts already standing (down pose visible), cuts
-     instantly to the arms-out-up pose while the wrapper bobs upward (a
-     smooth arc, not a cut), then cuts back to standing as it lands, then
-     the game returns. The pose swap itself is a hard cut (steps(1), same
-     technique as the bat/eyes pair-icons' own frame flip) rather than a
-     cross-fade -- only the jump's own motion eases. */
-  .robot-jump{ animation: robot-bob 1.4s ease-in-out 1 both; }
-  .robot-pose-down, .robot-pose-up{ transform-box:fill-box; }
-  .robot-pose-down{ animation: robot-pose-down 1.4s steps(1) 1 both; }
-  .robot-pose-up{ animation: robot-pose-up 1.4s steps(1) 1 both; }
-  @keyframes robot-bob{
-    0%, 100%{ transform:translateY(0); }
-    45%, 65%{ transform:translateY(-10%); }
-  }
-  @keyframes robot-pose-down{
-    0%, 100%{ opacity:1; }
-    30%, 80%{ opacity:0; }
-  }
-  @keyframes robot-pose-up{
-    0%, 100%{ opacity:0; }
-    30%, 80%{ opacity:1; }
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
 
   /* ---------- phone: single scrollable slider-menu bar ---------- */
@@ -195,9 +172,6 @@
     /* Matches Number Puzzle's own grid-line weight on phone -- 4px reads
        heavy at the smaller cell sizes mobile mazes render at. */
     .wall-line{ stroke-width:2.5px; }
-    /* Figma node 198:1707 (Phone/Celebration, 393x852 frame): robot is
-       ~269px wide there, i.e. 68.5% of that frame's width. */
-    .celebration-robot{ width:min(68.5vw, 269px); }
     .controls-slider{
       display:flex;
       align-items:flex-end;
@@ -758,98 +732,32 @@
 
   // ---------- celebration ----------
 
-  // Test icon (Figma frames 198:1163 "down"/crouch and 198:1217 "up"/jump,
-  // arms-out) -- geometry pulled from the two downloaded SVG assets, /10 to
-  // a 29x29 viewBox. Body/limbs use --bright as a placeholder color (the
-  // plan is a per-game color once this lands); eye-holes cut through to
-  // --bg and the pupil is drawn back in --bright, mirroring the original
-  // white-hole/dark-pupil contrast with this site's own tokens instead of
-  // literal white/black.
-  var ROBOT_DOWN =
-    '<rect fill="var(--bright)" x="7" y="11" width="14" height="9" rx="1"/>' +
-    '<rect fill="var(--bright)" x="12" y="10" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="15" y="10" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="16" y="9" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="17" y="8" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="18" y="7" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="11" y="9" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="10" y="8" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="9" y="7" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="21" y="15" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="22" y="14" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="23" y="13" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="6" y="15" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="5" y="14" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="4" y="13" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="12" y="20" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="12" y="21" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="12" y="22" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="12" y="23" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="11" y="23" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="10" y="23" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="15" y="20" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="15" y="21" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="15" y="22" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="15" y="23" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="16" y="23" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="17" y="23" width="1" height="1"/>' +
-    '<circle fill="var(--bg)" cx="11.5" cy="15.5" r="1.5"/>' +
-    '<circle fill="var(--bg)" cx="16.5" cy="15.5" r="1.5"/>' +
-    '<circle fill="var(--bright)" cx="11.5" cy="15.5" r="1"/>' +
-    '<circle fill="var(--bright)" cx="16.5" cy="15.5" r="1"/>';
-  var ROBOT_UP =
-    '<rect fill="var(--bright)" x="7" y="8" width="14" height="9" rx="1"/>' +
-    '<rect fill="var(--bright)" x="12" y="7" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="15" y="7" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="16" y="6" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="17" y="5" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="18" y="4" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="11" y="6" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="10" y="5" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="9" y="4" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="21" y="12" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="22" y="13" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="23" y="14" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="6" y="12" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="5" y="13" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="4" y="14" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="12" y="17" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="12" y="18" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="12" y="19" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="12" y="20" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="11" y="21" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="10" y="22" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="15" y="17" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="15" y="18" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="15" y="19" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="15" y="20" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="16" y="21" width="1" height="1"/>' +
-    '<rect fill="var(--bright)" x="17" y="22" width="1" height="1"/>' +
-    '<circle fill="var(--bg)" cx="11.5" cy="12.5" r="1.5"/>' +
-    '<circle fill="var(--bg)" cx="16.5" cy="12.5" r="1.5"/>' +
-    '<circle fill="var(--bright)" cx="11.5" cy="12.5" r="1"/>' +
-    '<circle fill="var(--bright)" cx="16.5" cy="12.5" r="1"/>';
-  var CELEBRATION_ROBOT_SVG = '<svg class="celebration-robot" viewBox="0 0 29 29">' +
-    '<g class="robot-jump">' +
-      '<g class="robot-pose-down">' + ROBOT_DOWN + '</g>' +
-      '<g class="robot-pose-up">' + ROBOT_UP + '</g>' +
-    '</g>' +
+  // Pixel-art smiley (Figma node 198:1809) instead of the earlier curved-path
+  // one -- two round eyes and a stepped-block smile, same --bright fill and
+  // bounce-in treatment every other game's win face already uses.
+  var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="var(--bright)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--bright)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--bright)" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="291" y="301" width="392" height="65"/>' +
     '</svg>';
 
   // A maze has no lose state -- reaching the exit is the only outcome. The
-  // page's own background never changes (no more flashing to --success) --
+  // page's own background never changes on win (no flash to --success) --
   // that flash was the source of several Chrome-iOS/keyboard-less-viewport
-  // bugs on other games; the robot just jumps once on top of it instead.
+  // bugs on other games this session, so this avoids it rather than risking
+  // the same bug class here.
   function showCelebration(){
     updateAppHeight();
-    els.celebration.innerHTML = CELEBRATION_ROBOT_SVG;
+    els.celebration.innerHTML = CELEBRATION_FACE_SVG;
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
       els.celebration.style.display = 'none';
       els.boardWrap.style.display = '';
       startGame();
-    }, 1800);
+    }, 3000);
   }
 
   els.diffGroup.addEventListener('click', function(e){
