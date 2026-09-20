@@ -725,17 +725,14 @@
     '<rect fill="var(--bright)" x="683" y="236" width="130" height="130"/>' +
     '</svg>';
 
-  // Flash the shared success-green on a win, the shared --incorrect red on a loss.
   function showCelebration(isWin){
     updateAppHeight();
     els.celebration.innerHTML = isWin ? CELEBRATION_FACE_SVG : SAD_FACE_SVG;
-    document.body.style.background = isWin ? 'var(--success)' : 'var(--incorrect)';
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
       els.celebration.style.display = 'none';
       els.boardWrap.style.display = '';
-      document.body.style.background = '';
       startGame();
     }, 3000);
   }

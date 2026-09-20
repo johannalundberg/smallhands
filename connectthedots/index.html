@@ -484,11 +484,9 @@
 
   function onShapeComplete(){
     state.busy = true;
-    document.body.style.background = 'var(--success)';
     els.labels.querySelectorAll('.dot-point').forEach(function(row){ row.classList.add('reveal-hide'); });
     els.svg.querySelectorAll('.dot-line').forEach(function(line){ line.classList.add('complete'); });
     setTimeout(function(){
-      document.body.style.background = '';
       newShape();
     }, 2400);
   }

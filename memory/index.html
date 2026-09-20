@@ -956,14 +956,12 @@
 
   function showCelebration(){
     updateAppHeight();
-    document.body.style.background = 'var(--success)';
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
       els.celebration.style.display = 'none';
       els.boardWrap.style.display = '';
-      document.body.style.background = '';
       buildBoard();
     }, 3000);
   }

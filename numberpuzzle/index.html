@@ -412,13 +412,9 @@
     // (getDigitBitmap renders the full board, not one piece), just cropped into
     // place per cell via translate + overflow:hidden — so this stroke only ever
     // falls at the true outer edge of the whole assembled board, against the
-    // page's own background, never at a seam between two pieces. For the normal
-    // in-play piece that backdrop is the page bg (yellow here), which the stroke
-    // was never a match for, so it's dropped entirely (stroke="none"). The solved
-    // overlay is the one case where recoloring instead of dropping is correct:
-    // its fill rect swaps blue -> green, and the page background is switched to
-    // that same green for the whole time it's shown, so a green stroke actually
-    // does blend into its real backdrop.
+    // page's own background (yellow here), never at a seam between two pieces.
+    // That backdrop never matches the stroke color, in-play or solved, so it's
+    // dropped entirely (stroke="none") in both cases.
     function loadRecolored(svgText, replacements, onImg){
       var recolored = svgText;
       replacements.forEach(function(r){ recolored = recolored.replace(r[0], r[1]); });
@@ -446,7 +442,7 @@
         });
         loadRecolored(svgText, [
           [/(<rect[^>]*fill=")#707EFF("[^>]*\/>)/, '$1#02B269$2'],
-          [/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1#02B269$2']
+          [/(<rect[^>]*stroke=")#E4E4E4("[^>]*\/>)/, '$1none$2']
         ], function(img){
           DIGIT_IMG_GREEN[d] = img;
         });
@@ -798,7 +794,6 @@
 
   function onSolved(){
     state.busy = true;
-    document.body.style.background = 'var(--success)';
     els.boardLines.classList.add('solved');
     var boardPx = state.bounds[state.bounds.length - 1];
     els.boardSolvedImg.src = getDigitBitmap(state.digit, boardPx, true);
@@ -807,9 +802,8 @@
       state.progress += 1;
       updateProgressDots();
       if (state.progress >= ROUND_SIZE) {
-        showCelebration(); // background stays green through the celebration; reset there instead
+        showCelebration();
       } else {
-        document.body.style.background = '';
         nextPuzzle();
       }
     }, 1600);
@@ -833,7 +827,6 @@
     setTimeout(function(){
       els.celebration.style.display = 'none';
       els.boardWrap.style.display = '';
-      document.body.style.background = '';
       state.progress = 0;
       updateProgressDots();
       state.digitOrder = shuffleDigits();
