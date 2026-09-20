@@ -135,7 +135,7 @@
   }
   .player-token.bump{ animation: bump-wall 180ms ease; }
 
-  .goal-icon{ color:var(--wall); }
+  .goal-icon{ color:#E98B47; }
   /* Desktop-only affordance: the exit cell's own tap-cell listens for hover
      (see updateReachableHints()) and toggles this class only while the exit
      is actually one step away and open -- i.e. exactly when clicking it
@@ -457,20 +457,24 @@
       }
     }
 
-    // exit marker: a static target/bullseye icon in a 24x24 viewBox,
-    // centered as a unit within the exit cell. Uses currentColor so the
-    // hover-lit state (see .goal-icon below) is a single color swap.
+    // exit marker: the static target/bullseye icon (Figma node 195:1115) in
+    // its own 44x44 viewBox, same coordinates verbatim. Its visual extent
+    // (outer ring incl. stroke) reaches exactly half the viewBox, same as
+    // the eyes-icon player token's own face circle -- so using the same
+    // goalSize as the token's iconSize (0.64) matches their radii exactly.
+    // Uses currentColor so the hover-lit state (see .goal-icon below) is a
+    // single color swap.
     var er = Math.floor(state.exit / cols), ec = state.exit % cols;
-    var goalSize = 0.55;
+    var goalSize = 0.64;
     var goal = document.createElementNS(SVG_NS, 'svg');
     goal.setAttribute('x', ec + (1 - goalSize) / 2); goal.setAttribute('y', er + (1 - goalSize) / 2);
     goal.setAttribute('width', goalSize); goal.setAttribute('height', goalSize);
-    goal.setAttribute('viewBox', '0 0 24 24');
+    goal.setAttribute('viewBox', '0 0 44 44');
     goal.innerHTML =
       '<g class="goal-icon">' +
-        '<circle fill="none" stroke="currentColor" stroke-width="2" cx="12" cy="12" r="10"/>' +
-        '<circle fill="none" stroke="currentColor" stroke-width="2" cx="12" cy="12" r="6"/>' +
-        '<circle fill="currentColor" cx="12" cy="12" r="2.5"/>' +
+        '<circle fill="none" stroke="currentColor" stroke-width="4" cx="22" cy="22" r="20"/>' +
+        '<circle fill="none" stroke="currentColor" stroke-width="4" cx="22" cy="22" r="11"/>' +
+        '<circle fill="currentColor" stroke="currentColor" cx="22" cy="22" r="3.5"/>' +
       '</g>';
     svg.appendChild(goal);
 
