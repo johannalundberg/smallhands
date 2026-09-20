@@ -153,8 +153,14 @@
     justify-content:center;
     z-index:4;
   }
+  /* Figma node 198:1613 (Tic-Tac-Toe/Success, the site's 1728x1117 desktop
+     frame): the robot's own bounding box there is ~496px wide, i.e. 28.7% of
+     that frame's width -- 28.7vw matches that proportion at any width up to
+     1728px, capped at the literal 496px from there on, same "fluid then
+     capped at the Figma pixel value" pattern as this site's other
+     Figma-derived sizes (e.g. tictactoe's --hero-size). */
   .celebration-robot{
-    width:min(50vmin, 400px);
+    width:min(28.7vw, 496px);
     height:auto;
   }
   /* One jump, not a loop: starts already standing (down pose visible), cuts
@@ -189,6 +195,9 @@
     /* Matches Number Puzzle's own grid-line weight on phone -- 4px reads
        heavy at the smaller cell sizes mobile mazes render at. */
     .wall-line{ stroke-width:2.5px; }
+    /* Figma node 198:1707 (Phone/Celebration, 393x852 frame): robot is
+       ~269px wide there, i.e. 68.5% of that frame's width. */
+    .celebration-robot{ width:min(68.5vw, 269px); }
     .controls-slider{
       display:flex;
       align-items:flex-end;
