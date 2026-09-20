@@ -135,24 +135,14 @@
   }
   .player-token.bump{ animation: bump-wall 180ms ease; }
 
-  /* transform-box:fill-box is required here for the same reason as the old
-     exit ring -- an SVG element's transform-origin otherwise resolves
-     against the whole SVG viewport's corner, not the heart's own center. */
-  .heart-beat{ transform-box:fill-box; transform-origin:center; animation: heart-thump 1.2s ease-in-out infinite; }
+  .goal-icon{ color:var(--wall); }
   /* Desktop-only affordance: the exit cell's own tap-cell listens for hover
      (see updateReachableHints()) and toggles this class only while the exit
      is actually one step away and open -- i.e. exactly when clicking it
      would win. Gated to real hover devices so a tap on mobile can't leave it
-     stuck green. */
+     stuck lit. */
   @media (hover:hover) and (pointer:fine){
-    .heart-beat.hover-green path{ fill:#52A973; }
-  }
-  @keyframes heart-thump{
-    0%, 100%{ transform:scale(1); }
-    15%{ transform:scale(1.18); }
-    30%{ transform:scale(1); }
-    45%{ transform:scale(1.12); }
-    60%{ transform:scale(1); }
+    .goal-icon.hover-lit{ color:var(--bright); }
   }
 
   @keyframes bounce-in{
@@ -467,38 +457,35 @@
       }
     }
 
-    // exit marker: a smooth heart (a single filled path, not the earlier
-    // pixel-art version) in a 24x24 viewBox, centered as a unit within the
-    // exit cell and given a simple heartbeat pulse (see .heart-beat below)
-    // so it reads as alive rather than a static goal marker.
+    // exit marker: a static target/bullseye icon in a 24x24 viewBox,
+    // centered as a unit within the exit cell. Uses currentColor so the
+    // hover-lit state (see .goal-icon below) is a single color swap.
     var er = Math.floor(state.exit / cols), ec = state.exit % cols;
-    var heartSize = 0.55;
-    var heart = document.createElementNS(SVG_NS, 'svg');
-    heart.setAttribute('x', ec + (1 - heartSize) / 2); heart.setAttribute('y', er + (1 - heartSize) / 2);
-    heart.setAttribute('width', heartSize); heart.setAttribute('height', heartSize);
-    heart.setAttribute('viewBox', '0 0 24 24');
-    // A nested <svg> clips to its own viewport by default, so the beat's
-    // scale-up was getting cropped square at this box's edges instead of
-    // growing freely -- overflow:visible lets the whole heart grow past it.
-    heart.setAttribute('overflow', 'visible');
-    heart.innerHTML =
-      '<g class="heart-beat">' +
-        '<path fill="#E4E4E4" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>' +
+    var goalSize = 0.55;
+    var goal = document.createElementNS(SVG_NS, 'svg');
+    goal.setAttribute('x', ec + (1 - goalSize) / 2); goal.setAttribute('y', er + (1 - goalSize) / 2);
+    goal.setAttribute('width', goalSize); goal.setAttribute('height', goalSize);
+    goal.setAttribute('viewBox', '0 0 24 24');
+    goal.innerHTML =
+      '<g class="goal-icon">' +
+        '<circle fill="none" stroke="currentColor" stroke-width="2" cx="12" cy="12" r="10"/>' +
+        '<circle fill="none" stroke="currentColor" stroke-width="2" cx="12" cy="12" r="6"/>' +
+        '<circle fill="currentColor" cx="12" cy="12" r="2.5"/>' +
       '</g>';
-    svg.appendChild(heart);
+    svg.appendChild(goal);
 
-    // Green-on-hover only while the exit is actually reachable in one tap
-    // (its own tap-cell carries the 'reachable' class exactly then, same as
-    // any other hint dot -- see updateReachableHints()). Checked live at
+    // Lights up to --bright only while the exit is actually reachable in one
+    // tap (its own tap-cell carries the 'reachable' class exactly then, same
+    // as any other hint dot -- see updateReachableHints()). Checked live at
     // hover time rather than once here, so it stays correct as the player
     // moves without needing to re-attach anything.
-    var heartGroup = heart.querySelector('.heart-beat');
+    var goalIcon = goal.querySelector('.goal-icon');
     var exitCell = els.tapGrid.children[state.exit];
     exitCell.addEventListener('mouseenter', function(){
-      if (exitCell.classList.contains('reachable')) heartGroup.classList.add('hover-green');
+      if (exitCell.classList.contains('reachable')) goalIcon.classList.add('hover-lit');
     });
     exitCell.addEventListener('mouseleave', function(){
-      heartGroup.classList.remove('hover-green');
+      goalIcon.classList.remove('hover-lit');
     });
 
     var token = document.createElementNS(SVG_NS, 'g');
