@@ -202,12 +202,12 @@
      maze layouts previewing that the game generates a fresh one each time,
      square rather than circular since a maze's own corners read oddly
      cropped in a circle. */
-  .lab-badge{ background:var(--lab-badge); border-radius:14%; }
+  .lab-badge{ background:var(--lab-badge); }
   .lab-badge .lab-frame{ position:absolute; inset:0; width:100%; height:100%; display:block; opacity:0; animation: pz-fade3 4.5s ease-in-out infinite; }
   .lab-badge .lab-frame:nth-child(1){ animation-delay:0s; }
   .lab-badge .lab-frame:nth-child(2){ animation-delay:-1.5s; }
   .lab-badge .lab-frame:nth-child(3){ animation-delay:-3s; }
-  .lab-wall{ stroke:#E88CE5; stroke-width:4px; stroke-linecap:square; vector-effect:non-scaling-stroke; }
+  .lab-wall{ stroke:#E88CE5; stroke-width:2px; stroke-linecap:square; vector-effect:non-scaling-stroke; }
 
   @keyframes fade4{
     0%{ opacity:1; }
