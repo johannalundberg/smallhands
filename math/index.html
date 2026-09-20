@@ -709,9 +709,11 @@
   function flashCorrect(){
     state.busy = true;
     clearTimeout(flashTimer);
+    document.body.style.background = 'var(--success)';
     flashTimer = setTimeout(function(){
       state.progress += 1;
       updateProgressDots();
+      document.body.style.background = '';
       if (state.progress >= ROUND_SIZE) {
         showCelebration();
       } else {
@@ -747,7 +749,9 @@
   function flashIncorrect(){
     state.busy = true;
     clearTimeout(flashTimer);
+    document.body.style.background = 'var(--incorrect)';
     flashTimer = setTimeout(function(){
+      document.body.style.background = '';
       state.busy = false;
       if (state.attempts >= MAX_ATTEMPTS) {
         newProblem();
