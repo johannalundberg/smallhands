@@ -139,18 +139,13 @@
      exit ring -- an SVG element's transform-origin otherwise resolves
      against the whole SVG viewport's corner, not the heart's own center. */
   .heart-beat{ transform-box:fill-box; transform-origin:center; animation: heart-thump 1.2s ease-in-out infinite; }
-  /* Adjacent pixel rows sharing an exact edge can show a hairline seam from
-     anti-aliasing, worse while the scale animation is moving -- crisp
-     (non-anti-aliased) edges remove it, matching Memory's own fix for the
-     same issue on its own pixel-art icons. */
-  .heart-beat rect{ shape-rendering:crispEdges; }
   /* Desktop-only affordance: the exit cell's own tap-cell listens for hover
      (see updateReachableHints()) and toggles this class only while the exit
      is actually one step away and open -- i.e. exactly when clicking it
      would win. Gated to real hover devices so a tap on mobile can't leave it
      stuck green. */
   @media (hover:hover) and (pointer:fine){
-    .heart-beat.hover-green rect{ fill:#52A973; }
+    .heart-beat.hover-green path{ fill:#52A973; }
   }
   @keyframes heart-thump{
     0%, 100%{ transform:scale(1); }
@@ -472,35 +467,23 @@
       }
     }
 
-    // exit marker: a pixel-art heart (Figma node 195:945), same coordinates
-    // verbatim in their own 44x36.667 viewBox so no scaling math is needed
-    // here -- just centered and sized as a unit within the exit cell, then
-    // given a simple heartbeat pulse (see .heart-beat below) so it reads as
-    // alive rather than a static goal marker.
+    // exit marker: a smooth heart (a single filled path, not the earlier
+    // pixel-art version) in a 24x24 viewBox, centered as a unit within the
+    // exit cell and given a simple heartbeat pulse (see .heart-beat below)
+    // so it reads as alive rather than a static goal marker.
     var er = Math.floor(state.exit / cols), ec = state.exit % cols;
-    var heartW = 0.6, heartH = heartW * (36.667 / 44);
+    var heartSize = 0.55;
     var heart = document.createElementNS(SVG_NS, 'svg');
-    heart.setAttribute('x', ec + (1 - heartW) / 2); heart.setAttribute('y', er + (1 - heartH) / 2);
-    heart.setAttribute('width', heartW); heart.setAttribute('height', heartH);
-    heart.setAttribute('viewBox', '0 0 44 36.667');
+    heart.setAttribute('x', ec + (1 - heartSize) / 2); heart.setAttribute('y', er + (1 - heartSize) / 2);
+    heart.setAttribute('width', heartSize); heart.setAttribute('height', heartSize);
+    heart.setAttribute('viewBox', '0 0 24 24');
     // A nested <svg> clips to its own viewport by default, so the beat's
     // scale-up was getting cropped square at this box's edges instead of
     // growing freely -- overflow:visible lets the whole heart grow past it.
     heart.setAttribute('overflow', 'visible');
     heart.innerHTML =
       '<g class="heart-beat">' +
-        '<rect fill="#E4E4E4" x="27.500" y="0" width="9.167" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="7.334" y="0" width="9.167" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="3.668" y="3.664" width="16.5" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="23.832" y="3.664" width="16.5" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="0" y="7.332" width="44" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="0" y="11" width="44" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="0" y="14.668" width="44" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="3.668" y="18.332" width="36.667" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="9.166" y="21.996" width="25.667" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="12.834" y="25.668" width="18.333" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="16.5" y="29.332" width="11" height="3.667"/>' +
-        '<rect fill="#E4E4E4" x="20.166" y="33" width="3.667" height="3.667"/>' +
+        '<path fill="#E4E4E4" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>' +
       '</g>';
     svg.appendChild(heart);
 
