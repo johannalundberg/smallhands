@@ -129,17 +129,6 @@
   }
   .tap-cell.reachable::after{ opacity:0.35; transform:translate(-50%,-50%) scale(1); }
 
-  /* The exact "eyes" pair-icon from Memory (same markup, same #181818/#E4E4E4
-     colors, same viewBox 0 0 20 20), reused verbatim as the player token
-     instead of a plain circle -- nested as its own <svg> so it scales/
-     positions as a unit without hand-converting each of its coordinates.
-     The two pupil rects alternate frame-a/frame-b to look left/right, same
-     animation as Memory's (always running here since the token, unlike a
-     face-down tile, is always visible). */
-  .frame-a{ animation: frameA 0.7s steps(1) infinite; }
-  .frame-b{ animation: frameB 0.7s steps(1) infinite; }
-  @keyframes frameA{ 0%,49%{ opacity:1; } 50%,100%{ opacity:0; } }
-  @keyframes frameB{ 0%,49%{ opacity:0; } 50%,100%{ opacity:1; } }
   @keyframes bump-wall{
     0%, 100%{ transform:translate(var(--tx, 0px), var(--ty, 0px)); }
     50%{ transform:translate(calc(var(--tx, 0px) + var(--bx, 0px)), calc(var(--ty, 0px) + var(--by, 0px))); }
@@ -488,45 +477,39 @@
     heart.setAttribute('viewBox', '0 0 44 36.667');
     heart.innerHTML =
       '<g class="heart-beat">' +
-        '<rect fill="#A7CF56" x="27.500" y="0" width="9.167" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="7.334" y="0" width="9.167" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="3.668" y="3.664" width="16.5" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="23.832" y="3.664" width="16.5" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="0" y="7.332" width="44" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="0" y="11" width="44" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="0" y="14.668" width="44" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="3.668" y="18.332" width="36.667" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="9.166" y="21.996" width="25.667" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="12.834" y="25.668" width="18.333" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="16.5" y="29.332" width="11" height="3.667"/>' +
-        '<rect fill="#A7CF56" x="20.166" y="33" width="3.667" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="27.500" y="0" width="9.167" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="7.334" y="0" width="9.167" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="3.668" y="3.664" width="16.5" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="23.832" y="3.664" width="16.5" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="0" y="7.332" width="44" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="0" y="11" width="44" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="0" y="14.668" width="44" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="3.668" y="18.332" width="36.667" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="9.166" y="21.996" width="25.667" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="12.834" y="25.668" width="18.333" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="16.5" y="29.332" width="11" height="3.667"/>' +
+        '<rect fill="#E4E4E4" x="20.166" y="33" width="3.667" height="3.667"/>' +
       '</g>';
     svg.appendChild(heart);
 
     var token = document.createElementNS(SVG_NS, 'g');
     token.setAttribute('id', 'playerToken');
     token.setAttribute('class', 'player-token');
-    // The icon's own face circle (r=7 of a 20-unit viewBox) only fills 70% of
-    // whatever box it's given, so the box is sized up to 0.64/0.7 -- that
-    // makes the face itself (not the nested <svg>'s own bounds) match the
-    // previous plain circle's diameter (r=0.32) instead of rendering smaller.
-    var iconSize = 0.64 / 0.7;
+    // Static eyes icon (Figma node 195:1054) -- the face circle fills the
+    // whole 84x84 box (r=42 of an 84-wide frame), so no size compensation is
+    // needed like the old Memory-eyes icon required; the box just matches
+    // the previous plain circle's diameter directly.
+    var iconSize = 0.64;
     var icon = document.createElementNS(SVG_NS, 'svg');
     icon.setAttribute('x', 0.5 - iconSize / 2); icon.setAttribute('y', 0.5 - iconSize / 2);
     icon.setAttribute('width', iconSize); icon.setAttribute('height', iconSize);
-    icon.setAttribute('viewBox', '0 0 20 20');
+    icon.setAttribute('viewBox', '0 0 84 84');
     icon.innerHTML =
-      '<circle fill="var(--wall)" cx="10" cy="10" r="7"/>' +
-      '<circle fill="#E4E4E4" cx="7.5" cy="9.5" r="1.5"/>' +
-      '<circle fill="#E4E4E4" cx="12.5" cy="9.5" r="1.5"/>' +
-      '<g class="frame-a">' +
-        '<rect fill="#111111" x="8" y="9" width="1.05" height="1"/>' +
-        '<rect fill="#111111" x="13" y="9" width="1.05" height="1"/>' +
-      '</g>' +
-      '<g class="frame-b">' +
-        '<rect fill="#111111" x="5.95" y="9" width="1.05" height="1"/>' +
-        '<rect fill="#111111" x="10.95" y="9" width="1.05" height="1"/>' +
-      '</g>';
+      '<circle fill="var(--wall)" cx="42" cy="42" r="42"/>' +
+      '<circle fill="#E4E4E4" cx="27" cy="39" r="9"/>' +
+      '<circle fill="#E4E4E4" cx="57" cy="39" r="9"/>' +
+      '<ellipse fill="#111111" cx="31" cy="38.5" rx="5" ry="5.5"/>' +
+      '<ellipse fill="#111111" cx="61" cy="38.5" rx="5" ry="5.5"/>';
     token.appendChild(icon);
     svg.appendChild(token);
     els.playerToken = token;
