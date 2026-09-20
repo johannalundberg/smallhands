@@ -289,7 +289,17 @@
   // the same width (same tap target size on mobile) as medium's -- the extra
   // difficulty comes entirely from the long axis (more length, more
   // junctions) and the higher braid factor below, not from smaller cells.
-  var HARD_LONG = 22, HARD_SHORT = 13;
+  // 17 is the largest long-axis count that still fits the height budget at
+  // medium's own cell size (now that sizeBoardWrap sizes mobile's cell from
+  // width alone) across real portrait devices, phone or tablet -- an
+  // iPhone SE-class 375x667 phone works out to ~20.5 max rows, but a wider
+  // tablet like iPad mini's 744x1133 (still under the 767 mobile-breakpoint
+  // width) only has room for ~17.9, since its cell is bigger (cell scales
+  // with width) while --icon-size has already capped out at 100px, so the
+  // tray reserve stops shrinking as a share of the viewport. 22 pushed past
+  // even the phone number, which was quietly shrinking the cell (and so
+  // the board's width) to still fit no matter how tall the grid was.
+  var HARD_LONG = 17, HARD_SHORT = 13;
 
   var TIER_MAZE = {
     easy:   { cols: 10, rows: 10, braid: 0 },
@@ -564,20 +574,26 @@
     // left to its own natural budget so a wide/tall rectangular grid can
     // still grow to actually reach that filled axis's full size, instead of
     // being capped at 720 itself and falling short of the square tiers.
+    var cell;
     if (mobile) {
       var trayRect = els.controlsSlider.getBoundingClientRect();
       var bodyStyle = getComputedStyle(document.body);
       var reserveV = parseFloat(bodyStyle.paddingTop) + parseFloat(bodyStyle.paddingBottom);
       widthBudget = Math.min(window.innerWidth - trayRect.left * 2, 720);
       heightBudget = vh - reserveV;
+      // Cell size comes from width alone: mobile's filled axis is width, so
+      // every tier renders at the same board width regardless of row count.
+      // Hard's extra rows (HARD_LONG) are sized to fit heightBudget at this
+      // cell on the smallest supported phones -- see HARD_LONG's own comment.
+      cell = widthBudget / cols;
     } else {
       var r = els.diffGroup.getBoundingClientRect();
       var reserve = r.top * 2 + r.height; // icon row height + gap above + matching gap below
       widthBudget = window.innerWidth * 0.94;
       heightBudget = Math.min(vh - reserve * 2, 720);
+      cell = Math.min(widthBudget / cols, heightBudget / rows);
     }
 
-    var cell = Math.min(widthBudget / cols, heightBudget / rows);
     els.boardWrap.style.width = (cell * cols) + 'px';
     els.boardWrap.style.height = (cell * rows) + 'px';
   }
