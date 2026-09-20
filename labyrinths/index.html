@@ -661,6 +661,11 @@
       if (!(state.walls[state.player] & dir)) continue;
       var d = DELTA[dir];
       var ni = idx(r + d[0], c + d[1], cols);
+      // Skip the exit cell -- the target icon itself already lights up on
+      // hover when reachable (see the goal-icon hover wiring), so a second,
+      // separately-centered translucent dot layered on top just reads as
+      // slightly misaligned clutter instead of adding information.
+      if (ni === state.exit) continue;
       cells[ni].classList.add('reachable');
     }
   }
