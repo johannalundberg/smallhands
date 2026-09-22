@@ -51,7 +51,13 @@
   }
 
   *{ box-sizing:border-box; }
-  html,body{ height:100%; }
+  /* Unlike every other game here, this page has a real text input -- tapping
+     it can trigger the browser's own "scroll the focused input into view"
+     behavior, which scrolls the outer document/viewport itself, not
+     anything governed by body's own overflow:hidden below. html needs the
+     same overflow:hidden so there's no scrollable ancestor left for that
+     native behavior to act on. */
+  html,body{ height:100%; overflow:hidden; }
   body{
     position:relative;
     margin:0;
@@ -317,6 +323,23 @@
     body:has(.equation-tap.active) .btn-row,
     body:has(.equation-tap.active) .progress-dots{
       display:none;
+    }
+    /* op-group/diff-group stay visible (a keyboard sliding up from the
+       bottom never covers them), but body's flex-centering has no idea
+       they're there -- with no reserved padding, the equation+submit
+       button were centering against the FULL shrunk height, which can
+       land them right under the top icons once the keyboard takes a big
+       enough bite out of app-height. Reserve the same icon-row band up
+       top that idle state gets for free from the icons simply having
+       room to sit in the corner, plus a small buffer above the keyboard
+       (btn-row/progress-dots are hidden now, so the full icon-sized
+       bottom reserve idle state would want is no longer needed) -- so
+       the centered content sits between the icons and the keyboard, not
+       between the icons and the true edge of the (now much taller,
+       keyboard-shrunk-away) body box. */
+    body:has(.equation-tap.active){
+      padding-top: calc(var(--unit) * 2 + var(--icon-size));
+      padding-bottom: calc(var(--unit) * 1.5);
     }
   }
 
