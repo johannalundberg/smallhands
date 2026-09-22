@@ -306,6 +306,20 @@
     }
   }
 
+  /* iPad (tablet portrait or any landscape width >=768px): unlike phone, these
+     four corner groups are real position:absolute boxes, not funneled into a
+     collapsible tray -- but the on-screen keyboard covers the same bottom
+     slice of the screen here too, right over btn-row (back/refresh) and
+     progress-dots (bottom-right here, vs. already up top on phone). Hide
+     both the moment the equation goes active, the same way phone hides its
+     whole tray, so nothing sits stranded behind the keyboard. */
+  @media (min-width: 768px){
+    body:has(.equation-tap.active) .btn-row,
+    body:has(.equation-tap.active) .progress-dots{
+      display:none;
+    }
+  }
+
   /* Phone in landscape: the sizing above is all vw-based (tuned for a tall portrait
      phone), so on a short, wide landscape screen it overshoots badly — the reserved
      top+bottom padding alone can exceed the entire viewport height. Switch to
