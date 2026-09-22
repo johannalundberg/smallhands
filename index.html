@@ -396,8 +396,17 @@
   .info-btn{
     display:flex;
     flex:none;
-    width:80px;
-    height:80px;
+    /* Was 3 fixed sizes (80/96/150px) jumping at each breakpoint -- 150px
+       from 1024px all the way up made sense around typical desktop widths,
+       but at the low end of that range (an iPad in landscape, 5-column
+       grid) the tiles' own icons only render ~117px, so the button ended
+       up visibly bigger than everything else on the page. A single
+       vw-scaled clamp (matching the --icon-size pattern every game page
+       already uses for its own icon buttons) tracks the tiles' actual
+       rendered size continuously instead of jumping, and lands within a
+       few px of the old fixed values at each of their own breakpoints. */
+    width: clamp(80px, 11.5vw, 150px);
+    height: clamp(80px, 11.5vw, 150px);
     cursor:pointer;
     transition:transform 120ms ease;
   }
@@ -410,18 +419,17 @@
     transition:opacity 200ms ease, transform 200ms ease;
   }
   .icon-close{ opacity:0; transform:rotate(0deg) scale(0.6); }
+  /* The close "X" is a real, actionable affordance once the card is open --
+     unlike the deliberately-muted "?" (quiet by design, see the info-btn's
+     own history), it should read clearly at a glance without needing hover
+     to lighten it, matching every other close/back icon on the site. */
+  .icon-close .qmark{ fill:#E4E4E4; }
   .info-btn.open .icon-qmark{ opacity:0; transform:rotate(45deg) scale(0.6); }
   .info-btn.open .icon-close{ opacity:1; transform:rotate(45deg) scale(1); }
   .info-btn:active{ transform:scale(0.94); }
   @media (hover:hover) and (pointer:fine){
     .info-btn:hover{ transform:scale(1.035); }
     .info-btn:hover .qmark{ fill:#E4E4E4; }
-  }
-  @media (min-width:768px) and (max-width:1023px) and (min-height:501px){
-    .info-btn{ width:96px; height:96px; }
-  }
-  @media (min-width:1024px){
-    .info-btn{ width:150px; height:150px; }
   }
 </style>
 </head>
