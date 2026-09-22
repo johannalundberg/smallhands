@@ -186,7 +186,16 @@
     z-index:4;
   }
   .submit-btn:active{ transform: translateZ(0) scale(0.94); }
-  @media (min-width: 1200px){
+  /* iPad (and up) has its own on-screen keyboard's return/Go key to submit
+     with -- Enter already triggers submitAnswer() (see the keydown listener
+     below), so the floating submit button is redundant there, and removing
+     it sidesteps the button's own bottom-anchored-to-body positioning ever
+     needing to react to the keyboard shrinking app-height (it doesn't, and
+     fixing that up to work like phone's own relative-to-.equation-tap
+     positioning isn't worth doing for a button iPad doesn't need at all).
+     Phone keeps it: its on-screen keyboard doesn't reliably surface a
+     one-tap "submit" affordance the same way. */
+  @media (min-width: 768px){
     .submit-btn{ display:none; }
   }
   .equation-row{ position:relative; display:inline-block; }
