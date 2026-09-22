@@ -44,6 +44,22 @@
     --glyph:#E4E4E4;
     --win:#00C063;
     --tile-gap:10px;
+    /* Matches every game page's own --unit/--icon-size exactly, so the "?"
+       button is sized and inset identically to their back button. */
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+  }
+  @media (min-width:768px) and (max-width:1023px) and (min-height:501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+  @media (max-width:767px){
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+    }
   }
 
   @media (min-width:1367px){
@@ -395,16 +411,17 @@
      pages' own icon buttons (grow on hover, shrink on press). */
   .info-btn{
     display:flex;
-    flex:none;
-    /* Was 3 fixed sizes (80/96/150px) jumping at each breakpoint, then a
-       vw-scaled clamp() approximating the tiles' own icon size -- still
-       visibly off at some real iPad widths, since the grid's column count
-       doesn't scale linearly with viewport width the way a flat vw value
-       assumes. --info-btn-size is set from JS to the tile's actual
-       measured width * 0.62057 (the same ratio .badge uses), so this
-       always matches exactly regardless of column count. */
-    width: var(--info-btn-size, 150px);
-    height: var(--info-btn-size, 150px);
+    /* Sized and positioned identically to every game page's own back button
+       (and the About page's) -- fixed to the screen corner at --unit from
+       each edge, sized via the shared --icon-size clamp, instead of trying
+       to match the tile grid's own (much larger, badge-sized) icons. Two
+       earlier attempts at matching the tiles instead (a flat vw clamp, then
+       a JS-measured tile width) both still read as oversized in practice. */
+    position:fixed;
+    left:var(--unit);
+    bottom:var(--unit);
+    width: var(--icon-size);
+    height: var(--icon-size);
     cursor:pointer;
     transition:transform 120ms ease;
   }
@@ -678,24 +695,6 @@
   } else {
     window.addEventListener('resize', updateAppHeight);
   }
-
-  // The "?" button's size is meant to match each tile's own icon (62.057% of
-  // the tile, same ratio .badge uses) -- a vw-based clamp() only
-  // approximates that, and stayed visibly off at some real iPad widths where
-  // the grid's column count doesn't scale linearly with viewport width the
-  // way a flat vw value assumes. Measuring the real tile width directly and
-  // deriving the icon size from it is exact at every breakpoint/column
-  // count, with no approximation to tune.
-  var firstTile = document.querySelector('.tile');
-  function updateInfoBtnSize(){
-    if (!firstTile) return;
-    var tileWidth = firstTile.getBoundingClientRect().width;
-    if (tileWidth > 0) {
-      document.documentElement.style.setProperty('--info-btn-size', (tileWidth * 0.62057) + 'px');
-    }
-  }
-  updateInfoBtnSize();
-  window.addEventListener('resize', updateInfoBtnSize);
 
   // On tablet/desktop, "?" reveals the About text in the grid instead of
   // navigating away -- below that width there's no card to reveal (not enough
