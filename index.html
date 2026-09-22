@@ -115,10 +115,45 @@
   }
   @media (min-width:768px){
     .about-card.open{
-      display:block;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      overflow:hidden;
       grid-column: 1 / span 2;
       grid-row: 1 / span 2;
+      /* Spanning 2 columns/2 rows in a grid whose rows are all auto-sized to
+         their own row's tallest item (there's no grid-template-rows) means
+         this card's OWN height is what those two rows size themselves to --
+         it was sized by its text content alone, which rarely matches "2 real
+         tile-heights + the gap between them", so the gap above/below the
+         card ended up visibly different from every other tile-to-tile gap.
+         Forcing the same aspect-ratio:1 every .tile already uses makes this
+         card exactly as tall as 2 real tile rows + their shared gap (since
+         at N equal 1fr columns of width W, a 2-column span is always
+         2W + gap wide, which is exactly what 2 stacked square tiles need in
+         height too) -- so the grid's row tracks come out identical whether
+         the card is open or not. Text now fits the fixed box instead of the
+         box fitting the text -- see the font-size clamp below. */
+      aspect-ratio:1;
       animation: card-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+  }
+  /* Tablet (4 columns) gives this square card less room than desktop's 5+
+     columns do, so the fixed 26px/22px sizes above no longer reliably fit
+     the full about text -- clamp scales it down against the card's own box
+     size (via cqw) instead of a screen-width breakpoint, since what matters
+     here is the square's actual rendered size, not the viewport's. */
+  @media (min-width:768px){
+    .about-card.open{
+      container-type: size;
+    }
+    .about-card.open p{
+      font-size: clamp(13px, 5.2cqw, 26px);
+    }
+  }
+  @media (min-width:1024px){
+    .about-card.open p{
+      font-size: clamp(13px, 4.4cqw, 22px);
     }
   }
   @keyframes card-pop{
