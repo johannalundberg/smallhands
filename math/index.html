@@ -327,8 +327,13 @@
      slice of the screen here too, right over btn-row (back/refresh) and
      progress-dots (bottom-right here, vs. already up top on phone). Hide
      both the moment the equation goes active, the same way phone hides its
-     whole tray, so nothing sits stranded behind the keyboard. */
-  @media (min-width: 768px){
+     whole tray, so nothing sits stranded behind the keyboard.
+     Scoped to (pointer:coarse) -- touch, so an iPad -- because a real
+     desktop/laptop at this same width has no on-screen keyboard at all:
+     nothing shrinks app-height there, so this was reserving top padding and
+     hiding the back/refresh + progress-dots for no reason the moment the
+     answer field was merely focused with a mouse. */
+  @media (min-width: 768px) and (pointer: coarse){
     body:has(.equation-tap.active) .btn-row,
     body:has(.equation-tap.active) .progress-dots{
       display:none;
