@@ -123,6 +123,14 @@
     line-height:1.15;
   }
   .about-card p{ margin:0; max-width:480px; }
+  /* iPad landscape (the same 5-column breakpoint the tile grid itself
+     switches on): the card's own width grows enough here that lines were
+     running close to the full 480px cap, leaving little to no gutter on the
+     right. Tightening the measure specifically at this width leaves a real
+     margin instead. */
+  @media (min-width:1024px) and (max-width:1366px) and (min-height:500px){
+    .about-card p{ max-width:340px; }
+  }
   .about-card p + p{ margin-top:1.15em; }
   .about-card a{ color:#707EFF; text-decoration:none; }
   .about-card a:hover{ text-decoration:underline; }
