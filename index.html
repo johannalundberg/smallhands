@@ -396,17 +396,15 @@
   .info-btn{
     display:flex;
     flex:none;
-    /* Was 3 fixed sizes (80/96/150px) jumping at each breakpoint -- 150px
-       from 1024px all the way up made sense around typical desktop widths,
-       but at the low end of that range (an iPad in landscape, 5-column
-       grid) the tiles' own icons only render ~117px, so the button ended
-       up visibly bigger than everything else on the page. A single
-       vw-scaled clamp (matching the --icon-size pattern every game page
-       already uses for its own icon buttons) tracks the tiles' actual
-       rendered size continuously instead of jumping, and lands within a
-       few px of the old fixed values at each of their own breakpoints. */
-    width: clamp(80px, 11.5vw, 150px);
-    height: clamp(80px, 11.5vw, 150px);
+    /* Was 3 fixed sizes (80/96/150px) jumping at each breakpoint, then a
+       vw-scaled clamp() approximating the tiles' own icon size -- still
+       visibly off at some real iPad widths, since the grid's column count
+       doesn't scale linearly with viewport width the way a flat vw value
+       assumes. --info-btn-size is set from JS to the tile's actual
+       measured width * 0.62057 (the same ratio .badge uses), so this
+       always matches exactly regardless of column count. */
+    width: var(--info-btn-size, 150px);
+    height: var(--info-btn-size, 150px);
     cursor:pointer;
     transition:transform 120ms ease;
   }
@@ -680,6 +678,24 @@
   } else {
     window.addEventListener('resize', updateAppHeight);
   }
+
+  // The "?" button's size is meant to match each tile's own icon (62.057% of
+  // the tile, same ratio .badge uses) -- a vw-based clamp() only
+  // approximates that, and stayed visibly off at some real iPad widths where
+  // the grid's column count doesn't scale linearly with viewport width the
+  // way a flat vw value assumes. Measuring the real tile width directly and
+  // deriving the icon size from it is exact at every breakpoint/column
+  // count, with no approximation to tune.
+  var firstTile = document.querySelector('.tile');
+  function updateInfoBtnSize(){
+    if (!firstTile) return;
+    var tileWidth = firstTile.getBoundingClientRect().width;
+    if (tileWidth > 0) {
+      document.documentElement.style.setProperty('--info-btn-size', (tileWidth * 0.62057) + 'px');
+    }
+  }
+  updateInfoBtnSize();
+  window.addEventListener('resize', updateInfoBtnSize);
 
   // On tablet/desktop, "?" reveals the About text in the grid instead of
   // navigating away -- below that width there's no card to reveal (not enough
