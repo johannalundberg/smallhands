@@ -38,6 +38,22 @@
     }
   }
 
+  /* Tablet/desktop (diff-group/btn-row rendered as real corner-pinned icon
+     rows, not collapsed into the phone tray): --board-size was a flat
+     min(76vmin, 76vw, 570px) with no awareness of the icon rows' own
+     height, so on a short-but-wide viewport (an iPad in landscape) the
+     square board could still run taller than the room actually left
+     between the top and bottom icon rows. Othello avoids this by sizing
+     its board against app-height minus each row's reserved band -- same
+     fix here, keeping this file's own 76vw/570px terms untouched. */
+  @media (min-width: 768px){
+    :root{
+      --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+      --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
+      --board-size: min(76vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 570px);
+    }
+  }
+
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
   body{
