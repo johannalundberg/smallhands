@@ -243,6 +243,10 @@
   /* max-height clause catches a phone in landscape (width alone would otherwise put
      it in the iPad-tuned tablet breakpoint above) — matches on width OR shortness. */
   @media (max-width: 767px), (max-height: 500px){
+    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
+       here -- darken on tap instead, so pressing any icon button is
+       actually visible. */
+    .icon-btn:active{ filter: brightness(0.7); }
     :root{
       --hero-size: clamp(2.6rem, 16.5587vw, 140px); /* 65.08px on the 393px phone frame */
       --unit: 5.089vw; /* 20px on the 393px phone frame */

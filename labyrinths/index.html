@@ -165,6 +165,10 @@
 
   /* ---------- phone: single scrollable slider-menu bar ---------- */
   @media (max-width: 767px), (max-height: 500px){
+    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
+       here -- darken on tap instead, so pressing any icon button is
+       actually visible. */
+    .icon-btn:active{ filter: brightness(0.7); }
     :root{
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
@@ -794,6 +798,38 @@
   });
   els.refreshBtn.addEventListener('click', startGame);
   els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+
+  // First-visit only: gently peek-scroll the bottom slider tray so new users notice
+  // it scrolls (there are more icons than fit on a phone screen), then ease back to
+  // the correct resting view with + as the leftmost icon.
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'labyrinths.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = Math.min(maxScroll, el.clientWidth * 0.6);
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  setTimeout(introduceTraySlider, 500);
 
   els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
   startGame();

@@ -60,6 +60,10 @@
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
     }
+    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
+       here -- darken on tap instead, so pressing the info button (or its
+       close-X, the same element) is actually visible. */
+    .info-btn:active{ filter: brightness(0.7); }
   }
 
   @media (min-width:1367px){
