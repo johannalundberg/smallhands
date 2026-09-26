@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-45ZK78NND7');
+</script>
+
+<title>Odd One Out</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<style>
+  :root{
+    --bg:#1E8A7A;
+    --bright:#E4E4E4;
+    --ink:#202020;
+    --ink-muted:rgba(32,32,32,0.4);
+    --success:#0DC754;
+    --incorrect:#F2383B;
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+    --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+    --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
+    --cluster-count: 3;
+    --cluster-gap: calc(var(--icon-size) * 0.25);
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+    transition: background 80ms ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ---------- icon buttons (difficulty / back / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 120ms ease;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ transform: translateZ(0) scale(1.035); }
+  }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  /* ---------- round progress ---------- */
+  .progress-dots{
+    position:absolute;
+    right:var(--unit);
+    bottom:var(--unit);
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap: calc(var(--icon-size) * 0.08);
+  }
+  .progress-dots .dot{
+    width: calc(var(--icon-size) * 0.25);
+    height: calc(var(--icon-size) * 0.25);
+    border-radius:50%;
+    background: var(--ink-muted);
+    transition: background 150ms ease;
+  }
+  .progress-dots .dot.done{ background: var(--bright); }
+
+  /* ---------- the cluster row ---------- */
+  .board-wrap{ width:100%; display:flex; align-items:center; justify-content:center; }
+  .cluster-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+    gap: var(--cluster-gap);
+  }
+  /* Each card's size comes from BOTH the width n cards need to share AND the
+     height actually left between the top/bottom icon rows, taking whichever
+     is smaller -- the same min() shape Othello's own .board rule uses, baked
+     in from the start rather than retrofitted after an iPad landscape
+     overflow (the bug Number Puzzle and Tic-Tac-Toe both needed a follow-up
+     fix for). */
+  .cluster-card{
+    flex:none;
+    width: min(
+      calc((94vw - (var(--cluster-count) - 1) * var(--cluster-gap)) / var(--cluster-count)),
+      calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)),
+      200px
+    );
+    aspect-ratio:1;
+    background: rgba(0,0,0,0.2);
+    border-radius:12%;
+    cursor:pointer;
+    transition: background 150ms ease, transform 120ms ease;
+  }
+  .cluster-card:active{ transform:scale(0.96); }
+  .cluster-card.wrong{ background:var(--incorrect); }
+  .cluster-card svg{ width:100%; height:100%; display:block; }
+  .cluster-shape{ fill:var(--bright); }
+
+  @keyframes bounce-in{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(var(--final-scale)); opacity:1; }
+  }
+  .celebration{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:4;
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  @media (max-width: 767px), (max-height: 500px){
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+      /* Progress dots move to top here (see below), and read smaller than a
+         full icon row, so the top reserve only needs to match their own
+         height -- matches Number Puzzle's own mobile reserve split exactly. */
+      --v-reserve-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
+      --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      background: rgba(32,32,32,0.4);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      --ink-muted: rgba(32,32,32,0.7);
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    .diff-group, .btn-row{ display:contents; }
+    .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
+    body{
+      padding-top: var(--v-reserve-top);
+      padding-bottom: var(--v-reserve-bottom);
+    }
+  }
+
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    :root{
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:var(--incorrect);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    .rotate-block{ display:flex; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="rotate-block">
+    <svg viewBox="0 0 973 366">
+      <circle fill="var(--ink)" cx="65" cy="65" r="65"/>
+      <circle fill="var(--ink)" cx="908" cy="65" r="65"/>
+      <rect fill="var(--ink)" x="291" y="171" width="392" height="65"/>
+      <rect fill="var(--ink)" x="161" y="236" width="130" height="130"/>
+      <rect fill="var(--ink)" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
+  <div class="controls-slider" id="controlsSlider">
+    <div class="diff-group" id="diffGroup">
+      <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M114 75C114 53.4609 96.5391 36 75 36C53.4609 36 36 53.4609 36 75C36 96.5391 53.4609 114 75 114V150C33.5786 150 0 116.421 0 75C0 33.5786 33.5786 0 75 0C116.421 0 150 33.5786 150 75C150 116.421 116.421 150 75 150V114C96.5391 114 114 96.5391 114 75Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+        <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/></svg>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" aria-label="New round">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M111.491 32.1671L112.864 53.5756L90.0895 53.5683"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M110.802 97.5619C106.102 105.702 98.8837 112.094 90.2343 115.774C81.5848 119.454 71.9735 120.223 62.8492 117.964C53.7249 115.705 45.5822 110.541 39.6485 103.251C33.7149 95.9607 30.312 86.9392 29.9527 77.5463C29.5935 68.1534 32.2974 58.8983 37.6569 51.1762C43.0164 43.454 50.7409 37.6834 59.666 34.7343C68.5911 31.7851 78.2331 31.8172 87.1383 34.8258C96.0436 37.8343 103.729 43.6563 109.037 51.4139"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="progress-dots" id="progressDots">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <div class="cluster-row" id="clusterRow"></div>
+  </div>
+
+  <div class="celebration" id="celebration"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var SHAPES = ['square', 'rect', 'triangle', 'circle'];
+  var TIER_CLUSTERS = { easy: 3, medium: 4, hard: 5 };
+  var ROUND_SIZE = 10;
+  // Four candidate positions in a 100x100 viewBox; each cluster uses 3 of
+  // the 4 (see buildRound), which is what gives clusters their own distinct
+  // "composition" even when they all share the same 3 shape types.
+  var ALL_SLOTS = [
+    { x: 28, y: 32 }, { x: 72, y: 32 },
+    { x: 28, y: 72 }, { x: 72, y: 72 }
+  ];
+
+  var state = {
+    difficulty: 'easy',
+    clusters: null,
+    correctIndex: -1,
+    progress: 0,
+    busy: false
+  };
+
+  var els = {
+    boardWrap: document.getElementById('boardWrap'),
+    clusterRow: document.getElementById('clusterRow'),
+    celebration: document.getElementById('celebration'),
+    diffGroup: document.getElementById('diffGroup'),
+    backBtn: document.getElementById('backBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    controlsSlider: document.getElementById('controlsSlider'),
+    progressDots: Array.prototype.slice.call(document.querySelectorAll('#progressDots .dot'))
+  };
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) {
+      location.reload();
+    }
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) {
+    landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  } else if (landscapeBlockMQ.addListener) {
+    landscapeBlockMQ.addListener(onLandscapeBlockChange);
+  }
+
+  // ---------- round generation ----------
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function buildRound(){
+    var n = TIER_CLUSTERS[state.difficulty];
+    var sharedTypes = shuffle(SHAPES).slice(0, 3);
+    var spareType = SHAPES.filter(function(t){ return sharedTypes.indexOf(t) === -1; })[0];
+    var oddIndex = Math.floor(Math.random() * n);
+    var mutation = Math.random() < 0.5 ? 'swap' : 'missing';
+
+    var clusters = [];
+    for (var i = 0; i < n; i++) {
+      var slots = shuffle(ALL_SLOTS).slice(0, 3);
+      var types = shuffle(sharedTypes);
+      var shapes = types.map(function(t, idx){ return { type: t, x: slots[idx].x, y: slots[idx].y }; });
+      if (i === oddIndex) {
+        if (mutation === 'swap') {
+          var swapIdx = Math.floor(Math.random() * shapes.length);
+          shapes[swapIdx] = { type: spareType, x: shapes[swapIdx].x, y: shapes[swapIdx].y };
+        } else {
+          shapes.splice(Math.floor(Math.random() * shapes.length), 1);
+        }
+      }
+      clusters.push(shapes);
+    }
+    state.clusters = clusters;
+    state.correctIndex = oddIndex;
+    renderClusters();
+  }
+
+  // ---------- rendering ----------
+
+  function shapeSvg(shape){
+    var cx = shape.x, cy = shape.y;
+    if (shape.type === 'square') {
+      return '<rect class="cluster-shape" x="' + (cx - 15) + '" y="' + (cy - 15) + '" width="30" height="30"/>';
+    }
+    if (shape.type === 'rect') {
+      return '<rect class="cluster-shape" x="' + (cx - 17) + '" y="' + (cy - 10) + '" width="34" height="20"/>';
+    }
+    if (shape.type === 'circle') {
+      return '<circle class="cluster-shape" cx="' + cx + '" cy="' + cy + '" r="15"/>';
+    }
+    // triangle
+    var p1 = cx + ',' + (cy - 17);
+    var p2 = (cx - 17) + ',' + (cy + 13);
+    var p3 = (cx + 17) + ',' + (cy + 13);
+    return '<polygon class="cluster-shape" points="' + p1 + ' ' + p2 + ' ' + p3 + '"/>';
+  }
+
+  function renderClusters(){
+    els.clusterRow.innerHTML = '';
+    state.clusters.forEach(function(shapes, i){
+      var card = document.createElement('div');
+      card.className = 'cluster-card';
+      card.dataset.index = i;
+      card.innerHTML = '<svg viewBox="0 0 100 100">' + shapes.map(shapeSvg).join('') + '</svg>';
+      card.addEventListener('click', onCardTap);
+      els.clusterRow.appendChild(card);
+    });
+  }
+
+  function updateProgressDots(){
+    els.progressDots.forEach(function(dot, i){
+      dot.classList.toggle('done', i < state.progress);
+    });
+  }
+
+  // ---------- interaction ----------
+
+  function onCardTap(e){
+    if (state.busy) return;
+    var i = Number(e.currentTarget.dataset.index);
+    if (i === state.correctIndex) {
+      state.progress++;
+      updateProgressDots();
+      if (state.progress >= ROUND_SIZE) {
+        showCelebration();
+      } else {
+        buildRound();
+      }
+    } else {
+      flashWrong(e.currentTarget);
+    }
+  }
+
+  function flashWrong(card){
+    state.busy = true;
+    card.classList.add('wrong');
+    setTimeout(function(){
+      card.classList.remove('wrong');
+      state.busy = false;
+    }, 250);
+  }
+
+  // ---------- celebration ----------
+
+  var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="var(--bright)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--bright)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--bright)" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="291" y="301" width="392" height="65"/>' +
+    '</svg>';
+
+  function showCelebration(){
+    updateAppHeight();
+    els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    els.boardWrap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    setTimeout(function(){
+      els.celebration.style.display = 'none';
+      els.boardWrap.style.display = '';
+      startGame();
+    }, 3000);
+  }
+
+  // ---------- lifecycle ----------
+
+  function startGame(){
+    state.progress = 0;
+    state.busy = false;
+    updateProgressDots();
+    document.documentElement.style.setProperty('--cluster-count', TIER_CLUSTERS[state.difficulty]);
+    buildRound();
+  }
+
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    state.difficulty = btn.dataset.tier;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    startGame();
+  });
+  els.refreshBtn.addEventListener('click', startGame);
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../../index.html'; });
+
+  els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+  startGame();
+})();
+</script>
+</body>
+</html>
