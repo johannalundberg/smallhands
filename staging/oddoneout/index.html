@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#F2383B">
+<meta name="theme-color" content="#FF3946">
 
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
@@ -19,17 +19,17 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#1E8A7A;
+    --bg:#33553B;
     --bright:#E4E4E4;
+    --shape:#EE65EA;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
-    --success:#0DC754;
-    --incorrect:#F2383B;
+    --success:#52ED67;
+    --incorrect:#FF3946;
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
     --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
     --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
-    --cluster-count: 3;
     --cluster-gap: calc(var(--icon-size) * 0.25);
   }
 
@@ -130,29 +130,33 @@
     justify-content:center;
     gap: var(--cluster-gap);
   }
-  /* Each card's size comes from BOTH the width n cards need to share AND the
+  /* Each card's size comes from BOTH the width 3 cards need to share AND the
      height actually left between the top/bottom icon rows, taking whichever
      is smaller -- the same min() shape Othello's own .board rule uses, baked
      in from the start rather than retrofitted after an iPad landscape
      overflow (the bug Number Puzzle and Tic-Tac-Toe both needed a follow-up
-     fix for). */
+     fix for). Card count is always 3; difficulty scales the composition's
+     visual complexity instead (see TIER_CONFIG in the script). */
   .cluster-card{
     flex:none;
     width: min(
-      calc((94vw - (var(--cluster-count) - 1) * var(--cluster-gap)) / var(--cluster-count)),
+      calc((94vw - 2 * var(--cluster-gap)) / 3),
       calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)),
       200px
     );
     aspect-ratio:1;
-    background: rgba(0,0,0,0.2);
-    border-radius:12%;
+    background:none;
+    border: calc(var(--icon-size) * 0.045) solid var(--shape);
     cursor:pointer;
-    transition: background 150ms ease, transform 120ms ease;
+    transition: border-color 150ms ease, background 150ms ease, transform 120ms ease;
   }
   .cluster-card:active{ transform:scale(0.96); }
-  .cluster-card.wrong{ background:var(--incorrect); }
-  .cluster-card svg{ width:100%; height:100%; display:block; }
-  .cluster-shape{ fill:var(--bright); }
+  .cluster-card.wrong{ border-color:var(--incorrect); background:rgba(255,57,70,0.15); }
+  .cluster-card.correct{ border-color:var(--success); background:rgba(82,237,103,0.15); }
+  .cluster-card svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .cluster-shape{ fill:none; stroke:var(--shape); stroke-width:2.5; vector-effect:non-scaling-stroke; }
+  .cluster-card.wrong .cluster-shape{ stroke:var(--incorrect); }
+  .cluster-card.correct .cluster-shape{ stroke:var(--success); }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -282,16 +286,18 @@
 (function(){
   "use strict";
 
-  var SHAPES = ['square', 'rect', 'triangle', 'circle'];
-  var TIER_CLUSTERS = { easy: 3, medium: 4, hard: 5 };
+  // Five types so there's always at least one "spare" left over for the
+  // swap mutation, even at the hard tier's higher shapes-per-cluster count.
+  var SHAPES = ['square', 'rect', 'triangle', 'circle', 'diamond'];
+  var CLUSTER_COUNT = 3;
+  // Always 3 clusters now -- difficulty instead scales how hard the odd one
+  // is to spot: more shapes per cluster, more overlap, more size variety.
+  var TIER_CONFIG = {
+    easy:   { shapes: 2, jitter: 9,  sizeMin: 30, sizeMax: 40 },
+    medium: { shapes: 3, jitter: 15, sizeMin: 32, sizeMax: 48 },
+    hard:   { shapes: 4, jitter: 19, sizeMin: 34, sizeMax: 56 }
+  };
   var ROUND_SIZE = 10;
-  // Four candidate positions in a 100x100 viewBox; each cluster uses 3 of
-  // the 4 (see buildRound), which is what gives clusters their own distinct
-  // "composition" even when they all share the same 3 shape types.
-  var ALL_SLOTS = [
-    { x: 28, y: 32 }, { x: 72, y: 32 },
-    { x: 28, y: 72 }, { x: 72, y: 72 }
-  ];
 
   var state = {
     difficulty: 'easy',
@@ -349,22 +355,31 @@
     return a;
   }
 
+  function makeShape(type, cfg){
+    return {
+      type: type,
+      x: 50 + (Math.random() * 2 - 1) * cfg.jitter,
+      y: 50 + (Math.random() * 2 - 1) * cfg.jitter,
+      size: cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin)
+    };
+  }
+
   function buildRound(){
-    var n = TIER_CLUSTERS[state.difficulty];
-    var sharedTypes = shuffle(SHAPES).slice(0, 3);
-    var spareType = SHAPES.filter(function(t){ return sharedTypes.indexOf(t) === -1; })[0];
-    var oddIndex = Math.floor(Math.random() * n);
+    var cfg = TIER_CONFIG[state.difficulty];
+    var sharedTypes = shuffle(SHAPES).slice(0, cfg.shapes);
+    var spareType = shuffle(SHAPES.filter(function(t){ return sharedTypes.indexOf(t) === -1; }))[0];
+    var oddIndex = Math.floor(Math.random() * CLUSTER_COUNT);
     var mutation = Math.random() < 0.5 ? 'swap' : 'missing';
 
     var clusters = [];
-    for (var i = 0; i < n; i++) {
-      var slots = shuffle(ALL_SLOTS).slice(0, 3);
+    for (var i = 0; i < CLUSTER_COUNT; i++) {
       var types = shuffle(sharedTypes);
-      var shapes = types.map(function(t, idx){ return { type: t, x: slots[idx].x, y: slots[idx].y }; });
+      var shapes = types.map(function(t){ return makeShape(t, cfg); });
       if (i === oddIndex) {
         if (mutation === 'swap') {
           var swapIdx = Math.floor(Math.random() * shapes.length);
-          shapes[swapIdx] = { type: spareType, x: shapes[swapIdx].x, y: shapes[swapIdx].y };
+          var old = shapes[swapIdx];
+          shapes[swapIdx] = { type: spareType, x: old.x, y: old.y, size: old.size };
         } else {
           shapes.splice(Math.floor(Math.random() * shapes.length), 1);
         }
@@ -379,20 +394,23 @@
   // ---------- rendering ----------
 
   function shapeSvg(shape){
-    var cx = shape.x, cy = shape.y;
+    var cx = shape.x, cy = shape.y, s = shape.size;
     if (shape.type === 'square') {
-      return '<rect class="cluster-shape" x="' + (cx - 15) + '" y="' + (cy - 15) + '" width="30" height="30"/>';
+      return '<rect class="cluster-shape" x="' + (cx - s / 2) + '" y="' + (cy - s / 2) + '" width="' + s + '" height="' + s + '"/>';
+    }
+    if (shape.type === 'diamond') {
+      return '<rect class="cluster-shape" x="' + (cx - s / 2) + '" y="' + (cy - s / 2) + '" width="' + s + '" height="' + s + '" transform="rotate(45 ' + cx + ' ' + cy + ')"/>';
     }
     if (shape.type === 'rect') {
-      return '<rect class="cluster-shape" x="' + (cx - 17) + '" y="' + (cy - 10) + '" width="34" height="20"/>';
+      return '<rect class="cluster-shape" x="' + (cx - s * 0.6) + '" y="' + (cy - s * 0.35) + '" width="' + (s * 1.2) + '" height="' + (s * 0.7) + '"/>';
     }
     if (shape.type === 'circle') {
-      return '<circle class="cluster-shape" cx="' + cx + '" cy="' + cy + '" r="15"/>';
+      return '<circle class="cluster-shape" cx="' + cx + '" cy="' + cy + '" r="' + (s / 2) + '"/>';
     }
     // triangle
-    var p1 = cx + ',' + (cy - 17);
-    var p2 = (cx - 17) + ',' + (cy + 13);
-    var p3 = (cx + 17) + ',' + (cy + 13);
+    var p1 = cx + ',' + (cy - s * 0.55);
+    var p2 = (cx - s / 2) + ',' + (cy + s * 0.4);
+    var p3 = (cx + s / 2) + ',' + (cy + s * 0.4);
     return '<polygon class="cluster-shape" points="' + p1 + ' ' + p2 + ' ' + p3 + '"/>';
   }
 
@@ -420,13 +438,7 @@
     if (state.busy) return;
     var i = Number(e.currentTarget.dataset.index);
     if (i === state.correctIndex) {
-      state.progress++;
-      updateProgressDots();
-      if (state.progress >= ROUND_SIZE) {
-        showCelebration();
-      } else {
-        buildRound();
-      }
+      flashCorrect(e.currentTarget);
     } else {
       flashWrong(e.currentTarget);
     }
@@ -439,6 +451,21 @@
       card.classList.remove('wrong');
       state.busy = false;
     }, 250);
+  }
+
+  function flashCorrect(card){
+    state.busy = true;
+    card.classList.add('correct');
+    setTimeout(function(){
+      state.progress++;
+      updateProgressDots();
+      if (state.progress >= ROUND_SIZE) {
+        showCelebration();
+      } else {
+        buildRound();
+      }
+      state.busy = false;
+    }, 220);
   }
 
   // ---------- celebration ----------
@@ -469,7 +496,6 @@
     state.progress = 0;
     state.busy = false;
     updateProgressDots();
-    document.documentElement.style.setProperty('--cluster-count', TIER_CLUSTERS[state.difficulty]);
     buildRound();
   }
 
