@@ -291,17 +291,17 @@
   // the same width (same tap target size on mobile) as medium's -- the extra
   // difficulty comes entirely from the long axis (more length, more
   // junctions) and the higher braid factor below, not from smaller cells.
-  // 17 is the largest long-axis count that still fits the height budget at
+  // 19 is the largest long-axis count that still fits the height budget at
   // medium's own cell size (now that sizeBoardWrap sizes mobile's cell from
-  // width alone) across real portrait devices, phone or tablet -- an
-  // iPhone SE-class 375x667 phone works out to ~20.5 max rows, but a wider
-  // tablet like iPad mini's 744x1133 (still under the 767 mobile-breakpoint
-  // width) only has room for ~17.9, since its cell is bigger (cell scales
-  // with width) while --icon-size has already capped out at 100px, so the
-  // tray reserve stops shrinking as a share of the viewport. 22 pushed past
-  // even the phone number, which was quietly shrinking the cell (and so
-  // the board's width) to still fit no matter how tall the grid was.
-  var HARD_LONG = 17, HARD_SHORT = 13;
+  // width alone) across real portrait devices, phone or tablet -- verified
+  // via actual getBoundingClientRect() measurement (not just the formula) on
+  // an iPhone SE-class 375x667 phone (117px of margin to spare) and a wider
+  // iPad mini-class 744x1133 tablet (still under the 767 mobile-breakpoint
+  // width, and the tighter of the two -- only ~9px of margin at 19). 20
+  // overflows the iPad mini case (board runs ~16px above the top of the
+  // viewport and behind the tray), so 19 is the real ceiling, not just a
+  // round number.
+  var HARD_LONG = 19, HARD_SHORT = 13;
 
   var TIER_MAZE = {
     easy:   { cols: 10, rows: 10, braid: 0 },
