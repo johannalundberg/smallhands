@@ -19,7 +19,7 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#0A2612;
+    --bg:#16281B;
     --bright:#E4E4E4;
     --shape:#9853FF;
     --ink:#202020;
@@ -597,10 +597,13 @@
   els.diffGroup.addEventListener('click', function(e){
     var btn = e.target.closest('.diff-btn');
     if (!btn) return;
-    state.difficulty = btn.dataset.tier;
+    if (state.busy) return; // mid tap-feedback -- let it finish before switching
+    var tier = btn.dataset.tier;
+    if (tier === state.difficulty) return; // already selected -- don't reset the current round
+    state.difficulty = tier;
     els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
-    startGame();
+    buildRound(); // new composition for the new tier, but keep progress (matches Math/Number Puzzle)
   });
   els.refreshBtn.addEventListener('click', startGame);
   els.backBtn.addEventListener('click', function(){ window.location.href = '../../index.html'; });
