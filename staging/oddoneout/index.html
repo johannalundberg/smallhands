@@ -146,15 +146,17 @@
     );
     aspect-ratio:1;
     background:none;
-    border: calc(var(--icon-size) * 0.045) solid var(--shape);
     cursor:pointer;
-    transition: border-color 150ms ease, background 150ms ease, transform 120ms ease;
+    transition: background 150ms ease, transform 120ms ease;
   }
   .cluster-card:active{ transform:scale(0.96); }
-  .cluster-card.wrong{ border-color:var(--incorrect); background:rgba(255,57,70,0.15); }
-  .cluster-card.correct{ border-color:var(--success); background:rgba(82,237,103,0.15); }
+  .cluster-card.wrong{ background:rgba(255,57,70,0.15); }
+  .cluster-card.correct{ background:rgba(82,237,103,0.15); }
   .cluster-card svg{ width:100%; height:100%; display:block; overflow:visible; }
-  .cluster-shape{ fill:none; stroke:var(--shape); stroke-width:2.5; vector-effect:non-scaling-stroke; }
+  /* Same line weight as Labyrinths' own .wall-line (3.5px / 2.5px on
+     phone) -- the square isn't a card frame, it's just one of the shape
+     types, so it and every other shape share one stroke convention. */
+  .cluster-shape{ fill:none; stroke:var(--shape); stroke-width:3.5px; vector-effect:non-scaling-stroke; }
   .cluster-card.wrong .cluster-shape{ stroke:var(--incorrect); }
   .cluster-card.correct .cluster-shape{ stroke:var(--success); }
 
@@ -186,6 +188,21 @@
          height -- matches Number Puzzle's own mobile reserve split exactly. */
       --v-reserve-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
       --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
+      /* Cards stack in one column on phone (per the mobile sketch) instead
+         of sitting 3 across, so they need more room between each other
+         than the desktop row's own gap. */
+      --cluster-gap: calc(var(--icon-size) * 0.5);
+    }
+    /* Matches Labyrinths' own phone line weight -- 3.5px reads heavy at
+       the smaller shape sizes phone cards render at. */
+    .cluster-shape{ stroke-width:2.5px; }
+    .cluster-row{ flex-direction:column; }
+    .cluster-card{
+      width: min(
+        35vw,
+        calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom) - 2 * var(--cluster-gap)) / 3),
+        160px
+      );
     }
     .controls-slider{
       display:flex;
