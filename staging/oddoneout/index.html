@@ -202,18 +202,17 @@
       --v-reserve-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
       --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
       /* Cards stack in one column on phone (per the mobile sketch) instead
-         of sitting 3 across. Same flat 100px gap as the desktop row. */
-      --cluster-gap: 60px;
+         of sitting 3 across, with much less room needed between them than
+         the desktop row (there's no left/right neighbor to guard against). */
+      --cluster-gap: 24px;
     }
-    /* Matches Labyrinths' own phone line weight -- 3.5px reads heavy at
-       the smaller shape sizes phone cards render at. */
-    .cluster-shape{ stroke-width:2.5px; }
+    .cluster-shape{ stroke-width:2px; }
     .cluster-row{ flex-direction:column; }
     .cluster-card{
       width: min(
-        35vw,
+        46vw,
         calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom) - 2 * var(--cluster-gap)) / 3),
-        160px
+        200px
       );
     }
     .controls-slider{
