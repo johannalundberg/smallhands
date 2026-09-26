@@ -63,7 +63,7 @@
     /* Touch has no hover, so desktop's grow-on-hover feedback never fires
        here -- darken on tap instead, so pressing the info button (or its
        close-X, the same element) is actually visible. */
-    .info-btn:active{ filter: brightness(0.7); }
+    .info-btn:active{ transform:scale(1); filter: brightness(0.7); }
   }
 
   @media (min-width:1367px){
@@ -534,7 +534,7 @@
       <p>I hope you enjoy it too. Feel free to <a href="mailto:johannalundberg@gmail.com">email me</a> if you'd like to say hello or share a thought.</p>
     </div>
 
-    <a class="tile" href="labyrinths/" aria-label="Labyrinths">
+    <a class="tile" href="labyrinth/" aria-label="Labyrinths">
       <div class="badge lab-badge">
         <svg class="lab-frame" viewBox="0 0 6 6" overflow="visible">
           <line class="lab-wall" x1="0" y1="0" x2="6" y2="0"/>
@@ -727,7 +727,11 @@
 <script>
 (function(){
   "use strict";
-  function updateAppHeight(){
+
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });  function updateAppHeight(){
     var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     document.documentElement.style.setProperty('--app-height', h + 'px');
   }

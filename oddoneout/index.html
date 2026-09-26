@@ -209,7 +209,7 @@
     /* Touch has no hover, so desktop's grow-on-hover feedback never fires
        here -- darken on tap instead, so pressing any icon button is
        actually visible. */
-    .icon-btn:active{ filter: brightness(0.7); }
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
     .cluster-shape{ stroke-width:2px; }
     .cluster-row{ flex-direction:column; }
     .cluster-card{
@@ -317,6 +317,10 @@
 (function(){
   "use strict";
 
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
   // Six types so there's always at least one "spare" left over for the
   // swap mutation, even at the hard tier's higher inner-shape count.
   var SHAPES = ['square', 'rect', 'triangle', 'circle', 'diamond', 'oval'];

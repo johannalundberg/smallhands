@@ -227,7 +227,7 @@
     /* Touch has no hover, so desktop's grow-on-hover feedback never fires
        here -- darken on tap instead, so pressing any icon button is
        actually visible. */
-    .icon-btn:active{ filter: brightness(0.7); }
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
     :root{
       --hero-size: clamp(2.6rem, 16.5587vw, 140px);
       --unit: 5.089vw;
@@ -363,6 +363,10 @@
 (function(){
   "use strict";
 
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
   var LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
   var X_SVG = '<svg viewBox="0 0 199.175 199.175"><path fill="var(--bright)" d="M37.0514 48.4488L48.4467 37.0534L99.7259 88.3326L151.005 37.0534L162.4 48.4488L111.121 99.7279L162.4 151.007L151.005 162.402L99.7259 111.123L48.4467 162.402L37.0514 151.007L88.3305 99.7279L37.0514 48.4488Z"/></svg>';

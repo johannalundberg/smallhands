@@ -261,7 +261,7 @@
     /* Touch has no hover, so desktop's grow-on-hover feedback never fires
        here -- darken on tap instead, so pressing any icon button is
        actually visible. */
-    .icon-btn:active{ filter: brightness(0.7); }
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
     :root{
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
@@ -373,6 +373,10 @@
 (function(){
   "use strict";
 
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
   var TIER_N = { easy: 2, medium: 3, hard: 4 };
   var ROUND_SIZE = 10;
   var DIGIT_SRC = [];
