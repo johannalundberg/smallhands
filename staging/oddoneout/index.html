@@ -202,10 +202,8 @@
       --v-reserve-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
       --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
       /* Cards stack in one column on phone (per the mobile sketch) instead
-         of sitting 3 across. Matches the design's own gap-to-card ratio
-         (~60px : 137px) as a flat vw value, same approach as the desktop
-         row's --cluster-gap. */
-      --cluster-gap: 15vw;
+         of sitting 3 across. Same flat 100px gap as the desktop row. */
+      --cluster-gap: 100px;
     }
     /* Matches Labyrinths' own phone line weight -- 3.5px reads heavy at
        the smaller shape sizes phone cards render at. */
@@ -329,6 +327,19 @@
   // difference. Difficulty scales the inner-shape count (more = harder to
   // spot), not cluster count, which is always 3.
   var ANCHOR_SIZE = 68;
+  // shapeSvg()'s "size" parameter maps to a different rendered HEIGHT per
+  // type (e.g. a rotated square's bounding height is size*sqrt(2), a rect's
+  // is only size*0.7) -- without correcting for that, the anchor would
+  // render at a different visual height depending on which type happened
+  // to be picked as the anchor that round. These factors let every type's
+  // anchor render at the exact same height (ANCHOR_SIZE) regardless.
+  var HEIGHT_FACTOR = {
+    square: 1, diamond: Math.SQRT2, rect: 0.7,
+    circle: 1, oval: 0.72, triangle: 0.95
+  };
+  function anchorSizeFor(type){
+    return ANCHOR_SIZE / HEIGHT_FACTOR[type];
+  }
   // The old "medium" is now the easiest tier (2 inner shapes was already a
   // reasonable floor), with medium/hard building further from there.
   var TIER_CONFIG = {
@@ -422,7 +433,7 @@
 
     var clusters = [];
     for (var i = 0; i < CLUSTER_COUNT; i++) {
-      var anchor = { type: anchorType, x: 50, y: 50, size: ANCHOR_SIZE };
+      var anchor = { type: anchorType, x: 50, y: 50, size: anchorSizeFor(anchorType) };
       var types = shuffle(innerTypes);
       var inner = types.map(function(t){ return makeShape(t, sizeByType[t], cfg); });
       if (i === oddIndex && inner.length) {
