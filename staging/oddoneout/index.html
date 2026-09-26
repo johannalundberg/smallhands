@@ -19,9 +19,9 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#1F3325;
+    --bg:#082C12;
     --bright:#E4E4E4;
-    --shape:#9A56FF;
+    --shape:#9853FF;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
     --success:#52ED67;
@@ -352,10 +352,14 @@
   // "the odd one is just a different size" shortcut, and subtleSwap (see
   // SIMILAR_TYPES below) prefers swapping in a shape that closely
   // resembles what it replaced instead of a totally different one.
+  // Inner sizes scaled up by the same factor as ANCHOR_SIZE's own increase
+  // (68 -> 82) so the anchor-to-inner size RATIO stays what it was --
+  // otherwise a bigger anchor next to unchanged-size inner shapes reads as
+  // a container again, regardless of shape type.
   var TIER_CONFIG = {
-    easy:   { inner: 2, jitter: 14, sizeMin: 26, sizeMax: 40 },
-    medium: { inner: 3, jitter: 18, sizeMin: 26, sizeMax: 42 },
-    hard:   { inner: 3, jitter: 22, sizeMin: 32, sizeMax: 36, subtleSwap: true }
+    easy:   { inner: 2, jitter: 14, sizeMin: 31, sizeMax: 48 },
+    medium: { inner: 3, jitter: 18, sizeMin: 31, sizeMax: 51 },
+    hard:   { inner: 3, jitter: 22, sizeMin: 39, sizeMax: 43, subtleSwap: true }
   };
   // Pairs that are easy to mistake for one another at a glance -- used only
   // when a tier's subtleSwap is on, to make the swap mutation's difference
