@@ -266,6 +266,17 @@
   .lab-badge .lab-frame:nth-child(3){ animation-delay:-3s; }
   .lab-wall{ stroke:#E88CE5; stroke-width:2px; stroke-linecap:square; vector-effect:non-scaling-stroke; }
 
+  /* Same 3-frame cross-fade as puzzle-badge/lab-badge (reuses pz-fade3) --
+     3 small shape clusters previewing that the game generates a fresh
+     composition each round. No background of its own (unlike every other
+     badge except lab-badge) -- just the purple lines directly on the
+     tile's own dark background. */
+  .odd-badge .odd-frame{ position:absolute; inset:0; width:100%; height:100%; display:block; opacity:0; animation: pz-fade3 4.5s ease-in-out infinite; }
+  .odd-badge .odd-frame:nth-child(1){ animation-delay:0s; }
+  .odd-badge .odd-frame:nth-child(2){ animation-delay:-1.5s; }
+  .odd-badge .odd-frame:nth-child(3){ animation-delay:-3s; }
+  .odd-shape{ fill:none; stroke:#9853FF; stroke-width:3px; vector-effect:non-scaling-stroke; }
+
   @keyframes fade4{
     0%{ opacity:1; }
     20%{ opacity:1; }
@@ -613,6 +624,26 @@
           <line class="lab-wall" x1="4" y1="4" x2="4" y2="5"/>
           <line class="lab-wall" x1="5" y1="5" x2="6" y2="5"/>
           <line class="lab-wall" x1="3" y1="5" x2="3" y2="6"/>
+        </svg>
+      </div>
+    </a>
+
+    <a class="tile" href="staging/oddoneout/" aria-label="Odd One Out">
+      <div class="badge odd-badge">
+        <svg class="odd-frame" viewBox="0 0 100 100" overflow="visible">
+          <circle class="odd-shape" cx="50" cy="50" r="44"/>
+          <rect class="odd-shape" x="26" y="24" width="46" height="46"/>
+          <polygon class="odd-shape" points="65,42.7 42,86.4 88,86.4"/>
+        </svg>
+        <svg class="odd-frame" viewBox="0 0 100 100" overflow="visible">
+          <rect class="odd-shape" x="17" y="17" width="66" height="66" transform="rotate(45 50 50)"/>
+          <rect class="odd-shape" x="14" y="38" width="50" height="28"/>
+          <circle class="odd-shape" cx="66" cy="62" r="22"/>
+        </svg>
+        <svg class="odd-frame" viewBox="0 0 100 100" overflow="visible">
+          <polygon class="odd-shape" points="50,3.8 8,83.6 92,83.6"/>
+          <rect class="odd-shape" x="30" y="40" width="38" height="38" transform="rotate(45 49 59)"/>
+          <ellipse class="odd-shape" cx="64" cy="56" rx="30" ry="18"/>
         </svg>
       </div>
     </a>
