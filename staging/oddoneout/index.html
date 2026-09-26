@@ -204,15 +204,15 @@
       /* Cards stack in one column on phone (per the mobile sketch) instead
          of sitting 3 across, with much less room needed between them than
          the desktop row (there's no left/right neighbor to guard against). */
-      --cluster-gap: 24px;
+      --cluster-gap: 12px;
     }
     .cluster-shape{ stroke-width:2px; }
     .cluster-row{ flex-direction:column; }
     .cluster-card{
       width: min(
-        46vw,
+        56vw,
         calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom) - 2 * var(--cluster-gap)) / 3),
-        200px
+        230px
       );
     }
     .controls-slider{
@@ -350,7 +350,7 @@
   // resembles what it replaced instead of a totally different one.
   var TIER_CONFIG = {
     easy:   { inner: 2, jitter: 14, sizeMin: 26, sizeMax: 40 },
-    medium: { inner: 3, jitter: 18, sizeMin: 26, sizeMax: 44 },
+    medium: { inner: 3, jitter: 18, sizeMin: 30, sizeMax: 40 },
     hard:   { inner: 3, jitter: 20, sizeMin: 32, sizeMax: 38, subtleSwap: true }
   };
   // Pairs that are easy to mistake for one another at a glance -- used only
