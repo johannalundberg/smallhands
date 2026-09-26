@@ -30,10 +30,9 @@
     --icon-size: clamp(44px, 8.912vw, 154px);
     --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
     --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
-    /* Matches the design's own gap exactly (148px), as a flat value
-       rather than a viewport-scaled one -- card size itself is capped at
-       a flat 460px too, so the gap should stay flat alongside it. */
-    --cluster-gap: 148px;
+    /* Flat value rather than a viewport-scaled one -- card size itself is
+       capped at a flat 460px too, so the gap should stay flat alongside it. */
+    --cluster-gap: 100px;
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
