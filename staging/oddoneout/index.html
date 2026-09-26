@@ -30,7 +30,10 @@
     --icon-size: clamp(44px, 8.912vw, 154px);
     --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
     --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
-    --cluster-gap: calc(var(--icon-size) * 0.25);
+    /* Gap-to-card ratio matches the design (~148px gap : 305px card) --
+       kept as a flat vw value, independent of card size, so the width
+       formula below (94vw split 3 ways minus 2 gaps) stays solvable. */
+    --cluster-gap: 11vw;
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
@@ -122,7 +125,7 @@
   .progress-dots .dot.done{ background: var(--bright); }
 
   /* ---------- the cluster row ---------- */
-  .board-wrap{ width:100%; display:flex; align-items:center; justify-content:center; }
+  .board-wrap{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
   .cluster-row{
     display:flex;
     flex-wrap:wrap;
@@ -142,7 +145,7 @@
     width: min(
       calc((94vw - 2 * var(--cluster-gap)) / 3),
       calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)),
-      200px
+      340px
     );
     aspect-ratio:1;
     background:none;
@@ -189,9 +192,10 @@
       --v-reserve-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
       --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
       /* Cards stack in one column on phone (per the mobile sketch) instead
-         of sitting 3 across, so they need more room between each other
-         than the desktop row's own gap. */
-      --cluster-gap: calc(var(--icon-size) * 0.5);
+         of sitting 3 across. Matches the design's own gap-to-card ratio
+         (~60px : 137px) as a flat vw value, same approach as the desktop
+         row's --cluster-gap. */
+      --cluster-gap: 15vw;
     }
     /* Matches Labyrinths' own phone line weight -- 3.5px reads heavy at
        the smaller shape sizes phone cards render at. */
