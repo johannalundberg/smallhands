@@ -19,7 +19,7 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#16281B;
+    --bg:#112115;
     --bright:#E4E4E4;
     --shape:#9853FF;
     --ink:#202020;
@@ -329,18 +329,19 @@
   // large enough that the shapes actually fill their own card, or shrinking
   // --cluster-gap has little visible effect.
   var ANCHOR_SIZE = 82;
-  // rect/oval are wide, flat shapes -- scaled up to anchor size they read
-  // as a container/frame around the other shapes rather than a member of
-  // the cluster, so they're excluded from anchor duty (still fine as
-  // smaller inner shapes, where they visibly overlap like everything else).
-  var ANCHOR_SHAPES = ['square', 'triangle', 'circle', 'diamond'];
+  // rect/oval/square all have straight, parallel edges that read as a
+  // container/frame around the other shapes once scaled up to anchor size,
+  // rather than a member of the cluster -- excluded from anchor duty (still
+  // fine as smaller inner shapes, where they visibly overlap like everything
+  // else). Only triangle/circle/diamond don't carry that "box" reading.
+  var ANCHOR_SHAPES = ['triangle', 'circle', 'diamond'];
   // shapeSvg()'s "size" parameter maps to a different rendered bounding box
   // per type (e.g. a rotated square's bounding box is size*sqrt(2) on a
   // side) -- each factor here is the LARGEST of a type's own width/height
   // multipliers, which caps its bounding box (both dimensions) at
   // ANCHOR_SIZE, so the gap between clusters stays identical regardless of
   // which type gets picked as the anchor.
-  var BOUNDING_FACTOR = { square: 1, diamond: Math.SQRT2, circle: 1, triangle: 1 };
+  var BOUNDING_FACTOR = { diamond: Math.SQRT2, circle: 1, triangle: 1 };
   function anchorSizeFor(type){
     return ANCHOR_SIZE / BOUNDING_FACTOR[type];
   }
@@ -355,10 +356,14 @@
   // (68 -> 82) so the anchor-to-inner size RATIO stays what it was --
   // otherwise a bigger anchor next to unchanged-size inner shapes reads as
   // a container again, regardless of shape type.
+  // Hard's earlier "messy" problem came from a wide size range at a high
+  // inner count (lots of differently-sized shapes tangling together), not
+  // from the count alone -- now that hard's sizes are tight and uniform,
+  // it can afford more shapes than medium again for a real difficulty step.
   var TIER_CONFIG = {
     easy:   { inner: 2, jitter: 14, sizeMin: 31, sizeMax: 48 },
     medium: { inner: 3, jitter: 18, sizeMin: 31, sizeMax: 51 },
-    hard:   { inner: 3, jitter: 22, sizeMin: 39, sizeMax: 43, subtleSwap: true }
+    hard:   { inner: 4, jitter: 24, sizeMin: 39, sizeMax: 43, subtleSwap: true }
   };
   // Pairs that are easy to mistake for one another at a glance -- used only
   // when a tier's subtleSwap is on, to make the swap mutation's difference
