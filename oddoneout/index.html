@@ -16,7 +16,7 @@
 </script>
 
 <title>Odd One Out</title>
-<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <style>
   :root{
     --bg:#053133;
@@ -25,7 +25,7 @@
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.4);
     --success:#54E349;
-    --incorrect:#FF0A0A;
+    --incorrect:#D50004;
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
     --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
@@ -611,7 +611,7 @@
     buildRound(); // new composition for the new tier, but keep progress (matches Math/Number Puzzle)
   });
   els.refreshBtn.addEventListener('click', startGame);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../../index.html'; });
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
 
   els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
   startGame();
