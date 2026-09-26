@@ -19,7 +19,7 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#223626;
+    --bg:#1F3325;
     --bright:#E4E4E4;
     --shape:#9A56FF;
     --ink:#202020;
@@ -325,7 +325,11 @@
   // never mutates; only the inner shapes vary and carry the odd-one-out
   // difference. Difficulty scales the inner-shape count (more = harder to
   // spot), not cluster count, which is always 3.
-  var ANCHOR_SIZE = 68;
+  // Most of what reads as "gap between clusters" is actually empty space
+  // inside each card, not the CSS gap between cards -- so this needs to be
+  // large enough that the shapes actually fill their own card, or shrinking
+  // --cluster-gap has little visible effect.
+  var ANCHOR_SIZE = 82;
   // rect/oval are wide, flat shapes -- scaled up to anchor size they read
   // as a container/frame around the other shapes rather than a member of
   // the cluster, so they're excluded from anchor duty (still fine as
@@ -350,8 +354,8 @@
   // resembles what it replaced instead of a totally different one.
   var TIER_CONFIG = {
     easy:   { inner: 2, jitter: 14, sizeMin: 26, sizeMax: 40 },
-    medium: { inner: 3, jitter: 18, sizeMin: 30, sizeMax: 40 },
-    hard:   { inner: 3, jitter: 20, sizeMin: 32, sizeMax: 38, subtleSwap: true }
+    medium: { inner: 3, jitter: 18, sizeMin: 26, sizeMax: 42 },
+    hard:   { inner: 3, jitter: 22, sizeMin: 32, sizeMax: 36, subtleSwap: true }
   };
   // Pairs that are easy to mistake for one another at a glance -- used only
   // when a tier's subtleSwap is on, to make the swap mutation's difference
@@ -450,7 +454,10 @@
       sizeByType[t] = cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin);
     });
     var oddIndex = Math.floor(Math.random() * CLUSTER_COUNT);
-    var mutation = Math.random() < 0.5 ? 'swap' : 'missing';
+    // A missing shape is an easy tell (fewer outlines, spottable at a
+    // glance) -- subtleSwap tiers always use the harder swap instead, so
+    // hard doesn't get an occasional "free" easy round.
+    var mutation = cfg.subtleSwap ? 'swap' : (Math.random() < 0.5 ? 'swap' : 'missing');
 
     var clusters = [];
     for (var i = 0; i < CLUSTER_COUNT; i++) {
