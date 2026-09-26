@@ -32,7 +32,7 @@
     --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
     /* Flat value rather than a viewport-scaled one -- card size itself is
        capped at a flat 460px too, so the gap should stay flat alongside it. */
-    --cluster-gap: 100px;
+    --cluster-gap: 60px;
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
@@ -203,7 +203,7 @@
       --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
       /* Cards stack in one column on phone (per the mobile sketch) instead
          of sitting 3 across. Same flat 100px gap as the desktop row. */
-      --cluster-gap: 100px;
+      --cluster-gap: 60px;
     }
     /* Matches Labyrinths' own phone line weight -- 3.5px reads heavy at
        the smaller shape sizes phone cards render at. */
