@@ -19,11 +19,15 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#082C12;
+    --bg:#0A2612;
     --bright:#E4E4E4;
     --shape:#9853FF;
     --ink:#202020;
-    --ink-muted:rgba(32,32,32,0.4);
+    /* Darker than the site-wide 0.4 -- this game's background is much
+       darker than Othello's/Memory's own, so the usual --ink-muted circle
+       blends almost invisibly into it (near-identical luminance) instead
+       of reading as a distinct button. */
+    --ink-muted:rgba(0,0,0,0.55);
     --success:#52ED67;
     --incorrect:#FF3946;
     --unit: 1.1574vw;
@@ -229,7 +233,7 @@
       overflow-x:auto;
       -webkit-overflow-scrolling:touch;
       scrollbar-width:none;
-      --ink-muted: rgba(32,32,32,0.7);
+      --ink-muted: rgba(0,0,0,0.8);
     }
     .controls-slider::-webkit-scrollbar{ display:none; }
     .diff-group, .btn-row{ display:contents; }
