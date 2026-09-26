@@ -25,6 +25,25 @@
     font-style:normal;
   }
 
+  :root{
+    /* Matches every game page's own --unit/--icon-size exactly, so the back
+       button here is sized and inset identically to theirs. */
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+  }
+  @media (min-width:768px) and (max-width:1023px) and (min-height:501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+  @media (max-width:767px){
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+    }
+  }
+
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
   body{
@@ -82,10 +101,10 @@
      own info button and every game page's back button -- same hover/active feel. */
   .back-btn{
     position:fixed;
-    left:20px;
-    bottom:20px;
-    width:80px;
-    height:80px;
+    left:var(--unit);
+    bottom:var(--unit);
+    width:var(--icon-size);
+    height:var(--icon-size);
     display:flex;
     cursor:pointer;
     transition:transform 120ms ease;
@@ -94,12 +113,6 @@
   .back-btn:active{ transform:scale(0.94); }
   @media (hover:hover) and (pointer:fine){
     .back-btn:hover{ transform:scale(1.035); }
-  }
-  @media (min-width:768px) and (max-width:1023px) and (min-height:501px){
-    .back-btn{ width:96px; height:96px; }
-  }
-  @media (min-width:1024px){
-    .back-btn{ width:150px; height:150px; }
   }
 </style>
 </head>
