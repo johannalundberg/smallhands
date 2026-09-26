@@ -327,18 +327,20 @@
   // difference. Difficulty scales the inner-shape count (more = harder to
   // spot), not cluster count, which is always 3.
   var ANCHOR_SIZE = 68;
-  // shapeSvg()'s "size" parameter maps to a different rendered HEIGHT per
-  // type (e.g. a rotated square's bounding height is size*sqrt(2), a rect's
-  // is only size*0.7) -- without correcting for that, the anchor would
-  // render at a different visual height depending on which type happened
-  // to be picked as the anchor that round. These factors let every type's
-  // anchor render at the exact same height (ANCHOR_SIZE) regardless.
-  var HEIGHT_FACTOR = {
-    square: 1, diamond: Math.SQRT2, rect: 0.7,
-    circle: 1, oval: 0.72, triangle: 0.95
-  };
+  // rect/oval are wide, flat shapes -- scaled up to anchor size they read
+  // as a container/frame around the other shapes rather than a member of
+  // the cluster, so they're excluded from anchor duty (still fine as
+  // smaller inner shapes, where they visibly overlap like everything else).
+  var ANCHOR_SHAPES = ['square', 'triangle', 'circle', 'diamond'];
+  // shapeSvg()'s "size" parameter maps to a different rendered bounding box
+  // per type (e.g. a rotated square's bounding box is size*sqrt(2) on a
+  // side) -- each factor here is the LARGEST of a type's own width/height
+  // multipliers, which caps its bounding box (both dimensions) at
+  // ANCHOR_SIZE, so the gap between clusters stays identical regardless of
+  // which type gets picked as the anchor.
+  var BOUNDING_FACTOR = { square: 1, diamond: Math.SQRT2, circle: 1, triangle: 1 };
   function anchorSizeFor(type){
-    return ANCHOR_SIZE / HEIGHT_FACTOR[type];
+    return ANCHOR_SIZE / BOUNDING_FACTOR[type];
   }
   // The old "medium" is now the easiest tier (2 inner shapes was already a
   // reasonable floor), with medium/hard building further from there.
@@ -416,10 +418,10 @@
 
   function buildRound(){
     var cfg = TIER_CONFIG[state.difficulty];
-    var pool = shuffle(SHAPES);
-    var anchorType = pool[0];
-    var innerTypes = pool.slice(1, 1 + cfg.inner);
-    var spareType = pool[1 + cfg.inner];
+    var anchorType = shuffle(ANCHOR_SHAPES)[0];
+    var pool = shuffle(SHAPES.filter(function(t){ return t !== anchorType; }));
+    var innerTypes = pool.slice(0, cfg.inner);
+    var spareType = pool[cfg.inner];
     // Fix each shape TYPE's size once for the whole round -- a shape that
     // recurs across clusters has to be recognizably the *same* shape (only
     // its position changes, which is what makes each cluster a different
