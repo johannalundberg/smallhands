@@ -343,11 +343,24 @@
     return ANCHOR_SIZE / BOUNDING_FACTOR[type];
   }
   // The old "medium" is now the easiest tier (2 inner shapes was already a
-  // reasonable floor), with medium/hard building further from there.
+  // reasonable floor). Hard keeps the same inner-shape count as medium
+  // (more shapes than that reads as clutter, not difficulty) and instead
+  // gets harder through subtlety: a near-uniform size range removes the
+  // "the odd one is just a different size" shortcut, and subtleSwap (see
+  // SIMILAR_TYPES below) prefers swapping in a shape that closely
+  // resembles what it replaced instead of a totally different one.
   var TIER_CONFIG = {
     easy:   { inner: 2, jitter: 14, sizeMin: 26, sizeMax: 40 },
     medium: { inner: 3, jitter: 18, sizeMin: 26, sizeMax: 44 },
-    hard:   { inner: 4, jitter: 22, sizeMin: 26, sizeMax: 48 }
+    hard:   { inner: 3, jitter: 20, sizeMin: 32, sizeMax: 38, subtleSwap: true }
+  };
+  // Pairs that are easy to mistake for one another at a glance -- used only
+  // when a tier's subtleSwap is on, to make the swap mutation's difference
+  // genuinely harder to spot rather than just busier.
+  var SIMILAR_TYPES = {
+    square: 'diamond', diamond: 'square',
+    circle: 'oval', oval: 'circle',
+    rect: 'oval', triangle: 'diamond'
   };
   var ROUND_SIZE = 10;
 
@@ -421,7 +434,14 @@
     var anchorType = shuffle(ANCHOR_SHAPES)[0];
     var pool = shuffle(SHAPES.filter(function(t){ return t !== anchorType; }));
     var innerTypes = pool.slice(0, cfg.inner);
-    var spareType = pool[cfg.inner];
+    var remaining = pool.slice(cfg.inner);
+    var spareType = remaining[0];
+    if (cfg.subtleSwap) {
+      for (var k = 0; k < innerTypes.length; k++) {
+        var similar = SIMILAR_TYPES[innerTypes[k]];
+        if (similar && remaining.indexOf(similar) !== -1) { spareType = similar; break; }
+      }
+    }
     // Fix each shape TYPE's size once for the whole round -- a shape that
     // recurs across clusters has to be recognizably the *same* shape (only
     // its position changes, which is what makes each cluster a different
