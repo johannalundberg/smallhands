@@ -19,7 +19,7 @@
 <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <style>
   :root{
-    --bg:#303E33;
+    --bg:#293A2D;
     --bright:#E4E4E4;
     --shape:#EE65EA;
     --ink:#202020;
@@ -30,10 +30,10 @@
     --icon-size: clamp(44px, 8.912vw, 154px);
     --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
     --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
-    /* Gap-to-card ratio matches the design (~148px gap : 305px card) --
-       kept as a flat vw value, independent of card size, so the width
-       formula below (94vw split 3 ways minus 2 gaps) stays solvable. */
-    --cluster-gap: 11vw;
+    /* Matches the design's own gap exactly (148px), as a flat value
+       rather than a viewport-scaled one -- card size itself is capped at
+       a flat 460px too, so the gap should stay flat alongside it. */
+    --cluster-gap: 148px;
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
@@ -318,9 +318,9 @@
 (function(){
   "use strict";
 
-  // Five types so there's always at least one "spare" left over for the
+  // Six types so there's always at least one "spare" left over for the
   // swap mutation, even at the hard tier's higher inner-shape count.
-  var SHAPES = ['square', 'rect', 'triangle', 'circle', 'diamond'];
+  var SHAPES = ['square', 'rect', 'triangle', 'circle', 'diamond', 'oval'];
   var CLUSTER_COUNT = 3;
   // Every cluster gets one "anchor" shape -- always the same type, size and
   // dead-center position across all 3 cards every round -- so all 3 always
@@ -330,10 +330,12 @@
   // difference. Difficulty scales the inner-shape count (more = harder to
   // spot), not cluster count, which is always 3.
   var ANCHOR_SIZE = 68;
+  // The old "medium" is now the easiest tier (2 inner shapes was already a
+  // reasonable floor), with medium/hard building further from there.
   var TIER_CONFIG = {
-    easy:   { inner: 1, jitter: 9,  sizeMin: 26, sizeMax: 36 },
-    medium: { inner: 2, jitter: 14, sizeMin: 26, sizeMax: 40 },
-    hard:   { inner: 3, jitter: 18, sizeMin: 26, sizeMax: 44 }
+    easy:   { inner: 2, jitter: 14, sizeMin: 26, sizeMax: 40 },
+    medium: { inner: 3, jitter: 18, sizeMin: 26, sizeMax: 44 },
+    hard:   { inner: 4, jitter: 22, sizeMin: 26, sizeMax: 48 }
   };
   var ROUND_SIZE = 10;
 
@@ -393,12 +395,12 @@
     return a;
   }
 
-  function makeShape(type, cfg){
+  function makeShape(type, size, cfg){
     return {
       type: type,
       x: 50 + (Math.random() * 2 - 1) * cfg.jitter,
       y: 50 + (Math.random() * 2 - 1) * cfg.jitter,
-      size: cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin)
+      size: size
     };
   }
 
@@ -408,6 +410,14 @@
     var anchorType = pool[0];
     var innerTypes = pool.slice(1, 1 + cfg.inner);
     var spareType = pool[1 + cfg.inner];
+    // Fix each shape TYPE's size once for the whole round -- a shape that
+    // recurs across clusters has to be recognizably the *same* shape (only
+    // its position changes, which is what makes each cluster a different
+    // composition), or the "spot the odd one" comparison breaks down.
+    var sizeByType = {};
+    innerTypes.concat([spareType]).forEach(function(t){
+      sizeByType[t] = cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin);
+    });
     var oddIndex = Math.floor(Math.random() * CLUSTER_COUNT);
     var mutation = Math.random() < 0.5 ? 'swap' : 'missing';
 
@@ -415,12 +425,12 @@
     for (var i = 0; i < CLUSTER_COUNT; i++) {
       var anchor = { type: anchorType, x: 50, y: 50, size: ANCHOR_SIZE };
       var types = shuffle(innerTypes);
-      var inner = types.map(function(t){ return makeShape(t, cfg); });
+      var inner = types.map(function(t){ return makeShape(t, sizeByType[t], cfg); });
       if (i === oddIndex && inner.length) {
         if (mutation === 'swap') {
           var swapIdx = Math.floor(Math.random() * inner.length);
           var old = inner[swapIdx];
-          inner[swapIdx] = { type: spareType, x: old.x, y: old.y, size: old.size };
+          inner[swapIdx] = { type: spareType, x: old.x, y: old.y, size: sizeByType[spareType] };
         } else {
           inner.splice(Math.floor(Math.random() * inner.length), 1);
         }
@@ -447,6 +457,9 @@
     }
     if (shape.type === 'circle') {
       return '<circle class="cluster-shape" cx="' + cx + '" cy="' + cy + '" r="' + (s / 2) + '"/>';
+    }
+    if (shape.type === 'oval') {
+      return '<ellipse class="cluster-shape" cx="' + cx + '" cy="' + cy + '" rx="' + (s * 0.6) + '" ry="' + (s * 0.36) + '"/>';
     }
     // triangle
     var p1 = cx + ',' + (cy - s * 0.55);
