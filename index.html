@@ -195,6 +195,30 @@
   .odd-badge .odd-frame:nth-child(3){ animation-delay:-3s; }
   .odd-shape{ fill:none; stroke:#EE643E; stroke-width:2px; vector-effect:non-scaling-stroke; }
 
+  /* Previews the sequence-repeat mechanic: same 2x2 grid/gap/corner-radius as
+     memory-badge, but each cell is one of the real game's 4 solid pad colors
+     instead of a flip-card. One shared keyframe (rest -> lit -> rest, held
+     briefly near the start of its own timeline) reused on all 4 cells via a
+     staggered negative animation-delay, so they light up one after another
+     and loop -- same 4.5s cycle as every other badge on the hub. */
+  .cp-badge{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    grid-template-rows:repeat(2, 1fr);
+    gap: 4%;
+  }
+  .cp-cell{ border-radius:14%; animation: cp-cell-pulse 4.5s ease-in-out infinite; }
+  .cp-cell:nth-child(1){ --cell-rest:#ff7235; --cell-lit:#fe621f; animation-delay:0s; }
+  .cp-cell:nth-child(2){ --cell-rest:#a512e5; --cell-lit:#c641ff; animation-delay:-1.125s; }
+  .cp-cell:nth-child(3){ --cell-rest:#3f75f2; --cell-lit:#2e6dfe; animation-delay:-2.25s; }
+  .cp-cell:nth-child(4){ --cell-rest:#d49b20; --cell-lit:#f5b427; animation-delay:-3.375s; }
+  @keyframes cp-cell-pulse{
+    0%{ background:var(--cell-rest); transform:scale(1); }
+    6%{ background:var(--cell-lit); transform:scale(1.08); }
+    16%{ background:var(--cell-rest); transform:scale(1); }
+    100%{ background:var(--cell-rest); transform:scale(1); }
+  }
+
   @keyframes fade4{
     0%{ opacity:1; }
     20%{ opacity:1; }
@@ -598,6 +622,15 @@
           <rect class="odd-shape" x="24" y="50" width="38" height="38"/>
           <rect class="odd-shape" x="45" y="49" width="38" height="38" transform="rotate(45 64 68)"/>
         </svg>
+      </div>
+    </a>
+
+    <a class="tile" href="copythepattern/" aria-label="Copy the Pattern">
+      <div class="badge cp-badge">
+        <div class="cp-cell"></div>
+        <div class="cp-cell"></div>
+        <div class="cp-cell"></div>
+        <div class="cp-cell"></div>
       </div>
     </a>
 

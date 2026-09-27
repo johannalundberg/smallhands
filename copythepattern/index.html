@@ -16,7 +16,7 @@
 </script>
 
 <title>Copy the Pattern</title>
-<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://playandlearn.kids/copythepattern/">
@@ -30,20 +30,20 @@
 <style>
   @font-face{
     font-family:'Spline Sans Mono';
-    src: url('../../fonts/SplineSansMono.woff2') format('woff2');
+    src: url('../fonts/SplineSansMono.woff2') format('woff2');
     font-weight:400;
     font-style:normal;
   }
 
   :root{
-    /* Placeholder accent -- a deep magenta, distinct from every other game's
-       (brown/labyrinth, dark-grey/memory, dark-teal/oddoneout, purple/math,
-       gold/numberpuzzle, blue/tictactoe, grey/othello). Very likely to get
-       tuned once the user sees it live, same as every other game's accent. */
-    --bg:#8C1F5C;
+    /* Figma sketch (node 229:5126): dark olive background. */
+    --bg:#3e3c2a;
     --bright:#E4E4E4;
     --ink:#202020;
-    --ink-muted:rgba(32,32,32,0.4);
+    /* Black-based (not grey-based) muted fill, matching Odd One Out --
+       reads with more contrast against a dark --bg than othello/numberpuzzle's
+       rgba(32,32,32,*) convention does. */
+    --ink-muted:rgba(0,0,0,0.4);
     --success:#0DC754;
     --incorrect:#F2383B;
     --unit: 1.1574vw;
@@ -120,17 +120,25 @@
 
   .controls-slider{ display:contents; }
 
-  /* ---------- round progress ---------- */
-  .progress-dots{
+  /* ---------- round progress: trace dots (top, one per step, fills in the
+     tapped pad's own color as you correctly repeat the sequence) stacked
+     above the regular best-of-N round counter ---------- */
+  .progress-cluster{
     position:absolute;
     right:var(--unit);
     bottom:var(--unit);
     z-index:2;
     display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap: calc(var(--icon-size) * 0.08);
+  }
+  .trace-dots, .progress-dots{
+    display:flex;
     align-items:center;
     gap: calc(var(--icon-size) * 0.08);
   }
-  .progress-dots .dot{
+  .trace-dots .dot, .progress-dots .dot{
     width: calc(var(--icon-size) * 0.25);
     height: calc(var(--icon-size) * 0.25);
     border-radius:50%;
@@ -146,26 +154,40 @@
     display:grid;
     grid-template-columns:repeat(2, 1fr);
     grid-template-rows:repeat(2, 1fr);
-    gap: calc(var(--unit) * 1.5);
-    width:min(94vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 520px);
+    gap: var(--pad-gap, 12px);
+    /* Same width/position as tictactoe's own board on mobile (this is the
+       base value, unconditionally applied below the 768px override). */
+    width:min(76vmin, 76vw, 570px);
     aspect-ratio:1;
   }
+  @media (min-width: 768px){
+    .pad-grid{
+      width:min(94vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 520px);
+    }
+  }
+  /* Four fixed colors (Figma node 229:5126) -- color is the puzzle's signal
+     here, not shape, so each pad is just a solid rounded square. Rest/lit
+     pairs per pad; lit is used for playback highlight, a correct-tap
+     confirmation flash, and live press feedback (all "interacting with them"
+     per the sketch), so all three share one class/pseudo-class rule. */
+  .pad:nth-child(1){ --pad-rest:#ff7235; --pad-lit:#fe621f; }
+  .pad:nth-child(2){ --pad-rest:#a512e5; --pad-lit:#c641ff; }
+  .pad:nth-child(3){ --pad-rest:#3f75f2; --pad-lit:#2e6dfe; }
+  .pad:nth-child(4){ --pad-rest:#d49b20; --pad-lit:#f5b427; }
   .pad{
     appearance:none;
-    background:rgba(32,32,32,0.25);
     border:none;
-    border-radius: calc(var(--unit) * 1.2);
+    /* Same corner-radius-to-size ratio as memory's own tile face. */
+    border-radius:14%;
     cursor:pointer;
-    padding: 14%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    transition: transform 150ms ease;
+    background:var(--pad-rest);
+    transition: background 150ms ease, transform 150ms ease;
   }
-  .pad-shape{ fill:var(--ink-muted); transition:fill 150ms ease; }
-  .pad.lit{ transform:scale(1.04); }
-  .pad.lit .pad-shape{ fill:var(--bright); }
-  .pad.wrong .pad-shape{ fill:var(--incorrect); }
+  .pad.lit, .pad:active{ transform:scale(1.06); background:var(--pad-lit); }
+  @media (hover:hover) and (pointer:fine){
+    .pad:hover{ transform:scale(1.035); }
+  }
+  .pad.wrong{ background:var(--incorrect); }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -206,17 +228,16 @@
       right:var(--unit);
       bottom:var(--unit);
       z-index:3;
-      background: rgba(32,32,32,0.4);
+      /* Matches Odd One Out's tray treatment: a lighter, black-based overlay
+         (rather than othello/numberpuzzle's grey rgba(32,32,32,*)) reads with
+         more contrast against this game's own dark --bg, and --ink-muted is
+         already dark enough on its own here that the tray doesn't need its
+         own darker in-tray override the way othello's does. */
+      background: rgba(0,0,0,0.22);
       border-radius:999px;
       overflow-x:auto;
       -webkit-overflow-scrolling:touch;
       scrollbar-width:none;
-      /* The back/refresh circle chips and inactive diff-btn icons are all
-         filled with --ink-muted, the same rgba(32,32,32,0.4) as this tray's
-         own background -- stacked on top of it, they all but disappear.
-         Darken just the --ink-muted inherited inside the tray so every
-         button reads as its own distinct shape against the tray behind it. */
-      --ink-muted: rgba(32,32,32,0.7);
     }
     .controls-slider::-webkit-scrollbar{ display:none; }
     .diff-group, .btn-row{ display:contents; }
@@ -224,7 +245,7 @@
       padding-top: var(--v-reserve-top);
       padding-bottom: var(--v-reserve-bottom);
     }
-    .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
+    .progress-cluster{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; align-items:flex-start; }
   }
 
   @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
@@ -290,16 +311,19 @@
 
   </div>
 
-  <div class="progress-dots" id="progressDots">
-    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  <div class="progress-cluster">
+    <div class="trace-dots" id="traceDots"></div>
+    <div class="progress-dots" id="progressDots">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    </div>
   </div>
 
   <div class="board-wrap" id="boardWrap">
     <div class="pad-grid" id="padGrid">
-      <button class="pad" data-index="0" aria-label="Square"><svg viewBox="0 0 100 100"><rect class="pad-shape" x="20" y="20" width="60" height="60"/></svg></button>
-      <button class="pad" data-index="1" aria-label="Triangle"><svg viewBox="0 0 100 100"><polygon class="pad-shape" points="50,15 90,85 10,85"/></svg></button>
-      <button class="pad" data-index="2" aria-label="Circle"><svg viewBox="0 0 100 100"><circle class="pad-shape" cx="50" cy="50" r="40"/></svg></button>
-      <button class="pad" data-index="3" aria-label="Diamond"><svg viewBox="0 0 100 100"><polygon class="pad-shape" points="50,10 90,50 50,90 10,50"/></svg></button>
+      <button class="pad" data-index="0" aria-label="Orange"></button>
+      <button class="pad" data-index="1" aria-label="Purple"></button>
+      <button class="pad" data-index="2" aria-label="Blue"></button>
+      <button class="pad" data-index="3" aria-label="Gold"></button>
     </div>
   </div>
 
@@ -314,11 +338,22 @@
   document.addEventListener('touchstart', function(){}, { passive: true });
 
   var PAD_COUNT = 4;
-  var ROUND_SIZE = 10;
+  // Mistakes never cost progress (see onPadTap) -- persistence alone always
+  // gets you there -- but the sequence gets one step longer every round, so
+  // later rounds take a lot more attempts/time than early ones. 7 keeps the
+  // total playtime-to-celebration closer to what a "best of N" feels like on
+  // every other game on the site; 10 would mean an 12+ step sequence by the
+  // final round on hard.
+  var ROUND_SIZE = 7;
+  // Same playback speed on every tier -- only the starting sequence length
+  // differs -- per live testing: easy's own slower speed read as sluggish
+  // rather than "easier".
+  var PLAYBACK_LIT = 500;
+  var PLAYBACK_GAP = 300;
   var TIER_CONFIG = {
-    easy:   { startLen: 1, lit: 650, gap: 350 },
-    medium: { startLen: 2, lit: 500, gap: 300 },
-    hard:   { startLen: 3, lit: 380, gap: 220 }
+    easy:   { startLen: 1 },
+    medium: { startLen: 2 },
+    hard:   { startLen: 3 }
   };
 
   var state = {
@@ -338,6 +373,7 @@
     backBtn: document.getElementById('backBtn'),
     refreshBtn: document.getElementById('refreshBtn'),
     controlsSlider: document.getElementById('controlsSlider'),
+    traceDots: document.getElementById('traceDots'),
     progressDots: Array.prototype.slice.call(document.querySelectorAll('.progress-dots .dot'))
   };
 
@@ -367,10 +403,48 @@
     landscapeBlockMQ.addListener(onLandscapeBlockChange);
   }
 
+  // Matches memory's own gap-to-tile-size ratio exactly (see memory/index.html's
+  // GAP_RATIO): measure the grid's own rendered width (fixed independently of
+  // gap by the CSS width:min(...) rule), then solve backwards for the tile size
+  // a given gap would leave, so the 4 pads sit at the same relative spacing as
+  // memory's tiles at every breakpoint.
+  var GAP_RATIO = 0.08;
+  var mobileMQ = window.matchMedia('(max-width: 767px), (max-height: 500px)');
+  function updatePadGap(){
+    var cols = 2;
+    var containerWidth = els.padGrid.getBoundingClientRect().width;
+    var tileSize = containerWidth / (cols + GAP_RATIO * (cols - 1));
+    els.padGrid.style.setProperty('--pad-gap', (tileSize * GAP_RATIO) + 'px');
+  }
+  if (mobileMQ.addEventListener) {
+    mobileMQ.addEventListener('change', updatePadGap);
+  } else if (mobileMQ.addListener) {
+    mobileMQ.addListener(updatePadGap);
+  }
+
   function updateProgressDots(){
     els.progressDots.forEach(function(dot, i){
       dot.classList.toggle('done', i < state.progress);
     });
+  }
+
+  // Rebuilds the trace-dots row to match the current sequence length, all
+  // unfilled -- called every time playback (re)starts, whether that's a fresh
+  // longer round or a replay after a wrong tap, so it's always showing empty
+  // slots for the attempt about to begin.
+  function renderTraceDots(){
+    els.traceDots.innerHTML = '';
+    for (var i = 0; i < state.sequence.length; i++) {
+      var dot = document.createElement('span');
+      dot.className = 'dot';
+      els.traceDots.appendChild(dot);
+    }
+  }
+
+  function markTraceDot(step, padIndex){
+    var dot = els.traceDots.children[step];
+    if (!dot) return;
+    dot.style.background = getComputedStyle(els.pads[padIndex]).getPropertyValue('--pad-rest').trim();
   }
 
   function tierConfig(){ return TIER_CONFIG[state.difficulty]; }
@@ -383,32 +457,33 @@
     state.progress = 0;
     updateProgressDots();
     els.boardWrap.classList.remove('busy');
+    updatePadGap();
     playSequence();
   }
 
-  // Plays back state.sequence one pad at a time, each lit for cfg.lit ms with
-  // cfg.gap ms of dark between steps -- a recursive setTimeout chain, matching
-  // memory.js's own "flip, wait, then advance" style rather than a promise chain
-  // (nothing else on this site uses async/await).
+  // Plays back state.sequence one pad at a time, each lit for PLAYBACK_LIT ms
+  // with PLAYBACK_GAP ms of dark between steps -- a recursive setTimeout chain,
+  // matching memory.js's own "flip, wait, then advance" style rather than a
+  // promise chain (nothing else on this site uses async/await).
   function playSequence(){
     state.busy = true;
     els.boardWrap.classList.add('busy');
-    var cfg = tierConfig();
+    renderTraceDots();
     function playStep(i){
       var pad = els.pads[state.sequence[i]];
       pad.classList.add('lit');
       setTimeout(function(){
         pad.classList.remove('lit');
         if (i + 1 < state.sequence.length) {
-          setTimeout(function(){ playStep(i + 1); }, cfg.gap);
+          setTimeout(function(){ playStep(i + 1); }, PLAYBACK_GAP);
         } else {
           setTimeout(function(){
             state.inputIndex = 0;
             state.busy = false;
             els.boardWrap.classList.remove('busy');
-          }, cfg.gap);
+          }, PLAYBACK_GAP);
         }
-      }, cfg.lit);
+      }, PLAYBACK_LIT);
     }
     playStep(0);
   }
@@ -422,6 +497,7 @@
     if (state.busy) return;
     var pad = els.pads[i];
     if (i === state.sequence[state.inputIndex]) {
+      markTraceDot(state.inputIndex, i);
       pad.classList.add('lit');
       setTimeout(function(){ pad.classList.remove('lit'); }, 150);
       state.inputIndex += 1;
@@ -487,7 +563,7 @@
     startGame();
   });
   els.refreshBtn.addEventListener('click', startGame);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../../index.html'; });
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls, then ease back to the correct resting view with + as the leftmost
