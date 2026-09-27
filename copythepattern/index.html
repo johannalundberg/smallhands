@@ -137,6 +137,11 @@
     display:flex;
     align-items:center;
     gap: calc(var(--icon-size) * 0.08);
+    /* Reserves the same height a row of dots will occupy even before any
+       exist (trace-dots starts genuinely empty, filled in only once the
+       first round's playback begins) -- otherwise the progress-dots row
+       below it jumps up when trace-dots first gains children. */
+    min-height: calc(var(--icon-size) * 0.25);
   }
   .trace-dots .dot, .progress-dots .dot{
     width: calc(var(--icon-size) * 0.25);
@@ -216,7 +221,13 @@
     :root{
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
-      --v-reserve-top: calc(var(--unit) * 2 + var(--icon-size));
+      /* Unlike every other game's mobile tray, the top-left corner here holds
+         the (much shorter) two-row dots cluster, not a full icon row -- two
+         0.25*icon-size dot-rows plus the 0.08*icon-size gap between them,
+         i.e. 0.58*icon-size tall. Reserving a full icon-size band (as if it
+         were an icon row) left more empty space above the pad grid than
+         below it, so the grid read as centered too low. */
+      --v-reserve-top: calc(var(--unit) * 2 + var(--icon-size) * 0.58);
       --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
     }
     .controls-slider{
