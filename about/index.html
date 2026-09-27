@@ -80,6 +80,14 @@
   @media (min-width:1024px){
     .about-text{ font-size:26px; letter-spacing:0.52px; max-width:663px; }
   }
+  /* iPad landscape (same range the hub's own about-card uses this exact
+     distinction for): matches >=1024px width so it's not stuck with the
+     768-1023 tablet bucket, but the full 663px desktop measure reads too
+     large/dominant on a compact landscape tablet -- narrows back down to
+     the same measure portrait already uses there. */
+  @media (min-width:1024px) and (max-width:1366px) and (min-height:500px){
+    .about-text{ max-width:574px; }
+  }
 
   /* Phone-landscape "please rotate" block, matching the homepage and every
      game page's own approach instead of trying to reflow the text sideways. */
