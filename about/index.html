@@ -42,6 +42,9 @@
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
     }
+    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
+       here -- darken on tap instead, so pressing back is actually visible. */
+    .back-btn:active{ transform:scale(1); filter: brightness(0.7); }
   }
 
   *{ box-sizing:border-box; }
@@ -75,7 +78,11 @@
     .about-text{ font-size:26px; letter-spacing:0.52px; max-width:574px; }
   }
   @media (min-width:1024px){
-    .about-text{ font-size:26px; letter-spacing:0.52px; max-width:663px; }
+    .about-text{ font-size:29px; letter-spacing:0.58px; max-width:831px; }
+    /* Wider measure reads best with more air between paragraphs than the
+       1.15em used at smaller sizes -- matches the design's own blank-line
+       spacing between paragraphs. */
+    .about-text p + p{ margin-top:2.3em; }
   }
 
   /* Phone-landscape "please rotate" block, matching the homepage and every
@@ -146,6 +153,11 @@
 <script>
 (function(){
   "use strict";
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
+
   function updateAppHeight(){
     var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     document.documentElement.style.setProperty('--app-height', h + 'px');

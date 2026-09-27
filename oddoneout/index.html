@@ -623,7 +623,10 @@
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls (there are more icons than fit on a phone screen), then ease back to
-  // the correct resting view with + as the leftmost icon.
+  // the correct resting view with + as the leftmost icon. Jumps to the revealed
+  // position immediately (before first paint) rather than after a delay -- a
+  // delay there meant the user briefly saw the correct resting view, THEN a jump
+  // to revealed, THEN the ease-back, which read as a glitch rather than a hint.
   function introduceTraySlider(){
     var el = els.controlsSlider;
     if (!el || window.innerWidth > 767) return;
@@ -649,9 +652,9 @@
       el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
       requestAnimationFrame(step);
     }
-    requestAnimationFrame(step);
+    setTimeout(function(){ requestAnimationFrame(step); }, 500);
   }
-  setTimeout(introduceTraySlider, 500);
+  introduceTraySlider();
 
   els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
   startGame();
