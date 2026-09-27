@@ -369,11 +369,14 @@
     hard:   { startLen: 3 }
   };
 
+  var MAX_ROUND_ATTEMPTS = 3;
+
   var state = {
     difficulty: 'easy',
     sequence: [],
     inputIndex: 0,
     progress: 0,
+    roundAttempts: 0,
     busy: false
   };
 
@@ -468,6 +471,7 @@
     for (var i = 0; i < cfg.startLen; i++) state.sequence.push(Math.floor(Math.random() * PAD_COUNT));
     state.inputIndex = 0;
     state.progress = 0;
+    state.roundAttempts = 0;
     updateProgressDots();
     updatePadGap();
     // A fresh round's first light can land before the player's eyes have
@@ -530,17 +534,29 @@
           // landing in this window is checked against the stale inputIndex/
           // sequence pairing and can double-advance or crash.
           state.busy = true;
+          state.roundAttempts = 0;
           state.sequence.push(Math.floor(Math.random() * PAD_COUNT));
           setTimeout(playSequence, 500);
         }
       }
     } else {
-      // A mistake never shrinks the sequence or resets progress -- it just
-      // replays the same challenge again, matching the forgiving, no-punitive-
-      // reset design used everywhere else on the site.
-      state.busy = true;
-      flashWrong(pad);
-      setTimeout(playSequence, 700);
+      state.roundAttempts += 1;
+      if (state.roundAttempts >= MAX_ROUND_ATTEMPTS) {
+        // Unlike every other game on the site, Copy the Pattern has a real
+        // adversary -- the growing sequence itself -- so (like Othello and
+        // Tic-Tac-Toe, the only other two with an actual opponent) it's the
+        // one game here with a genuine loss state, not just endless retries.
+        // Without this, a rough run had no way to ever resolve.
+        state.busy = true;
+        flashWrong(pad);
+        setTimeout(showLoss, 700);
+      } else {
+        // Under the limit: a mistake never shrinks the sequence or resets
+        // progress -- it just replays the same challenge again.
+        state.busy = true;
+        flashWrong(pad);
+        setTimeout(playSequence, 700);
+      }
     }
   }
 
@@ -564,6 +580,30 @@
   function showCelebration(){
     updateAppHeight();
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    els.boardWrap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    setTimeout(function(){
+      els.celebration.style.display = 'none';
+      els.boardWrap.style.display = '';
+      startGame();
+    }, 3000);
+  }
+
+  // Matching pixel-art sad face (Figma node 198:1914), same eyes/mouth-block
+  // layout as every other game's lose face -- red instead of --ink, since
+  // (unlike the rotate-block) this sits on the game's own dark --bg, not on
+  // a red background, so there's no contrast problem here.
+  var SAD_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="#FD4343" cx="65" cy="65" r="65"/>' +
+    '<circle fill="#FD4343" cx="908" cy="65" r="65"/>' +
+    '<rect fill="#FD4343" x="291" y="171" width="392" height="65"/>' +
+    '<rect fill="#FD4343" x="161" y="236" width="130" height="130"/>' +
+    '<rect fill="#FD4343" x="683" y="236" width="130" height="130"/>' +
+    '</svg>';
+
+  function showLoss(){
+    updateAppHeight();
+    els.celebration.innerHTML = SAD_FACE_SVG;
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
