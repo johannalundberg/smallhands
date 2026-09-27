@@ -155,14 +155,14 @@
     grid-template-columns:repeat(2, 1fr);
     grid-template-rows:repeat(2, 1fr);
     gap: var(--pad-gap, 12px);
-    /* Same width/position as tictactoe's own board on mobile (this is the
-       base value, unconditionally applied below the 768px override). */
-    width:min(76vmin, 76vw, 570px);
+    /* Close to tictactoe's own board width/position on mobile (bumped up
+       ~10% from an exact match, per the enlarged Figma sketch). */
+    width:min(82vmin, 82vw, 630px);
     aspect-ratio:1;
   }
   @media (min-width: 768px){
     .pad-grid{
-      width:min(94vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 520px);
+      width:min(94vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 575px);
     }
   }
   /* Four fixed colors (Figma node 229:5126) -- color is the puzzle's signal
@@ -456,9 +456,15 @@
     state.inputIndex = 0;
     state.progress = 0;
     updateProgressDots();
-    els.boardWrap.classList.remove('busy');
     updatePadGap();
-    playSequence();
+    // A fresh round's first light can land before the player's eyes have
+    // actually reached the grid (page just loaded, or they just tapped a
+    // difficulty/refresh icon elsewhere on screen) -- give it a beat. Mid-
+    // round replays (growing the sequence, retrying after a mistake) skip
+    // this and start instantly, since the player is already watching by then.
+    state.busy = true;
+    els.boardWrap.classList.add('busy');
+    setTimeout(playSequence, 600);
   }
 
   // Plays back state.sequence one pad at a time, each lit for PLAYBACK_LIT ms
