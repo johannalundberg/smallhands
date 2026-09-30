@@ -377,8 +377,22 @@
     inputIndex: 0,
     progress: 0,
     roundAttempts: 0,
-    busy: false
+    busy: false,
+    // Bumped only in startGame(). Every deferred callback below captures the
+    // gen that was current when IT was scheduled (via guardedTimeout) and
+    // no-ops if a newer round has since started -- otherwise switching
+    // difficulty (or tapping refresh) while a round's animation was still
+    // mid-flight left the old chain running alongside the new one, lighting
+    // two different pads at once.
+    gen: 0
   };
+
+  function guardedTimeout(fn, delay){
+    var myGen = state.gen;
+    return setTimeout(function(){
+      if (myGen === state.gen) fn();
+    }, delay);
+  }
 
   var els = {
     boardWrap: document.getElementById('boardWrap'),
@@ -474,6 +488,11 @@
   function tierConfig(){ return TIER_CONFIG[state.difficulty]; }
 
   function startGame(){
+    state.gen += 1;
+    // Clears any pad still visually 'lit'/'wrong' from a chain this same
+    // reset is about to supersede -- the gen bump stops it from animating
+    // any FURTHER, but doesn't by itself undo whatever it already applied.
+    els.pads.forEach(function(pad){ pad.classList.remove('lit', 'wrong'); });
     var cfg = tierConfig();
     state.sequence = [];
     for (var i = 0; i < cfg.startLen; i++) state.sequence.push(Math.floor(Math.random() * PAD_COUNT));
@@ -489,7 +508,7 @@
     // this and start instantly, since the player is already watching by then.
     state.busy = true;
     els.boardWrap.classList.add('busy');
-    setTimeout(playSequence, 600);
+    guardedTimeout(playSequence, 600);
   }
 
   // Plays back state.sequence one pad at a time, each lit for PLAYBACK_LIT ms
@@ -503,12 +522,12 @@
     function playStep(i){
       var pad = els.pads[state.sequence[i]];
       pad.classList.add('lit');
-      setTimeout(function(){
+      guardedTimeout(function(){
         pad.classList.remove('lit');
         if (i + 1 < state.sequence.length) {
-          setTimeout(function(){ playStep(i + 1); }, PLAYBACK_GAP);
+          guardedTimeout(function(){ playStep(i + 1); }, PLAYBACK_GAP);
         } else {
-          setTimeout(function(){
+          guardedTimeout(function(){
             state.inputIndex = 0;
             state.busy = false;
             els.boardWrap.classList.remove('busy');
@@ -530,7 +549,7 @@
     if (i === state.sequence[state.inputIndex]) {
       markTraceDot(state.inputIndex, i);
       pad.classList.add('lit');
-      setTimeout(function(){ pad.classList.remove('lit'); }, 150);
+      guardedTimeout(function(){ pad.classList.remove('lit'); }, 150);
       state.inputIndex += 1;
       if (state.inputIndex >= state.sequence.length) {
         state.progress += 1;
@@ -544,7 +563,7 @@
           state.busy = true;
           state.roundAttempts = 0;
           state.sequence.push(Math.floor(Math.random() * PAD_COUNT));
-          setTimeout(playSequence, 500);
+          guardedTimeout(playSequence, 500);
         }
       }
     } else {
@@ -557,13 +576,13 @@
         // Without this, a rough run had no way to ever resolve.
         state.busy = true;
         flashWrong(pad);
-        setTimeout(showLoss, 700);
+        guardedTimeout(showLoss, 700);
       } else {
         // Under the limit: a mistake never shrinks the sequence or resets
         // progress -- it just replays the same challenge again.
         state.busy = true;
         flashWrong(pad);
-        setTimeout(playSequence, 700);
+        guardedTimeout(playSequence, 700);
       }
     }
   }
