@@ -93,6 +93,16 @@
      real 20px gap above the button instead of letting it get crowded, and the
      page just scrolls past one screen like any other overflowing content. */
   .footer-spacer{ flex:1 0 auto; min-height:20px; }
+  /* Only raises the FLOOR used when the grid barely fits one screen (see the
+     comment above) -- when there's already more slack than this, flex:1 still
+     just absorbs all of it exactly as before, so the button stays pinned to
+     the true bottom with no change there. Right at that floor, though, the
+     button used to land exactly on the fold (the last visible pixel row)
+     with no visual cue there was more page below it -- 80px (20px margin +
+     60px) reads clearly as "below the fold". */
+  @media (max-width:767px){
+    .footer-spacer{ min-height:80px; }
+  }
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
   }
