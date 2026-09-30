@@ -567,6 +567,14 @@
     window.addEventListener('resize', updateAppHeight);
   }
 
+  // iOS can leave --app-height stuck at a stale reading after the tab is
+  // backgrounded (app-switched away from, screen locked) and never self-
+  // correct on return, since nothing else re-fires resize/scroll -- force a
+  // fresh reading the moment the page becomes visible again.
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') updateAppHeight();
+  });
+
   // Rotating out of the phone-landscape rotate-block and back to portrait can
   // leave iOS's WebKit engine (Safari, Chrome, any iOS browser — Apple requires
   // them all to use it) rendering at the previous orientation's zoom/scale, so

@@ -405,6 +405,14 @@
     window.addEventListener('resize', updateAppHeight);
   }
 
+  // iOS can leave --app-height stuck at a stale reading after the tab is
+  // backgrounded (app-switched away from, screen locked) and never self-
+  // correct on return, since nothing else re-fires resize/scroll -- force a
+  // fresh reading the moment the page becomes visible again.
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') updateAppHeight();
+  });
+
   var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
