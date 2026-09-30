@@ -145,7 +145,7 @@
        viewport minus --v-reserve-top/bottom, then convert that height budget to a
        width via the tier's own aspect ratio — whichever of that, 94vw, or the
        outer safety cap is smallest wins. */
-    width:min(94vw, calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) * var(--aspect)), var(--grid-max));
+    width:min(calc(100vw - 2 * var(--unit)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) * var(--aspect)), var(--grid-max));
   }
   .tile{
     position:relative;
