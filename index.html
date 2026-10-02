@@ -663,14 +663,24 @@
   // page has a touch listener -- this is that listener (a no-op is enough).
   document.addEventListener('touchstart', function(){}, { passive: true });
 
-  // Measures the page with the regular 20px footer gap: if the grid + "?" fit
-  // one screen the body is exactly the viewport tall (the spacer absorbs the
-  // slack, "?" pinned bottom-left); if not, the body is taller and the page
-  // scrolls -- only then raise the gap above the "?" to 80px (.grid-overflows).
+  // Would the grid + "?" fit one screen with the regular 20px footer gap? If
+  // so, the "?" stays pinned bottom-left with that margin; if not, the page
+  // scrolls and the gap above the "?" becomes 80px (.grid-overflows).
+  // Computed from sizes only -- it must NOT toggle the class to measure: this
+  // runs on every viewport scroll event, and briefly removing the 80px gap
+  // shrinks the page by 60px, which iOS answers by clamping the scroll
+  // position upward (the "? jumps up when I scroll to the bottom" bug).
+  var FOOTER_GAP_REGULAR = 20;
   function updateFooterGap(h){
+    var tiles = document.querySelector('.tiles');
+    var info = document.querySelector('.info-btn');
+    var padBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var needed = tiles.offsetTop + tiles.offsetHeight + FOOTER_GAP_REGULAR + info.offsetHeight + padBottom;
+    var overflows = needed > h + 1;
     var root = document.documentElement;
-    root.classList.remove('grid-overflows');
-    if (document.body.offsetHeight > h + 1) root.classList.add('grid-overflows');
+    if (overflows !== root.classList.contains('grid-overflows')) {
+      root.classList.toggle('grid-overflows', overflows);
+    }
   }
 
   function updateAppHeight(){
