@@ -671,6 +671,7 @@
   // shrinks the page by 60px, which iOS answers by clamping the scroll
   // position upward (the "? jumps up when I scroll to the bottom" bug).
   var FOOTER_GAP_REGULAR = 20;
+  var lastFooterWidth = window.innerWidth;
   function updateFooterGap(h){
     var tiles = document.querySelector('.tiles');
     var info = document.querySelector('.info-btn');
@@ -678,9 +679,19 @@
     var needed = tiles.offsetTop + tiles.offsetHeight + FOOTER_GAP_REGULAR + info.offsetHeight + padBottom;
     var overflows = needed > h + 1;
     var root = document.documentElement;
-    if (overflows !== root.classList.contains('grid-overflows')) {
-      root.classList.toggle('grid-overflows', overflows);
-    }
+    var widthChanged = window.innerWidth !== lastFooterWidth;
+    lastFooterWidth = window.innerWidth;
+    if (overflows === root.classList.contains('grid-overflows')) return;
+    // Never change the page's height under someone who has scrolled down: a
+    // freshly launched iOS web app reports its viewport height unreliably
+    // until the first scrolls, so the reading can cross the fits/doesn't-fit
+    // threshold mid-scroll, and the resulting 20px<->80px flip shrinks/grows
+    // the page, dumping the scroll position (the "? is cut in half after I
+    // scroll to the bottom" bug). Re-evaluated at the top of the page instead
+    // (every viewport scroll event re-runs this), or at once if the width
+    // changed (rotation), when the layout is being redone anyway.
+    if (window.scrollY > 1 && !widthChanged) return;
+    root.classList.toggle('grid-overflows', overflows);
   }
 
   function updateAppHeight(){
