@@ -62,10 +62,6 @@
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
     }
-    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
-       here -- darken on tap instead, so pressing the info button (or its
-       close-X, the same element) is actually visible. */
-    .info-btn:active{ transform:scale(1); filter: brightness(0.7); }
   }
 
   @media (min-width:1367px){
@@ -156,6 +152,12 @@
   a.tile:active{ transform:scale(0.96); }
   @media (hover:hover) and (pointer:fine){
     a.tile:hover{ transform:scale(1.035); }
+  }
+  /* Touch has no hover, so a plain shrink-on-press felt flat next to the
+     desktop grow -- give a tapped tile the same slight grow hover gives a
+     mouse (matches Tic-Tac-Toe and Memory on touch). */
+  @media (hover:none){
+    a.tile:active{ transform:scale(1.035); }
   }
 
   .badge{
@@ -400,6 +402,15 @@
   @media (hover:hover) and (pointer:fine){
     .info-btn:hover{ transform:scale(1.035); }
     .info-btn:hover .qmark{ fill:#E4E4E4; }
+  }
+  /* Touch has no hover, so desktop's grow-on-hover never fires: grow slightly
+     on tap (same as the games' tray, matching the hover grow) and darken, so
+     pressing the info button (or its close-X, the same element) is visible.
+     Must come AFTER the base .info-btn:active above -- same specificity, so
+     source order decides, and placed earlier it silently lost (the button was
+     still shrinking to 0.94 on phones). */
+  @media (max-width:767px){
+    .info-btn:active{ transform:scale(1.035); filter: brightness(0.7); }
   }
 </style>
 </head>

@@ -161,6 +161,12 @@
   @media (hover:hover) and (pointer:fine){
     .tile:hover{ transform:scale(1.035); transition: opacity 300ms ease; }
   }
+  /* Touch has no hover, so pressing a tile now grows it the same slight
+     amount hover does for a mouse (matches Tic-Tac-Toe and the hub tiles)
+     rather than shrinking -- same instant snap as the rule above. */
+  @media (hover:none){
+    .tile:active{ transform:scale(1.035); }
+  }
   /* A matched pair clears away entirely a beat after the match (see onTileClick)
      so only the tiles still in play stay on screen, instead of sitting there
      dimmed as done. */
@@ -263,7 +269,8 @@
   @media (max-width: 767px), (max-height: 500px){
     /* Touch has no hover, so desktop's grow-on-hover feedback never fires
        here -- darken on tap instead, so pressing any icon button is
-       actually visible. */
+       actually visible. (The icons inside the tray deliberately don't grow:
+       the tray itself is the thing that grows, see .controls-slider:active.) */
     .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
     :root{
       --unit: 5.089vw;

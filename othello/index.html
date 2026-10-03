@@ -246,7 +246,8 @@
   @media (max-width: 767px), (max-height: 500px){
     /* Touch has no hover, so desktop's grow-on-hover feedback never fires
        here -- darken on tap instead, so pressing any icon button is
-       actually visible. */
+       actually visible. (The icons inside the tray deliberately don't grow:
+       the tray itself is the thing that grows, see .controls-slider:active.) */
     .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
     :root{
       --unit: 5.089vw;

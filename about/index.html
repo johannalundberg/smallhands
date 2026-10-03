@@ -54,9 +54,6 @@
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
     }
-    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
-       here -- darken on tap instead, so pressing back is actually visible. */
-    .back-btn:active{ transform:scale(1); filter: brightness(0.7); }
   }
 
   *{ box-sizing:border-box; }
@@ -136,6 +133,14 @@
   .back-btn:active{ transform:scale(0.94); }
   @media (hover:hover) and (pointer:fine){
     .back-btn:hover{ transform:scale(1.035); }
+  }
+  /* Touch has no hover, so desktop's grow-on-hover never fires: grow slightly
+     on tap (same as the games' tray and the hub's "?", matching the hover
+     grow) and darken. Must come AFTER the base .back-btn:active above -- same
+     specificity, so source order decides (placed earlier it silently lost and
+     the button still shrank to 0.94 on phones). */
+  @media (max-width:767px){
+    .back-btn:active{ transform:scale(1.035); filter: brightness(0.7); }
   }
 </style>
 </head>
