@@ -161,12 +161,6 @@
   @media (hover:hover) and (pointer:fine){
     .tile:hover{ transform:scale(1.035); transition: opacity 300ms ease; }
   }
-  /* Touch has no hover, so pressing a tile now grows it the same slight
-     amount hover does for a mouse (matches Tic-Tac-Toe and the hub tiles)
-     rather than shrinking -- same instant snap as the rule above. */
-  @media (hover:none){
-    .tile:active{ transform:scale(1.035); }
-  }
   /* A matched pair clears away entirely a beat after the match (see onTileClick)
      so only the tiles still in play stay on screen, instead of sitting there
      dimmed as done. */

@@ -275,7 +275,11 @@
       transform: translateZ(0);
       transition: transform 120ms ease, bottom 250ms ease;
     }
-    .submit-btn:active{ transform: translateZ(0) scale(0.94); }
+    /* Grows slightly on tap like the hub's "?" and the games' tray (it's a
+       standalone icon, not inside the tray) and still darkens via
+       .icon-btn:active above. The disabled rule (higher specificity) keeps a
+       disabled button from reacting. */
+    .submit-btn:active{ transform: translateZ(0) scale(1.035); }
     /* Typing: let body's own flex-centering (below) place this, same mechanism as
        idle — reserving space below the equation for the button so the pair centers
        as a group. The button stays position:absolute in both states (never switches
