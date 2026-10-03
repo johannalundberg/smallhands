@@ -312,6 +312,11 @@
       scrollbar-width:none;
     }
     .controls-slider::-webkit-scrollbar{ display:none; }
+    /* Press feedback for the tray itself, like the icons and tiles: it dips
+       slightly while touched (:active also matches while any button inside it
+       is held, so tapping an icon gives both). */
+    .controls-slider{ transition: transform 120ms ease; }
+    .controls-slider:active{ transform: scale(0.97); }
     /* position:fixed alone doesn't reliably stay pinned to the layout viewport (and
        so hidden behind the keyboard) on current mobile WebKit — in practice it
        tracks the shrunk visual viewport instead, landing right on top of the
