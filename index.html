@@ -111,8 +111,15 @@
   @media (min-width:1024px) and (max-width:1366px) and (min-height:500px){
     .tiles{ grid-template-columns:repeat(5, minmax(0, 1fr)); }
   }
+  /* Fixed 5 columns (5+3 for 8 games) with fluid tiles, same as the range
+     above -- this used to be repeat(auto-fill, minmax(321px, 1fr)), which
+     picks a column count from the window width: shrinking a wide window went
+     5 columns (>=1725px) -> 4 oversized (1400-1724px) -> 3 oversized
+     (1367-1399px) -> back to 5 below 1367px, so the layout jumped and
+     stretched tiles up to ~430px. At 1728px wide this still gives the
+     design's 321px tiles. */
   @media (min-width:1367px){
-    .tiles{ grid-template-columns:repeat(auto-fill, minmax(321px, 1fr)); }
+    .tiles{ grid-template-columns:repeat(5, minmax(0, 1fr)); }
   }
   /* Phone landscape: several rounds of trying to reflow the grid to fit (4 columns,
      then 3) each fixed one overflow only to reveal another (vertical, then
