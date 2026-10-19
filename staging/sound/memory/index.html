@@ -1016,7 +1016,7 @@
     buildBoard();
   });
   els.refreshBtn.addEventListener('click', buildBoard);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // Re-lay the grid in the right orientation if the viewport crosses the
   // mobile breakpoint (rotating a real device, or resizing a window).

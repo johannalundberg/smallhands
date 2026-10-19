@@ -629,7 +629,7 @@
       state.busy = true;
       setTimeout(function(){
         var move = computerMove();
-        if (move) playMove(move, 'W');
+        if (move) { playMove(move, 'W'); PLSound.play('click'); }
       }, 500 + Math.random() * 400);
     }
   }
@@ -797,7 +797,7 @@
     startGame();
   });
   els.refreshBtn.addEventListener('click', startGame);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls (there are more icons than fit on a phone screen), then ease back to

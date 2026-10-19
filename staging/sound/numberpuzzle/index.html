@@ -834,7 +834,6 @@
     state.slots[b] = tmp;
     renderSlot(a);
     renderSlot(b);
-    PLSound.play('click');
     var pieceA = els.board.children[a].querySelector('.piece');
     var pieceB = els.board.children[b].querySelector('.piece');
     pieceA.classList.add('pop');
@@ -911,7 +910,7 @@
   });
 
   els.refreshBtn.addEventListener('click', restartRound);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls (there are more icons than fit on a phone screen), then ease back to

@@ -573,6 +573,7 @@
     setTimeout(function(){
       var move = computerMove();
       place(move, 'O');
+      PLSound.play('click');
       state.busy = false;
       els.boardWrap.classList.remove('busy');
       checkEnd();
@@ -588,7 +589,7 @@
     var res = getResult(state.board);
     if(!res.winner) return false;
     state.over = true;
-    if(res.winner === 'draw') runFade(allIndices(), '--draw', resetBoard);
+    if(res.winner === 'draw'){ PLSound.play('negative'); runFade(allIndices(), '--draw', resetBoard); }
     else if(res.winner === 'X'){ PLSound.play('positive'); runFade(res.line, '--success', onWinResolved); }
     else { PLSound.play('negative'); runFade(res.line, '--incorrect', onLoseResolved); }
     return true;
@@ -686,7 +687,7 @@
   els.yayOverlay.addEventListener('click', finishMilestone);
   els.loseOverlay.addEventListener('click', finishMilestone);
   els.refreshBtn.addEventListener('click', restartRound);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   els.diffGroup.addEventListener('click', function(e){
     var btn = e.target.closest('.diff-btn');

@@ -71,16 +71,32 @@
     } catch (e) {}
   }
 
+  // Leaving the page stops its sound instantly, so a tap that navigates (a
+  // hub tile, a back button) would cut its own click off before it's heard.
+  // Hold the page change just long enough for the click to play.
+  var NAV_DELAY = 150;
+  function go(url){
+    if (isMuted() || !ctx) { window.location.href = url; return; }
+    setTimeout(function(){ window.location.href = url; }, NAV_DELAY);
+  }
+
   // One click sound for every tap on something tappable, site-wide, so no page
   // has to wire it per button. 'click' rather than pointerdown so scrolling the
   // hub over its tiles stays silent. Number Puzzle's pieces are dragged, not
-  // clicked, so they play their own drag sound from that page instead.
+  // clicked, so that page plays its own click on pickup instead.
   var CLICKABLE = 'a[href], button, .tile, .cell, .tap-cell, .pad, .cluster-card, .equation-tap';
   document.addEventListener('click', function(e){
     var el = e.target.closest && e.target.closest(CLICKABLE);
     if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
     play('click');
+    // Plain same-tab links (hub tiles, "?", About's back arrow): delay the
+    // page change like go() does. Modified clicks open new tabs, leave them be.
+    if (el.tagName === 'A' && !el.target && !e.defaultPrevented &&
+        !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
+      e.preventDefault();
+      go(el.href);
+    }
   }, true);
 
-  window.PLSound = { play: play, isMuted: isMuted, setMuted: setMuted };
+  window.PLSound = { play: play, go: go, isMuted: isMuted, setMuted: setMuted };
 })();

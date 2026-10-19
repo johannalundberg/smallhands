@@ -780,10 +780,14 @@
     }
   }
 
+  // One sound per typed (or deleted) digit. Two candidates being compared on
+  // staging: the site's click by default, sound 02 when the URL has ?typing=02.
+  var TYPING_SOUND = /[?&]typing=02\b/.test(location.search) ? 'drag' : 'click';
   els.answerInput.addEventListener('input', function(){
     var digits = els.answerInput.value.replace(/[^0-9]/g, '');
     var maxLen = String(state.answerValue).length;
     if (digits.length > maxLen) digits = digits.slice(0, maxLen);
+    if (digits !== state.input) PLSound.play(TYPING_SOUND);
     state.input = digits;
     if (els.answerInput.value !== digits) els.answerInput.value = digits;
     render();
@@ -906,7 +910,7 @@
   });
 
   els.refreshBtn.addEventListener('click', restartRound);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls (there are more icons than fit on a phone screen), then ease back to
