@@ -52,9 +52,15 @@
   // drag's touchend alone didn't unlock it there. A silent one-sample buffer
   // started inside the gesture is what some iOS versions need beyond resume().
   var primed = false;
-  function unlock(){
+  function unlock(e){
     if (!ctx) return;
-    if (ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
+    if (ctx.state !== 'running') {
+      if (e && e.type) debug('unlock attempt on ' + e.type + ' (audio ' + ctx.state + ')');
+      try {
+        var p = ctx.resume();
+        if (p && p.then) p.then(function(){ debug('audio now ' + ctx.state); }, function(){});
+      } catch (err) {}
+    }
     if (!primed) {
       try {
         var silent = ctx.createBufferSource();
@@ -76,7 +82,32 @@
     try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch (e) {}
   }
 
+  // ?sounddebug in the URL shows a small on-screen log of every sound request
+  // and the audio state at that moment -- for diagnosing iPhone-only silence,
+  // where there's no console to look at.
+  var debugEl = null;
+  if (/[?&]sounddebug\b/.test(location.search)) {
+    document.addEventListener('DOMContentLoaded', function(){
+      debugEl = document.createElement('pre');
+      debugEl.style.cssText = 'position:fixed;left:4px;right:4px;bottom:4px;z-index:99999;margin:0;' +
+        'max-height:40vh;overflow:auto;padding:6px 8px;background:rgba(0,0,0,0.8);color:#0f0;' +
+        'font:11px/1.35 monospace;white-space:pre-wrap;pointer-events:none;';
+      document.body.appendChild(debugEl);
+      debug('loaded, audio ' + (ctx ? ctx.state : 'unsupported'));
+    });
+    setInterval(function(){
+      if (debugEl) debugEl.dataset.state = ctx ? ctx.state : '-';
+    }, 500);
+  }
+  function debug(msg){
+    if (!debugEl) return;
+    var t = (performance.now() / 1000).toFixed(1);
+    debugEl.textContent = (t + 's ' + msg + '\n' + debugEl.textContent).slice(0, 3000);
+  }
+
   function play(name){
+    debug(name + ': audio ' + (ctx ? ctx.state : 'none') +
+      (buffers[name] ? '' : ', NOT LOADED') + (isMuted() ? ', MUTED' : ''));
     if (!ctx || !buffers[name] || isMuted()) return;
     unlock();
     try {
@@ -84,7 +115,24 @@
       src.buffer = buffers[name];
       src.connect(ctx.destination);
       src.start(0);
+      // Asked for while iOS still has the page locked: it would sit queued
+      // and burst out on the next real tap (Number Puzzle's positive sound
+      // playing when Back was pressed). Keep it only if the unlock lands
+      // right away, as it does when this tap itself is the unlocking one.
+      if (ctx.state !== 'running') pending.push({ src: src, at: performance.now() });
     } catch (e) {}
+  }
+  var pending = [];
+  var STALE_MS = 300;
+  if (ctx) {
+    ctx.onstatechange = function(){
+      if (ctx.state !== 'running') return;
+      var now = performance.now();
+      pending.forEach(function(p){
+        if (now - p.at > STALE_MS) { try { p.src.stop(); } catch (e) {} }
+      });
+      pending = [];
+    };
   }
 
   // Leaving the page stops its sound instantly, so a tap that navigates (a

@@ -452,14 +452,17 @@
     .sound-btn:hover .sglyph{ fill:#E4E4E4; }
     .sound-btn:hover .sglyph-stroke{ stroke:#E4E4E4; }
   }
-  /* Touch has no hover, so desktop's grow-on-hover never fires: grow slightly
-     on tap (same as the games' tray, matching the hover grow) and darken, so
-     pressing the info button (or its close-X, the same element) is visible.
+  /* Touch has no hover, so desktop's grow-on-hover never fires: on tap, grow
+     slightly (same as the games' tray, matching the hover grow) and turn the
+     glyph white, exactly like desktop hover. No darkening filter here -- it
+     would dim that white back to grey.
      Must come AFTER the base .info-btn:active above -- same specificity, so
      source order decides, and placed earlier it silently lost (the button was
      still shrinking to 0.94 on phones). */
   @media (max-width:767px){
-    .info-btn:active, .sound-btn:active{ transform:scale(1.035); filter: brightness(0.7); }
+    .info-btn:active, .sound-btn:active{ transform:scale(1.035); }
+    .info-btn:active .qmark, .sound-btn:active .sglyph{ fill:#E4E4E4; }
+    .sound-btn:active .sglyph-stroke{ stroke:#E4E4E4; }
   }
 </style>
 </head>
