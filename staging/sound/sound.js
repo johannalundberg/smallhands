@@ -46,10 +46,26 @@
     });
   }
 
+  // iOS only unlocks audio from inside a gesture, and which events count has
+  // shifted between versions -- so try on every touch/pointer event, not just
+  // the end of a tap: Number Puzzle is played entirely by dragging, and a
+  // drag's touchend alone didn't unlock it there. A silent one-sample buffer
+  // started inside the gesture is what some iOS versions need beyond resume().
+  var primed = false;
   function unlock(){
-    if (ctx && ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
+    if (!ctx) return;
+    if (ctx.state !== 'running') { try { ctx.resume(); } catch (e) {} }
+    if (!primed) {
+      try {
+        var silent = ctx.createBufferSource();
+        silent.buffer = ctx.createBuffer(1, 1, 22050);
+        silent.connect(ctx.destination);
+        silent.start(0);
+        primed = true;
+      } catch (e) {}
+    }
   }
-  ['touchend', 'pointerup', 'click', 'keydown'].forEach(function(type){
+  ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'mousedown', 'click', 'keydown'].forEach(function(type){
     document.addEventListener(type, unlock, { capture: true, passive: true });
   });
 
