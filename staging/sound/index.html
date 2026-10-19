@@ -416,8 +416,13 @@
     .info-btn:hover .qmark{ fill:#E4E4E4; }
   }
 
-  /* The "?" and the sound toggle share one bottom row, 20px apart. */
-  .footer-row{ flex:none; display:flex; gap:20px; }
+  /* The "?" and the sound toggle share one bottom row. On phones and tablets
+     they sit as far apart as the game tiles do (--tile-gap); on a desktop
+     (mouse, not touch) a fixed 20px. */
+  .footer-row{ flex:none; display:flex; gap:var(--tile-gap); }
+  @media (hover:hover) and (pointer:fine) and (min-width:768px){
+    .footer-row{ gap:20px; }
+  }
 
   /* Sound on/off (Figma node 199:2645). Same quiet treatment as its "?"
      neighbor -- dark circle, grey glyph, brightening only on hover -- so the
