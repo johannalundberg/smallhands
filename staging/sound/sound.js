@@ -23,6 +23,9 @@
     complete: 'complete.mp3',
     tryagain: 'tryagain.mp3'
   };
+  // Per-sound playback level (1 = as delivered). The right/wrong sounds play
+  // many times per game, so they sit a bit under the click.
+  var VOLUME = { positive: 0.6, negative: 0.6 };
 
   // Mix with (not stop) whatever else is playing, and follow the iPhone's
   // silent switch -- a kids' site shouldn't override either.
@@ -113,7 +116,14 @@
     try {
       var src = ctx.createBufferSource();
       src.buffer = buffers[name];
-      src.connect(ctx.destination);
+      if (VOLUME[name] != null) {
+        var gain = ctx.createGain();
+        gain.gain.value = VOLUME[name];
+        src.connect(gain);
+        gain.connect(ctx.destination);
+      } else {
+        src.connect(ctx.destination);
+      }
       src.start(0);
       // Asked for while iOS still has the page locked: it would sit queued
       // and burst out on the next real tap (Number Puzzle's positive sound
