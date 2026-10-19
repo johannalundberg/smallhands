@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-45ZK78NND7');
+</script>
+
+<title>Copy the Pattern</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://playandlearn.kids/copythepattern/">
+<meta property="og:title" content="Copy the Pattern — Play and Learn">
+<meta property="og:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta property="og:image" content="https://playandlearn.kids/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Copy the Pattern — Play and Learn">
+<meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
+<style>
+  @font-face{
+    font-family:'Spline Sans Mono';
+    src: url('../fonts/SplineSansMono.woff2') format('woff2');
+    font-weight:400;
+    font-style:normal;
+  }
+
+  :root{
+    /* Figma sketch (node 229:5126): dark olive background. */
+    --bg:#3e3c2a;
+    --bright:#E4E4E4;
+    --ink:#202020;
+    /* Black-based (not grey-based) muted fill, matching Odd One Out --
+       reads with more contrast against a dark --bg than othello/numberpuzzle's
+       rgba(32,32,32,*) convention does. */
+    --ink-muted:rgba(0,0,0,0.4);
+    --success:#0DC754;
+    --incorrect:#F2383B;
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+    --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+    --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ---------- icon buttons (difficulty / back / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 120ms ease;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ transform: translateZ(0) scale(1.035); }
+  }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  /* ---------- round progress: trace dots (top, one per step, fills in the
+     tapped pad's own color as you correctly repeat the sequence) stacked
+     above the regular best-of-N round counter ---------- */
+  .progress-cluster{
+    position:absolute;
+    right:var(--unit);
+    bottom:var(--unit);
+    z-index:2;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap: calc(var(--icon-size) * 0.08);
+  }
+  .trace-dots, .progress-dots{
+    display:flex;
+    align-items:center;
+    gap: calc(var(--icon-size) * 0.08);
+    /* Reserves the same height a row of dots will occupy even before any
+       exist (trace-dots starts genuinely empty, filled in only once the
+       first round's playback begins) -- otherwise the progress-dots row
+       below it jumps up when trace-dots first gains children. */
+    min-height: calc(var(--icon-size) * 0.25);
+  }
+  .trace-dots .dot, .progress-dots .dot{
+    width: calc(var(--icon-size) * 0.25);
+    height: calc(var(--icon-size) * 0.25);
+    border-radius:50%;
+    background: var(--ink-muted);
+    transition: background 150ms ease;
+  }
+  .progress-dots .dot.done{ background: var(--bright); }
+
+  /* ---------- the pad grid ---------- */
+  .board-wrap{ width:100%; display:flex; align-items:center; justify-content:center; }
+  .board-wrap.busy{ pointer-events:none; }
+  .pad-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    grid-template-rows:repeat(2, 1fr);
+    gap: var(--pad-gap, 12px);
+    /* Close to tictactoe's own board width/position on mobile (bumped up
+       ~10% from an exact match, per the enlarged Figma sketch). */
+    width:min(82vmin, 82vw, 630px);
+    aspect-ratio:1;
+  }
+  @media (min-width: 768px){
+    .pad-grid{
+      width:min(94vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 575px);
+    }
+  }
+  /* Four fixed colors (Figma node 229:5126) -- color is the puzzle's signal
+     here, not shape, so each pad is just a solid rounded square. Rest/lit
+     pairs per pad; lit is used for playback highlight, a correct-tap
+     confirmation flash, and live press feedback (all "interacting with them"
+     per the sketch), so all three share one class/pseudo-class rule. */
+  .pad:nth-child(1){ --pad-rest:#8104C9; --pad-lit:#C641FF; } /* math's --bg purple */
+  .pad:nth-child(2){ --pad-rest:#FD6427; --pad-lit:#FD9162; } /* tictactoe's tile orange */
+  .pad:nth-child(3){ --pad-rest:#E4AA2D; --pad-lit:#FFCE63; } /* numberpuzzle's --bg yellow */
+  .pad:nth-child(4){ --pad-rest:#707EFF; --pad-lit:#79A1FF; } /* memory's tile blue */
+  .pad{
+    appearance:none;
+    border:none;
+    /* Same corner-radius-to-size ratio as memory's own tile face. */
+    border-radius:14%;
+    cursor:pointer;
+    background:var(--pad-rest);
+    transition: background 150ms ease, transform 150ms ease;
+  }
+  .pad.lit, .pad:active{ transform:scale(1.06); background:var(--pad-lit); }
+  @media (hover:hover) and (pointer:fine){
+    .pad:hover{ transform:scale(1.035); }
+  }
+  .pad.wrong{ background:var(--incorrect); }
+
+  @keyframes bounce-in{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(var(--final-scale)); opacity:1; }
+  }
+  .celebration{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:4;
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  @media (max-width: 767px), (max-height: 500px){
+    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
+       here -- darken on tap instead, so pressing any icon button is
+       actually visible. (The icons inside the tray deliberately don't grow:
+       the tray itself is the thing that grows, see .controls-slider:active.) */
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+      /* Unlike every other game's mobile tray, the top-left corner here holds
+         the (much shorter) two-row dots cluster, not a full icon row -- two
+         0.25*icon-size dot-rows plus the 0.08*icon-size gap between them,
+         i.e. 0.58*icon-size tall. Reserving a full icon-size band (as if it
+         were an icon row) left more empty space above the pad grid than
+         below it, so the grid read as centered too low. */
+      --v-reserve-top: calc(var(--unit) * 2 + var(--icon-size) * 0.58);
+      --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      /* Matches Odd One Out's tray treatment: a lighter, black-based overlay
+         (rather than othello/numberpuzzle's grey rgba(32,32,32,*)) reads with
+         more contrast against this game's own dark --bg, and --ink-muted is
+         already dark enough on its own here that the tray doesn't need its
+         own darker in-tray override the way othello's does. */
+      background: rgba(0,0,0,0.22);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    /* Press feedback for the tray itself, like the icons and tiles: it grows
+       slightly while touched (:active also matches while any button inside it
+       is held, so tapping an icon gives both). */
+    .controls-slider{ transition: transform 120ms ease; }
+    .controls-slider:active{ transform: scale(1.03); }
+    .diff-group, .btn-row{ display:contents; }
+    body{
+      padding-top: var(--v-reserve-top);
+      padding-bottom: var(--v-reserve-bottom);
+    }
+    .progress-cluster{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; align-items:flex-start; }
+  }
+
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    :root{
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:var(--incorrect);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    .rotate-block{ display:flex; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="rotate-block">
+    <!-- Pixel-art sad face (Figma node 198:1914), matching the site's other
+         lose-state faces. -->
+    <svg viewBox="0 0 973 366">
+      <circle fill="var(--ink)" cx="65" cy="65" r="65"/>
+      <circle fill="var(--ink)" cx="908" cy="65" r="65"/>
+      <rect fill="var(--ink)" x="291" y="171" width="392" height="65"/>
+      <rect fill="var(--ink)" x="161" y="236" width="130" height="130"/>
+      <rect fill="var(--ink)" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
+  <div class="controls-slider" id="controlsSlider">
+    <div class="diff-group" id="diffGroup">
+      <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M114 75C114 53.4609 96.5391 36 75 36C53.4609 36 36 53.4609 36 75C36 96.5391 53.4609 114 75 114V150C33.5786 150 0 116.421 0 75C0 33.5786 33.5786 0 75 0C116.421 0 150 33.5786 150 75C150 116.421 116.421 150 75 150V114C96.5391 114 114 96.5391 114 75Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+        <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/></svg>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" aria-label="New game">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M111.491 32.1671L112.864 53.5756L90.0895 53.5683"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M110.802 97.5619C106.102 105.702 98.8837 112.094 90.2343 115.774C81.5848 119.454 71.9735 120.223 62.8492 117.964C53.7249 115.705 45.5822 110.541 39.6485 103.251C33.7149 95.9607 30.312 86.9392 29.9527 77.5463C29.5935 68.1534 32.2974 58.8983 37.6569 51.1762C43.0164 43.454 50.7409 37.6834 59.666 34.7343C68.5911 31.7851 78.2331 31.8172 87.1383 34.8258C96.0436 37.8343 103.729 43.6563 109.037 51.4139"/></svg>
+      </button>
+    </div>
+
+  </div>
+
+  <div class="progress-cluster">
+    <div class="trace-dots" id="traceDots"></div>
+    <div class="progress-dots" id="progressDots">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    </div>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <div class="pad-grid" id="padGrid">
+      <button class="pad" data-index="0" aria-label="Purple"></button>
+      <button class="pad" data-index="1" aria-label="Orange"></button>
+      <button class="pad" data-index="2" aria-label="Yellow"></button>
+      <button class="pad" data-index="3" aria-label="Blue"></button>
+    </div>
+  </div>
+
+  <div class="celebration" id="celebration"></div>
+
+<script src="../sound.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
+
+  var PAD_COUNT = 4;
+  // Mistakes never cost progress (see onPadTap) -- persistence alone always
+  // gets you there -- but the sequence gets one step longer every round, so
+  // later rounds take a lot more attempts/time than early ones. 7 keeps the
+  // total playtime-to-celebration closer to what a "best of N" feels like on
+  // every other game on the site; 10 would mean an 12+ step sequence by the
+  // final round on hard.
+  var ROUND_SIZE = 7;
+  // Same playback speed on every tier -- only the starting sequence length
+  // differs -- per live testing: easy's own slower speed read as sluggish
+  // rather than "easier".
+  var PLAYBACK_LIT = 500;
+  var PLAYBACK_GAP = 300;
+  var TIER_CONFIG = {
+    easy:   { startLen: 1 },
+    medium: { startLen: 2 },
+    hard:   { startLen: 3 }
+  };
+
+  var MAX_ROUND_ATTEMPTS = 3;
+
+  var state = {
+    difficulty: 'easy',
+    sequence: [],
+    inputIndex: 0,
+    progress: 0,
+    roundAttempts: 0,
+    busy: false,
+    // Bumped only in startGame(). Every deferred callback below captures the
+    // gen that was current when IT was scheduled (via guardedTimeout) and
+    // no-ops if a newer round has since started -- otherwise switching
+    // difficulty (or tapping refresh) while a round's animation was still
+    // mid-flight left the old chain running alongside the new one, lighting
+    // two different pads at once.
+    gen: 0
+  };
+
+  function guardedTimeout(fn, delay){
+    var myGen = state.gen;
+    return setTimeout(function(){
+      if (myGen === state.gen) fn();
+    }, delay);
+  }
+
+  var els = {
+    boardWrap: document.getElementById('boardWrap'),
+    padGrid: document.getElementById('padGrid'),
+    pads: Array.prototype.slice.call(document.querySelectorAll('.pad')),
+    celebration: document.getElementById('celebration'),
+    diffGroup: document.getElementById('diffGroup'),
+    backBtn: document.getElementById('backBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    controlsSlider: document.getElementById('controlsSlider'),
+    traceDots: document.getElementById('traceDots'),
+    progressDots: Array.prototype.slice.call(document.querySelectorAll('.progress-dots .dot'))
+  };
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+
+  // iOS can leave --app-height stuck at a stale reading after the tab is
+  // backgrounded (app-switched away from, screen locked) and never self-
+  // correct on return, since nothing else re-fires resize/scroll -- force a
+  // fresh reading the moment the page becomes visible again.
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') updateAppHeight();
+  });
+
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) {
+      location.reload();
+    }
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) {
+    landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  } else if (landscapeBlockMQ.addListener) {
+    landscapeBlockMQ.addListener(onLandscapeBlockChange);
+  }
+
+  // Matches memory's own gap-to-tile-size ratio exactly (see memory/index.html's
+  // GAP_RATIO): measure the grid's own rendered width (fixed independently of
+  // gap by the CSS width:min(...) rule), then solve backwards for the tile size
+  // a given gap would leave, so the 4 pads sit at the same relative spacing as
+  // memory's tiles at every breakpoint.
+  var GAP_RATIO = 0.08;
+  var mobileMQ = window.matchMedia('(max-width: 767px), (max-height: 500px)');
+  function updatePadGap(){
+    var cols = 2;
+    var containerWidth = els.padGrid.getBoundingClientRect().width;
+    var tileSize = containerWidth / (cols + GAP_RATIO * (cols - 1));
+    els.padGrid.style.setProperty('--pad-gap', (tileSize * GAP_RATIO) + 'px');
+  }
+  if (mobileMQ.addEventListener) {
+    mobileMQ.addEventListener('change', updatePadGap);
+  } else if (mobileMQ.addListener) {
+    mobileMQ.addListener(updatePadGap);
+  }
+
+  function updateProgressDots(){
+    els.progressDots.forEach(function(dot, i){
+      dot.classList.toggle('done', i < state.progress);
+    });
+  }
+
+  // Rebuilds the trace-dots row to match the current sequence length, all
+  // unfilled -- called every time playback (re)starts, whether that's a fresh
+  // longer round or a replay after a wrong tap, so it's always showing empty
+  // slots for the attempt about to begin.
+  function renderTraceDots(){
+    els.traceDots.innerHTML = '';
+    for (var i = 0; i < state.sequence.length; i++) {
+      var dot = document.createElement('span');
+      dot.className = 'dot';
+      els.traceDots.appendChild(dot);
+    }
+  }
+
+  function markTraceDot(step, padIndex){
+    var dot = els.traceDots.children[step];
+    if (!dot) return;
+    dot.style.background = getComputedStyle(els.pads[padIndex]).getPropertyValue('--pad-rest').trim();
+  }
+
+  function tierConfig(){ return TIER_CONFIG[state.difficulty]; }
+
+  function startGame(){
+    state.gen += 1;
+    // Clears any pad still visually 'lit'/'wrong' from a chain this same
+    // reset is about to supersede -- the gen bump stops it from animating
+    // any FURTHER, but doesn't by itself undo whatever it already applied.
+    els.pads.forEach(function(pad){ pad.classList.remove('lit', 'wrong'); });
+    var cfg = tierConfig();
+    state.sequence = [];
+    for (var i = 0; i < cfg.startLen; i++) state.sequence.push(Math.floor(Math.random() * PAD_COUNT));
+    state.inputIndex = 0;
+    state.progress = 0;
+    state.roundAttempts = 0;
+    updateProgressDots();
+    updatePadGap();
+    // A fresh round's first light can land before the player's eyes have
+    // actually reached the grid (page just loaded, or they just tapped a
+    // difficulty/refresh icon elsewhere on screen) -- give it a beat. Mid-
+    // round replays (growing the sequence, retrying after a mistake) skip
+    // this and start instantly, since the player is already watching by then.
+    state.busy = true;
+    els.boardWrap.classList.add('busy');
+    guardedTimeout(playSequence, 600);
+  }
+
+  // Plays back state.sequence one pad at a time, each lit for PLAYBACK_LIT ms
+  // with PLAYBACK_GAP ms of dark between steps -- a recursive setTimeout chain,
+  // matching memory.js's own "flip, wait, then advance" style rather than a
+  // promise chain (nothing else on this site uses async/await).
+  function playSequence(){
+    state.busy = true;
+    els.boardWrap.classList.add('busy');
+    renderTraceDots();
+    function playStep(i){
+      var pad = els.pads[state.sequence[i]];
+      pad.classList.add('lit');
+      guardedTimeout(function(){
+        pad.classList.remove('lit');
+        if (i + 1 < state.sequence.length) {
+          guardedTimeout(function(){ playStep(i + 1); }, PLAYBACK_GAP);
+        } else {
+          guardedTimeout(function(){
+            state.inputIndex = 0;
+            state.busy = false;
+            els.boardWrap.classList.remove('busy');
+          }, PLAYBACK_GAP);
+        }
+      }, PLAYBACK_LIT);
+    }
+    playStep(0);
+  }
+
+  function flashWrong(pad){
+    pad.classList.add('wrong');
+    setTimeout(function(){ pad.classList.remove('wrong'); }, 250);
+  }
+
+  function onPadTap(i){
+    if (state.busy) return;
+    var pad = els.pads[i];
+    if (i === state.sequence[state.inputIndex]) {
+      markTraceDot(state.inputIndex, i);
+      pad.classList.add('lit');
+      guardedTimeout(function(){ pad.classList.remove('lit'); }, 150);
+      state.inputIndex += 1;
+      if (state.inputIndex >= state.sequence.length) {
+        state.progress += 1;
+        updateProgressDots();
+        if (state.progress >= ROUND_SIZE) {
+          showCelebration();
+        } else {
+          PLSound.play('positive');
+          // Block input for the gap before playback resumes -- otherwise a tap
+          // landing in this window is checked against the stale inputIndex/
+          // sequence pairing and can double-advance or crash.
+          state.busy = true;
+          state.roundAttempts = 0;
+          state.sequence.push(Math.floor(Math.random() * PAD_COUNT));
+          guardedTimeout(playSequence, 500);
+        }
+      }
+    } else {
+      PLSound.play('negative');
+      state.roundAttempts += 1;
+      if (state.roundAttempts >= MAX_ROUND_ATTEMPTS) {
+        // Unlike every other game on the site, Copy the Pattern has a real
+        // adversary -- the growing sequence itself -- so (like Othello and
+        // Tic-Tac-Toe, the only other two with an actual opponent) it's the
+        // one game here with a genuine loss state, not just endless retries.
+        // Without this, a rough run had no way to ever resolve.
+        state.busy = true;
+        flashWrong(pad);
+        guardedTimeout(showLoss, 700);
+      } else {
+        // Under the limit: a mistake never shrinks the sequence or resets
+        // progress -- it just replays the same challenge again.
+        state.busy = true;
+        flashWrong(pad);
+        guardedTimeout(playSequence, 700);
+      }
+    }
+  }
+
+  els.padGrid.addEventListener('click', function(e){
+    var btn = e.target.closest('.pad');
+    if (!btn) return;
+    onPadTap(Number(btn.dataset.index));
+  });
+
+  // ---------- celebration ----------
+
+  // Pixel-art smiley (Figma node 198:1809), matching the site's other win faces.
+  var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="#E4AA2D" cx="65" cy="65" r="65"/>' +
+    '<circle fill="#E4AA2D" cx="908" cy="65" r="65"/>' +
+    '<rect fill="#E4AA2D" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="#E4AA2D" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="#E4AA2D" x="291" y="301" width="392" height="65"/>' +
+    '</svg>';
+
+  function showCelebration(){
+    updateAppHeight();
+    els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
+    els.boardWrap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    setTimeout(function(){
+      els.celebration.style.display = 'none';
+      els.boardWrap.style.display = '';
+      startGame();
+    }, 3000);
+  }
+
+  // Matching pixel-art sad face (Figma node 198:1914), same eyes/mouth-block
+  // layout as every other game's lose face -- red instead of --ink, since
+  // (unlike the rotate-block) this sits on the game's own dark --bg, not on
+  // a red background, so there's no contrast problem here.
+  var SAD_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="#FD4343" cx="65" cy="65" r="65"/>' +
+    '<circle fill="#FD4343" cx="908" cy="65" r="65"/>' +
+    '<rect fill="#FD4343" x="291" y="171" width="392" height="65"/>' +
+    '<rect fill="#FD4343" x="161" y="236" width="130" height="130"/>' +
+    '<rect fill="#FD4343" x="683" y="236" width="130" height="130"/>' +
+    '</svg>';
+
+  function showLoss(){
+    updateAppHeight();
+    els.celebration.innerHTML = SAD_FACE_SVG;
+    PLSound.play('tryagain');
+    els.boardWrap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    setTimeout(function(){
+      els.celebration.style.display = 'none';
+      els.boardWrap.style.display = '';
+      startGame();
+    }, 3000);
+  }
+
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    state.difficulty = btn.dataset.tier;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    startGame();
+  });
+  els.refreshBtn.addEventListener('click', startGame);
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+
+  // First-visit only: gently peek-scroll the bottom slider tray so new users notice
+  // it scrolls, then ease back to the correct resting view with + as the leftmost
+  // icon. Jumps to the TRUE end immediately, before first paint, then eases back
+  // on the very next frame with no added hold.
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'copythepattern.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = maxScroll;
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  introduceTraySlider();
+
+  els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+  startGame();
+})();
+</script>
+</body>
+</html>

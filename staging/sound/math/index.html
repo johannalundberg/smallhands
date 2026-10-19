@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-45ZK78NND7');
+</script>
+
+<title>Math</title>
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://playandlearn.kids/math/">
+<meta property="og:title" content="Math — Play and Learn">
+<meta property="og:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta property="og:image" content="https://playandlearn.kids/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Math — Play and Learn">
+<meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
+<style>
+  @font-face{
+    font-family:'Spline Sans Mono';
+    src: url('../fonts/SplineSansMono.woff2') format('woff2');
+    font-weight:400;
+    font-style:normal;
+  }
+
+  :root{
+    --bg:#8104C9;
+    --bright:#E4E4E4;
+    --ink:#202020;
+    --ink-muted:rgba(32,32,32,0.4);
+    --success:#04BA50;
+    --incorrect:#EE3B3B;
+    /* Figma frame: 1728x1117 */
+    --hero-size: clamp(2.6rem, 13.3102vw, 230px); /* 230px on the 1728-wide frame */
+    --unit: 1.1574vw; /* 20px margin/gap on the 1728-wide frame */
+    --icon-size: clamp(44px, 8.912vw, 154px);
+  }
+
+  /* iPad Pro portrait: icons and equation text run bigger relative to width than the desktop curve gives */
+  /* min-height guard excludes a phone in landscape (width lands in this range but
+     height is short, e.g. 844x390) — that should get the phone slider-menu layout
+     below, not this iPad-tuned four-corner one, which assumes far more height. */
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --hero-size: clamp(90px, 14.4733vw, 150px); /* 120.71px on the 834-wide frame */
+      --unit: 2.3981vw; /* 20px on the 834-wide iPad portrait frame */
+      --icon-size: clamp(80px, 11.4824vw, 120px); /* 95.77px on the 834-wide frame */
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  /* Unlike every other game here, this page has a real text input -- tapping
+     it can trigger the browser's own "scroll the focused input into view"
+     behavior, which scrolls the outer document/viewport itself, not
+     anything governed by body's own overflow:hidden below. html needs the
+     same overflow:hidden so there's no scrollable ancestor left for that
+     native behavior to act on. */
+  html,body{ height:100%; overflow:hidden; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition: background 80ms ease, padding-bottom 250ms ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  .num{
+    font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings: "zero" 1;
+    font-weight:400;
+  }
+
+  /* ---------- icon buttons (operation / difficulty / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    /* Force a stable, dedicated GPU compositing layer from the start, instead of
+       letting the browser promote/demote one inconsistently — a classic fix for
+       intermittent stale-paint/clipping glitches on rounded elements in WebKit. */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 120ms ease;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ transform: translateZ(0) scale(1.035); }
+  }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+  .icon-btn .fill-glyph{ transition: fill 150ms ease; }
+
+  .op-group{ position:absolute; left:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .op-btn .fill-bg{ fill:var(--ink-muted); }
+  .op-btn .fill-glyph{ fill:var(--bright); }
+  .op-btn.active .fill-bg{ fill:var(--bright); }
+  .op-btn.active .fill-glyph{ fill:var(--ink); }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  /* iPad portrait: icon-group gap is proportionally wider than the desktop ratio */
+  /* min-height guard excludes a phone in landscape (width lands in this range but
+     height is short, e.g. 844x390) — that should get the phone slider-menu layout
+     below, not this iPad-tuned four-corner one, which assumes far more height. */
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .op-group, .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  .progress-dots{
+    position:absolute;
+    right:var(--unit);
+    bottom:var(--unit);
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap: calc(var(--icon-size) * 0.08);
+  }
+  .progress-dots .dot{
+    width: calc(var(--icon-size) * 0.25);
+    height: calc(var(--icon-size) * 0.25);
+    border-radius:50%;
+    background: var(--ink-muted);
+    transition: background 150ms ease;
+  }
+  .progress-dots .dot.done{ background: var(--bright); }
+
+  .celebration{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:1;
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes bounce-in{
+    0%{ transform: scale(0); opacity:0; }
+    100%{ transform: scale(var(--final-scale)); opacity:1; }
+  }
+
+  /* equation: Figma width 1188px height 327px, centered on both axes of the 1728x1117 frame */
+  .equation-tap{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap: calc(var(--unit) * 2); }
+  @media (min-width: 480px){
+    .equation-tap{ flex-direction:row; flex-wrap:wrap; gap: calc(var(--unit) * 3); }
+  }
+  /* submit button: always pinned above the bottom icon row (btn-row on tablet/desktop,
+     the slider tray on phone), never beside the equation */
+  .submit-btn{
+    position:absolute;
+    left:var(--unit);
+    bottom: calc(var(--unit) * 2 + var(--icon-size));
+    z-index:4;
+  }
+  .submit-btn:active{ transform: translateZ(0) scale(0.94); }
+  /* iPad (and up) has its own on-screen keyboard's return/Go key to submit
+     with -- Enter already triggers submitAnswer() (see the keydown listener
+     below), so the floating submit button is redundant there, and removing
+     it sidesteps the button's own bottom-anchored-to-body positioning ever
+     needing to react to the keyboard shrinking app-height (it doesn't, and
+     fixing that up to work like phone's own relative-to-.equation-tap
+     positioning isn't worth doing for a button iPad doesn't need at all).
+     Phone keeps it: its on-screen keyboard doesn't reliably surface a
+     one-tap "submit" affordance the same way. */
+  @media (min-width: 768px){
+    .submit-btn{ display:none; }
+  }
+  .equation-row{ position:relative; display:inline-block; }
+  .equation{
+    display:flex;
+    align-items:baseline;
+    flex-wrap:nowrap;
+    justify-content:center;
+    gap:0.15em;
+    font-size: calc(var(--hero-size) * var(--eq-scale, 1));
+    line-height:1.4864;
+    color:var(--bright);
+    max-width:94vw;
+    transition: color 80ms ease;
+  }
+  .answer-slots{ display:inline-flex; }
+  .answer-digit{ display:inline-block; min-width:0.62em; text-align:center; }
+  .answer-digit.placeholder{ visibility:hidden; }
+  .answer-digit.cursor{
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink{
+    50%{ opacity:0; }
+  }
+  .answer-input{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    opacity:0;
+    border:none;
+    padding:0;
+    margin:0;
+    font-size:16px;
+    cursor:text;
+  }
+
+  .submit-btn .fill-bg{ fill:var(--bright); }
+  .submit-btn .fill-glyph{ fill:var(--ink); }
+  .submit-btn:disabled{ opacity:0.4; cursor:default; }
+  .submit-btn:disabled:active{ transform: translateZ(0); }
+  .submit-btn:disabled:hover{ transform: translateZ(0); }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  /* max-height clause catches a phone in landscape (width alone would otherwise put
+     it in the iPad-tuned tablet breakpoint above) — matches on width OR shortness. */
+  @media (max-width: 767px), (max-height: 500px){
+    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
+       here -- darken on tap instead, so pressing any icon button is
+       actually visible. (The icons inside the tray deliberately don't grow:
+       the tray itself is the thing that grows, see .controls-slider:active.) */
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
+    :root{
+      --hero-size: clamp(2.6rem, 16.5587vw, 140px); /* 65.08px on the 393px phone frame */
+      --unit: 5.089vw; /* 20px on the 393px phone frame */
+      --icon-size: clamp(52px, 20.5344vw, 100px); /* 80.71px on the 393px phone frame */
+    }
+    /* Idle: equation is dead-centered by body's own flex centering (untouched), submit
+       button floats independently above the slider tray, left-aligned with it. */
+    .submit-btn{
+      position:absolute;
+      left:var(--unit);
+      bottom: calc(var(--unit) * 2 + var(--icon-size));
+      top:auto;
+      transform: translateZ(0);
+      transition: transform 120ms ease, bottom 250ms ease;
+    }
+    /* Grows slightly on tap like the hub's "?" and the games' tray (it's a
+       standalone icon, not inside the tray) and still darkens via
+       .icon-btn:active above. The disabled rule (higher specificity) keeps a
+       disabled button from reacting. */
+    .submit-btn:active{ transform: translateZ(0) scale(1.035); }
+    /* Typing: let body's own flex-centering (below) place this, same mechanism as
+       idle — reserving space below the equation for the button so the pair centers
+       as a group. The button stays position:absolute in both states (never switches
+       schemes) — aspect-ratio on .icon-btn now guarantees its rendered size exactly
+       matches --icon-size, so this reservation can't under/overshoot the real size.
+       padding-bottom transitions on the base class (not just .active) so it animates
+       both entering and leaving the typing state, in step with body's own padding
+       transition below — otherwise the equation+button pair snapped straight to its
+       new centered position the instant the keyboard opened or closed. */
+    .equation-tap{
+      transition: padding-bottom 250ms ease;
+    }
+    .equation-tap.active{
+      position:relative;
+      width:100%;
+      z-index:4;
+      padding-bottom: calc(var(--unit) + var(--icon-size));
+    }
+    .equation-tap.active .submit-btn{
+      bottom:0;
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      background: rgba(32,32,32,0.4);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    /* Press feedback for the tray itself, like the icons and tiles: it grows
+       slightly while touched (:active also matches while any button inside it
+       is held, so tapping an icon gives both). */
+    .controls-slider{ transition: transform 120ms ease; }
+    .controls-slider:active{ transform: scale(1.03); }
+    /* position:fixed alone doesn't reliably stay pinned to the layout viewport (and
+       so hidden behind the keyboard) on current mobile WebKit — in practice it
+       tracks the shrunk visual viewport instead, landing right on top of the
+       keyboard. Hide it outright instead of counting on that. */
+    body:has(.equation-tap.active) .controls-slider{
+      display:none;
+    }
+    .op-group, .diff-group, .btn-row{ display:contents; }
+    .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
+    /* Reserve room at the top for the progress dots in both states, so centering
+       the remaining space always centers the equation below the dots.
+       Idle: also reserve room at the bottom for the slider tray + independently-
+       floating submit button. Typing: the tray is now display:none (see above), and
+       the submit button's own space is reserved inside .equation-tap itself — so
+       body only needs a small buffer to clear the keyboard, not the whole
+       tray+button stack. */
+    body{
+      padding-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
+      padding-bottom: calc(var(--unit) * 3 + var(--icon-size) * 2);
+    }
+    body:has(.equation-tap.active){
+      padding-bottom: calc(var(--unit) * 1.5);
+    }
+  }
+
+  /* iPad (tablet portrait or any landscape width >=768px): unlike phone, these
+     four corner groups are real position:absolute boxes, not funneled into a
+     collapsible tray -- but the on-screen keyboard covers the same bottom
+     slice of the screen here too, right over btn-row (back/refresh) and
+     progress-dots (bottom-right here, vs. already up top on phone). Hide
+     both the moment the equation goes active, the same way phone hides its
+     whole tray, so nothing sits stranded behind the keyboard.
+     Scoped to (pointer:coarse) -- touch, so an iPad -- because a real
+     desktop/laptop at this same width has no on-screen keyboard at all:
+     nothing shrinks app-height there, so this was reserving top padding and
+     hiding the back/refresh + progress-dots for no reason the moment the
+     answer field was merely focused with a mouse. */
+  @media (min-width: 768px) and (pointer: coarse){
+    body:has(.equation-tap.active) .btn-row,
+    body:has(.equation-tap.active) .progress-dots{
+      display:none;
+    }
+    /* op-group/diff-group stay visible (a keyboard sliding up from the
+       bottom never covers them), but body's flex-centering has no idea
+       they're there -- with no reserved padding, the equation+submit
+       button were centering against the FULL shrunk height, which can
+       land them right under the top icons once the keyboard takes a big
+       enough bite out of app-height. Reserve the same icon-row band up
+       top that idle state gets for free from the icons simply having
+       room to sit in the corner, plus a small buffer above the keyboard
+       (btn-row/progress-dots are hidden now, so the full icon-sized
+       bottom reserve idle state would want is no longer needed) -- so
+       the centered content sits between the icons and the keyboard, not
+       between the icons and the true edge of the (now much taller,
+       keyboard-shrunk-away) body box. */
+    body:has(.equation-tap.active){
+      padding-top: calc(var(--unit) * 2 + var(--icon-size));
+      padding-bottom: calc(var(--unit) * 1.5);
+    }
+  }
+
+  /* Phone in landscape: the sizing above is all vw-based (tuned for a tall portrait
+     phone), so on a short, wide landscape screen it overshoots badly — the reserved
+     top+bottom padding alone can exceed the entire viewport height. Switch to
+     vh-based sizing here so everything scales against the constrained dimension. */
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    :root{
+      --hero-size: clamp(2.2rem, 30vh, 140px);
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+
+  /* No game here is designed to work in phone landscape — rather than a half-broken
+     cramped layout, block it outright with a plain "please rotate" screen. Matches
+     the same phone-landscape condition already used elsewhere (a landscape tablet has
+     enough height to stay excluded and keeps its normal, working layout).
+     The min-width guards against a false positive from the on-screen keyboard: opening
+     it shrinks the visual viewport's height (not its width), and on a narrow-enough
+     portrait phone that alone can flip CSS's width>height "orientation:landscape" test
+     true without the device actually rotating — instantly covering the answer input
+     with this block the moment it's tapped. Real landscape phones are all well past
+     500px wide; a keyboard-shrunk portrait viewport never is. */
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:var(--incorrect);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    .rotate-block{ display:flex; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="rotate-block">
+    <!-- Pixel-art sad face (Figma node 198:1914), matching the site's other
+         lose-state faces, in place of the old curved-path frown. -->
+    <svg viewBox="0 0 973 366">
+      <circle fill="var(--ink)" cx="65" cy="65" r="65"/>
+      <circle fill="var(--ink)" cx="908" cy="65" r="65"/>
+      <rect fill="var(--ink)" x="291" y="171" width="392" height="65"/>
+      <rect fill="var(--ink)" x="161" y="236" width="130" height="130"/>
+      <rect fill="var(--ink)" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
+
+  <div class="controls-slider" id="controlsSlider">
+  <div class="op-group" id="opGroup">
+    <button class="icon-btn op-btn" data-op="add" aria-label="Addition">
+      <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="fill-glyph" d="M36.0391 78.4439V70.7329H70.7387V36.0332H78.4498V70.7329H113.149V78.4439H78.4498V113.144H70.7387V78.4439H36.0391Z"/></svg>
+    </button>
+    <button class="icon-btn op-btn" data-op="sub" aria-label="Subtraction">
+      <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="fill-glyph" d="M36.0391 78.8185V71.1074H113.149V78.8185H36.0391Z"/></svg>
+    </button>
+    <button class="icon-btn op-btn" data-op="mul" aria-label="Multiplication">
+      <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="fill-glyph" d="M44.6029 50.0612L50.0554 44.6086L74.5918 69.145L99.1282 44.6086L104.581 50.0612L80.0443 74.5976L104.581 99.1339L99.1282 104.586L74.5918 80.0501L50.0554 104.586L44.6029 99.1339L69.1393 74.5976L44.6029 50.0612Z"/></svg>
+    </button>
+    <button class="icon-btn op-btn" data-op="div" aria-label="Division">
+      <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><g class="fill-glyph"><path d="M36.0391 78.8185V71.1074H113.149V78.8185H36.0391Z"/><circle cx="74.5109" cy="53.0812" r="6.33117"/><circle cx="74.5109" cy="95.9405" r="6.33117"/></g></svg>
+    </button>
+  </div>
+
+  <div class="diff-group" id="diffGroup">
+    <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+      <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+    </button>
+    <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+      <svg viewBox="0 0 80.71 80.71"><path class="fill-bg" d="M61.3396 40.355C61.3396 28.7655 51.9445 19.3704 40.355 19.3704C28.7655 19.3704 19.3704 28.7655 19.3704 40.355C19.3704 51.9445 28.7655 61.3396 40.355 61.3396V80.71C18.0675 80.71 0 62.6425 0 40.355C0 18.0675 18.0675 0 40.355 0C62.6425 0 80.71 18.0675 80.71 40.355C80.71 62.6425 62.6425 80.71 40.355 80.71V61.3396C51.9445 61.3396 61.3396 51.9445 61.3396 40.355Z"/></svg>
+    </button>
+    <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+      <svg viewBox="0 0 80.71 80.71"><circle class="fill-bg" cx="40.355" cy="40.355" r="40.355"/></svg>
+    </button>
+  </div>
+
+  <div class="btn-row">
+    <button class="icon-btn" id="backBtn" aria-label="Back">
+      <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+    </button>
+    <button class="icon-btn" id="refreshBtn" aria-label="New problem">
+      <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M32.1677 38.5101L53.5762 37.1367L53.5688 59.9113"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M97.5629 39.1974C105.703 43.8973 112.095 51.1161 115.775 59.7655C119.455 68.415 120.224 78.0263 117.965 87.1506C115.706 96.2749 110.542 104.418 103.252 110.351C95.9618 116.285 86.9403 119.688 77.5474 120.047C68.1545 120.406 58.8994 117.702 51.1773 112.343C43.4551 106.983 37.6845 99.2589 34.7353 90.3338C31.7862 81.4087 31.8183 71.7667 34.8269 62.8615C37.8354 53.9562 43.6574 46.2703 51.415 40.9624"/></svg>
+    </button>
+  </div>
+  </div>
+
+  <div class="progress-dots" id="progressDots">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <div class="equation-tap">
+    <div class="equation-row">
+      <div class="equation" id="equation">
+        <span class="num" id="numA">--</span><span class="num" id="opSign">+</span><span class="num" id="numB">--</span><span class="num">=</span><span class="answer-slots" id="answerSlots"></span>
+      </div>
+      <input class="answer-input" id="answerInput" type="number" inputmode="numeric" autocomplete="off" enterkeyhint="done" aria-label="Type your answer">
+    </div>
+    <button class="icon-btn submit-btn" id="submitBtn" aria-label="Check answer" disabled>
+      <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="fill-glyph" d="M113.9717 79.8692L117 77.207L114.1475 74.3565L83.7705 43.999L78.4268 49.3467L102.0029 72.9082L34 72.9082L34 80.1953L102.1533 80.1953L78.6025 100.906L83.5947 106.584L113.9717 79.8692Z"/></svg>
+    </button>
+  </div>
+
+  <div class="celebration" id="celebration"></div>
+
+<script src="../sound.js"></script>
+<script>
+(function(){
+  "use strict";
+
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
+  var TIER_MAX = { easy: 25, medium: 50, hard: 100 };
+
+  var ROUND_SIZE = 10;
+  var MAX_ATTEMPTS = 3;
+
+  var state = {
+    a: 0, b: 0, op: '+', answerValue: 0,
+    input: '',
+    activeOp: 'add',
+    difficulty: 'easy',
+    progress: 0,
+    attempts: 0,
+    busy: false
+  };
+
+  var els = {
+    numA: document.getElementById('numA'),
+    numB: document.getElementById('numB'),
+    opSign: document.getElementById('opSign'),
+    answerSlots: document.getElementById('answerSlots'),
+    answerInput: document.getElementById('answerInput'),
+    equation: document.getElementById('equation'),
+    equationTap: document.querySelector('.equation-tap'),
+    opGroup: document.getElementById('opGroup'),
+    diffGroup: document.getElementById('diffGroup'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    backBtn: document.getElementById('backBtn'),
+    progressDots: document.querySelectorAll('#progressDots .dot'),
+    celebration: document.getElementById('celebration'),
+    submitBtn: document.getElementById('submitBtn'),
+    controlsSlider: document.getElementById('controlsSlider')
+  };
+
+  var flashTimer = null;
+
+  // Prevent icon buttons from stealing focus from the answer field, so the
+  // on-screen keyboard stays open across submissions instead of closing and
+  // failing to reopen (iOS/Android won't reliably reopen it from a delayed
+  // programmatic focus() call outside a direct user gesture).
+  // Uses 'mousedown' rather than 'pointerdown': preventDefault on pointerdown
+  // is specced to also suppress the synthetic click that follows a touch tap,
+  // which silently broke every icon button on touchscreens. Cancelling the
+  // later 'mousedown' compatibility event still blocks the focus-shift
+  // without swallowing the click.
+  // Only guarded while the keyboard is actually open: the answer input stays
+  // "focused" even after the keyboard is dismissed via its own hide control
+  // (no blur fires), so if this kept blocking the focus-shift afterwards too,
+  // the next tray tap would land as a touch on a still-focused input and iOS
+  // would silently resurrect the keyboard — snapping the equation/submit
+  // button into the typing layout for no visible reason.
+  document.addEventListener('mousedown', function(e){
+    if (e.target.closest('.icon-btn') && isKeyboardOpen()) {
+      e.preventDefault();
+    }
+  });
+
+  // document.activeElement alone can't tell us whether the on-screen keyboard is
+  // actually visible: tapping an icon button never blurs the answer input (by design,
+  // see the mousedown handler below), so it stays the "active element" forever once
+  // focused once, even after the keyboard has been dismissed. Compare the live visual
+  // viewport height against the tallest height seen so far with no keyboard open.
+  // This can't just be captured once at load: mobile browsers grow/shrink their own
+  // chrome (URL bar collapsing on scroll, etc.) well after the page loads, and a
+  // stale baseline can then read as "keyboard open" from browser-chrome changes alone
+  // — which was intermittently re-applying the typing-state layout after a plain tap
+  // on a tray icon, with the keyboard already closed.
+  //
+  // (window.innerHeight - visualViewport.height, the layout-vs-visual-viewport
+  // comparison, looks like the textbook-correct fix for that same false positive —
+  // but real iOS Safari doesn't reliably keep window.innerHeight fixed while the
+  // keyboard is up the way the spec implies, so that version made this function
+  // undercount "yes the keyboard is genuinely open" on real devices too. That
+  // silently broke the mousedown guard below (submit-btn is a .icon-btn, and this
+  // is the only thing stopping tapping it from blurring the input): tapping the
+  // submit button while typing started blurring the field and dismissing the
+  // keyboard instead of submitting with it still open. Reverted to the baseline
+  // comparison, which is what real devices were actually tested against.
+  var noKeyboardHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  function isKeyboardOpen(){
+    if (!window.visualViewport) return false;
+    return (noKeyboardHeight - window.visualViewport.height) > 150;
+  }
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    if (h > noKeyboardHeight) noKeyboardHeight = h;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+
+  // iOS can leave --app-height stuck at a stale reading after the tab is
+  // backgrounded (app-switched away from, screen locked) and never self-
+  // correct on return, since nothing else re-fires resize/scroll -- force a
+  // fresh reading the moment the page becomes visible again.
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') updateAppHeight();
+  });
+
+  // Rotating out of the phone-landscape rotate-block and back to portrait can
+  // leave iOS's WebKit engine (Safari, Chrome, any iOS browser — Apple requires
+  // them all to use it) rendering at the previous orientation's zoom/scale, so
+  // the layout comes back oversized and spills past the screen edge. Toggling
+  // the viewport meta wasn't enough to unstick it, so instead: reload outright
+  // the moment the device leaves that blocked landscape state. A fresh load
+  // can't inherit a stuck scale — there's nothing left to get stuck.
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) {
+      location.reload();
+    }
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) {
+    landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  } else if (landscapeBlockMQ.addListener) {
+    landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
+  }
+
+  // iOS's own "hide keyboard" control dismisses the keyboard without blurring the
+  // input, so the focus/blur listeners below never fire and the layout stays stuck
+  // in the typing state. Re-sync it directly off actual keyboard visibility whenever
+  // the viewport changes, so it snaps back to the idle layout regardless of how the
+  // keyboard was dismissed.
+  // One-directional on purpose: only ever clears .active, never sets it. The keyboard
+  // can't appear without the input being focused first, so focus (below) is always
+  // what turns typing state on — this only needs to catch it turning off without a
+  // blur. Toggling both ways using isKeyboardOpen()'s baseline-height heuristic (see
+  // its own comment — needed as-is for the mousedown guard below) meant an ordinary
+  // browser-chrome resize alone could flip .active back on here too, with nothing
+  // clicked and no keyboard involved — hiding the tray and, worse, fighting the real
+  // dismissal's own transition into a jerky double-step instead of one smooth pass.
+  function syncEquationActiveState(){
+    if (!isKeyboardOpen()) {
+      els.equationTap.classList.remove('active');
+      // Dismissing the keyboard this way never blurs the input (that's the whole
+      // reason this listener exists — see above), so document.activeElement is
+      // still the answer input at this point, keyboard or not. Left alone, the
+      // very next tap on a tray button lands as a touch on a still-focused text
+      // input, and iOS can silently resurrect the keyboard from that alone —
+      // reopening it (and re-hiding the tray) right as the user picks a new
+      // operator, with nothing about that tap ever reaching this input directly.
+      // Release focus for real once the keyboard is confirmed gone, so later taps
+      // have nothing residual to resurrect it from.
+      if (document.activeElement === els.answerInput) {
+        els.answerInput.blur();
+      }
+    }
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncEquationActiveState);
+  }
+
+  function randInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function newProblem(){
+    var max = TIER_MAX[state.difficulty];
+    var a, b, answer, op;
+
+    if (state.activeOp === 'add') {
+      op = '+';
+      a = randInt(1, max - 1);
+      b = randInt(1, max - a);
+      answer = a + b;
+    } else if (state.activeOp === 'sub') {
+      op = '−';
+      a = randInt(1, max);
+      b = randInt(1, a);
+      answer = a - b;
+    } else if (state.activeOp === 'mul') {
+      op = '×';
+      var capA = Math.min(12, max);
+      a = randInt(1, capA);
+      var capB = Math.min(12, Math.floor(max / a));
+      b = randInt(1, capB);
+      answer = a * b;
+    } else {
+      op = '÷';
+      var divisor = randInt(1, Math.min(12, max));
+      var capQ = Math.min(12, Math.floor(max / divisor));
+      var quotient = randInt(1, capQ);
+      a = divisor * quotient;
+      b = divisor;
+      answer = quotient;
+    }
+
+    state.a = a; state.b = b; state.answerValue = answer;
+    state.op = op;
+    state.input = '';
+    state.attempts = 0;
+    els.answerInput.value = '';
+    els.answerInput.maxLength = String(state.answerValue).length;
+    render();
+    // Re-derived from .active itself (already the reliable, event-driven signal for
+    // "currently typing" — see focus/blur below), not a fresh isKeyboardOpen() call:
+    // that viewport-height heuristic can momentarily misread true from ordinary
+    // browser-chrome changes (Safari's address bar expanding, say) that have nothing
+    // to do with the keyboard — which used to be harmless when this only decided
+    // whether to refocus, but now also decides whether the tray is hidden, so a
+    // false positive here would hide it right after an operator/difficulty tap made
+    // with the keyboard closed.
+    if (els.equationTap.classList.contains('active')) focusInput();
+  }
+
+  function focusInput(){
+    try { els.answerInput.focus({ preventScroll: true }); } catch (e) { els.answerInput.focus(); }
+  }
+
+  function updateProgressDots(){
+    els.progressDots.forEach(function(dot, i){
+      dot.classList.toggle('done', i < state.progress);
+    });
+  }
+
+  function restartRound(){
+    state.progress = 0;
+    updateProgressDots();
+    newProblem();
+  }
+
+  function render(){
+    els.numA.textContent = state.a;
+    els.numB.textContent = state.b;
+    els.opSign.textContent = state.op;
+
+    var digitCount = String(state.answerValue).length;
+    var cursorIndex = state.input.length;
+    var html = '';
+    for (var i = 0; i < digitCount; i++) {
+      var ch = state.input.charAt(i);
+      if (ch) {
+        html += '<span class="num answer-digit">' + ch + '</span>';
+      } else if (i === cursorIndex) {
+        html += '<span class="num answer-digit cursor">_</span>';
+      } else {
+        html += '<span class="num answer-digit placeholder">_</span>';
+      }
+    }
+    els.answerSlots.innerHTML = html;
+    updateProgressDots();
+
+    els.opGroup.querySelectorAll('.op-btn').forEach(function(btn){
+      var op = btn.getAttribute('data-op');
+      btn.classList.toggle('active', state.activeOp === op);
+    });
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(btn){
+      var tier = btn.getAttribute('data-tier');
+      btn.classList.toggle('active', state.difficulty === tier);
+    });
+
+    els.submitBtn.disabled = state.busy || state.input.length < String(state.answerValue).length;
+    fitEquationText();
+  }
+
+  // Occasionally a particular number combination renders wider than the equation's
+  // own 94vw cap, which used to wrap it onto a second line. Instead, shrink it down
+  // in small steps only as far as needed to fit on one line — most equations never
+  // trigger this and render at full size exactly as before.
+  function fitEquationText(){
+    var el = els.equation;
+    var maxWidth = window.innerWidth * 0.94;
+    var scale = 1;
+    el.style.setProperty('--eq-scale', scale);
+    while (el.scrollWidth > maxWidth && scale > 0.5) {
+      scale -= 0.02;
+      el.style.setProperty('--eq-scale', scale);
+    }
+  }
+
+  els.answerInput.addEventListener('input', function(){
+    var digits = els.answerInput.value.replace(/[^0-9]/g, '');
+    var maxLen = String(state.answerValue).length;
+    if (digits.length > maxLen) digits = digits.slice(0, maxLen);
+    state.input = digits;
+    if (els.answerInput.value !== digits) els.answerInput.value = digits;
+    render();
+  });
+
+  els.equation.addEventListener('click', focusInput);
+
+  els.answerInput.addEventListener('focus', function(){
+    els.equationTap.classList.add('active');
+  });
+  els.answerInput.addEventListener('blur', function(){
+    els.equationTap.classList.remove('active');
+  });
+
+  function flashCorrect(){
+    state.busy = true;
+    PLSound.play('positive');
+    clearTimeout(flashTimer);
+    document.body.style.background = 'var(--success)';
+    flashTimer = setTimeout(function(){
+      state.progress += 1;
+      updateProgressDots();
+      document.body.style.background = '';
+      if (state.progress >= ROUND_SIZE) {
+        showCelebration();
+      } else {
+        state.busy = false;
+        newProblem();
+      }
+    }, 700);
+  }
+
+  // Pixel-art smiley (Figma node 198:1809) instead of the earlier curved-path
+  // one -- two round eyes and a stepped-block smile.
+  var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="var(--bright)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--bright)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--bright)" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="291" y="301" width="392" height="65"/>' +
+    '</svg>';
+
+  function showCelebration(){
+    // Called right after the round's last correct answer, while the keyboard
+    // (and its shrunken visualViewport height) may still be up -- centering
+    // the overlay against the live --app-height here would place it high,
+    // then visibly slide down to true center once the keyboard's async
+    // dismiss animation finishes and the next resize event corrects it.
+    // The round is over and the keyboard is about to close regardless, so
+    // center against the known full-height value instead of waiting for it.
+    document.documentElement.style.setProperty('--app-height', noKeyboardHeight + 'px');
+    els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
+    els.equationTap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    flashTimer = setTimeout(function(){
+      els.celebration.style.display = 'none';
+      els.equationTap.style.display = '';
+      state.progress = 0;
+      state.busy = false;
+      newProblem();
+    }, 3000);
+  }
+
+  function flashIncorrect(){
+    state.busy = true;
+    PLSound.play('negative');
+    clearTimeout(flashTimer);
+    document.body.style.background = 'var(--incorrect)';
+    flashTimer = setTimeout(function(){
+      document.body.style.background = '';
+      state.busy = false;
+      if (state.attempts >= MAX_ATTEMPTS) {
+        newProblem();
+      } else {
+        state.input = '';
+        els.answerInput.value = '';
+        render();
+        focusInput();
+      }
+    }, 700);
+  }
+
+  function submitAnswer(){
+    var maxLen = String(state.answerValue).length;
+    if (state.busy || state.input.length < maxLen) return;
+    var guess = parseInt(state.input, 10);
+    if (guess === state.answerValue) {
+      flashCorrect();
+    } else {
+      state.attempts += 1;
+      flashIncorrect();
+    }
+  }
+
+  els.answerInput.addEventListener('keydown', function(e){
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    submitAnswer();
+  });
+
+  els.submitBtn.addEventListener('click', submitAnswer);
+
+  els.opGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.op-btn');
+    if (!btn) return;
+    var op = btn.getAttribute('data-op');
+    if (op === state.activeOp) return; // already selected — don't reset the current problem
+    state.activeOp = op;
+    newProblem();
+  });
+
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    var tier = btn.getAttribute('data-tier');
+    if (tier === state.difficulty) return; // already selected — don't reset the current problem
+    state.difficulty = tier;
+    newProblem();
+  });
+
+  els.refreshBtn.addEventListener('click', restartRound);
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+
+  // First-visit only: gently peek-scroll the bottom slider tray so new users notice
+  // it scrolls (there are more icons than fit on a phone screen), then ease back to
+  // the correct resting view with + as the leftmost icon. Jumps to the TRUE end
+  // (no partial-reveal cap -- a longer tray, e.g. Math's, was never reaching its
+  // real end otherwise) immediately, before first paint, then eases back on the
+  // very next frame with no added hold -- both the jump and the start of the
+  // ease read as a glitchy stutter when delayed.
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'math.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = maxScroll;
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  introduceTraySlider();
+
+  newProblem();
+})();
+</script>
+</body>
+</html>
