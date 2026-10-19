@@ -770,7 +770,7 @@
     if (state.busy) return;
     forceEndDrag(); // guard against a stale drag from a previous pointer sequence that never cleaned up
     e.preventDefault();
-    PLSound.play('drag');
+    PLSound.play('click');
     var piece = e.currentTarget;
     var slotEl = piece.parentElement;
     var rect = piece.getBoundingClientRect();
@@ -834,7 +834,7 @@
     state.slots[b] = tmp;
     renderSlot(a);
     renderSlot(b);
-    PLSound.play('drag');
+    PLSound.play('click');
     var pieceA = els.board.children[a].querySelector('.piece');
     var pieceB = els.board.children[b].querySelector('.piece');
     pieceA.classList.add('pop');
