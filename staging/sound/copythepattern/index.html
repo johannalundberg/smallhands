@@ -195,6 +195,15 @@
     .pad:hover{ transform:scale(1.035); }
   }
   .pad.wrong{ background:var(--incorrect); }
+  /* Before the first pattern: all four pads breathe together, inviting a tap
+     (no words needed). Tapping any pad starts the game -- that tap is also
+     what lets the phone play the pattern's notes. Paused while pressed so the
+     press feedback above still shows. */
+  .pad-grid.await-start .pad:not(:active){ animation: pad-breathe 1600ms ease-in-out infinite; }
+  @keyframes pad-breathe{
+    0%, 100%{ transform:scale(1); }
+    50%{ transform:scale(1.045); }
+  }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -494,8 +503,16 @@
 
   function tierConfig(){ return TIER_CONFIG[state.difficulty]; }
 
-  function startGame(){
+  // waitForTap: on page load only. The pattern's notes can't play until the
+  // player has tapped the page (a phone rule), and the pattern used to start
+  // on its own -- so the very first one was always silent. Instead, the pads
+  // breathe until any of them is tapped, and that tap starts the round.
+  // Later rounds (difficulty, refresh, after a win) start on their own as
+  // before, since the page has been tapped by then.
+  function startGame(waitForTap){
     state.gen += 1;
+    state.awaitingStart = !!waitForTap;
+    els.padGrid.classList.toggle('await-start', state.awaitingStart);
     // Clears any pad still visually 'lit'/'wrong' from a chain this same
     // reset is about to supersede -- the gen bump stops it from animating
     // any FURTHER, but doesn't by itself undo whatever it already applied.
@@ -513,6 +530,16 @@
     // difficulty/refresh icon elsewhere on screen) -- give it a beat. Mid-
     // round replays (growing the sequence, retrying after a mistake) skip
     // this and start instantly, since the player is already watching by then.
+    if (state.awaitingStart) return;
+    state.busy = true;
+    els.boardWrap.classList.add('busy');
+    guardedTimeout(playSequence, 600);
+  }
+
+  function beginFirstRound(){
+    state.awaitingStart = false;
+    els.padGrid.classList.remove('await-start');
+    PLSound.play('click');
     state.busy = true;
     els.boardWrap.classList.add('busy');
     guardedTimeout(playSequence, 600);
@@ -552,6 +579,7 @@
   }
 
   function onPadTap(i){
+    if (state.awaitingStart) { beginFirstRound(); return; }
     if (state.busy) return;
     var pad = els.pads[i];
     if (i === state.sequence[state.inputIndex]) {
@@ -662,7 +690,7 @@
     btn.classList.add('active');
     startGame();
   });
-  els.refreshBtn.addEventListener('click', startGame);
+  els.refreshBtn.addEventListener('click', function(){ startGame(); });
   els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
@@ -699,7 +727,7 @@
   introduceTraySlider();
 
   els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  startGame();
+  startGame(true);
 })();
 </script>
 </body>
