@@ -127,7 +127,10 @@
     } catch (e) {}
   }
   var pending = [];
-  var STALE_MS = 300;
+  // Generous: on an iPhone the first tap's unlock can take a good fraction
+  // of a second to get audio running, and that tap's own click must survive
+  // it. Only sounds left over from long before (drag-only play) are dropped.
+  var STALE_MS = 1000;
   if (ctx) {
     ctx.onstatechange = function(){
       if (ctx.state !== 'running') return;
@@ -142,10 +145,21 @@
   // Leaving the page stops its sound instantly, so a tap that navigates (a
   // hub tile, a back button) would cut its own click off before it's heard.
   // Hold the page change just long enough for the click to play.
+  // If this tap is the page's first, audio is still starting up (it can take
+  // several hundred ms on an iPhone) -- wait for it to be running before
+  // counting the delay, or the page changes before the click ever sounds.
   var NAV_DELAY = 150;
+  var NAV_MAX_WAIT = 700;
   function go(url){
     if (isMuted() || !ctx) { window.location.href = url; return; }
-    setTimeout(function(){ window.location.href = url; }, NAV_DELAY);
+    var left = false;
+    function leave(){ if (!left) { left = true; window.location.href = url; } }
+    var started = performance.now();
+    (function waitForAudio(){
+      if (ctx.state === 'running') setTimeout(leave, NAV_DELAY);
+      else if (performance.now() - started > NAV_MAX_WAIT) leave();
+      else setTimeout(waitForAudio, 20);
+    })();
   }
 
   // One click sound for every tap on something tappable, site-wide, so no page
