@@ -21,9 +21,6 @@
 
   var AC = window.AudioContext || window.webkitAudioContext;
   var ctx = null;
-  if (AC) {
-    try { ctx = new AC(); } catch (e) { ctx = null; }
-  }
 
   // Recorded sounds (Magnus's UI toolbox, PLAY&LEARN_UI_03 / _04 / _07 / _08), kept as
   // WAV: Safari's Web Audio played a short MP3 silently. URLs are versioned
@@ -39,17 +36,42 @@
   // play many times per game, so they sit lowest.
   var VOLUME = { positive: 0.35, negative: 0.35, complete: 0.45, tryagain: 0.45 };
   var buffers = {};
-  if (ctx) {
+
+  // One audio player per page, shut down the moment the page is left and
+  // started fresh if the page comes back (browser Back). Safari keeps
+  // recently left pages alive in memory, and an iPad only allows a few audio
+  // players at once -- going back and forth between the hub and About used
+  // up the allowance, so the third trip was silent and the queued clicks
+  // later burst out together.
+  function openAudio(){
+    if (!AC || ctx) return;
+    var c;
+    try { c = new AC(); } catch (e) { return; }
+    ctx = c;
+    buffers = {};
+    waiting = [];
+    primed = false;
+    c.onstatechange = onAudioState;
     Object.keys(FILES).forEach(function(name){
-      fetch(base + FILES[name] + '?v=20261025zd')
+      fetch(base + FILES[name] + '?v=20261025ze')
         .then(function(r){ return r.arrayBuffer(); })
         .then(function(data){
           // Callback form, not the promise form: older iOS Safari only has this one.
-          ctx.decodeAudioData(data, function(buf){ buffers[name] = buf; }, function(){});
+          c.decodeAudioData(data, function(buf){ if (ctx === c) buffers[name] = buf; }, function(){});
         })
         .catch(function(){});
     });
   }
+  function closeAudio(){
+    if (!ctx) return;
+    var c = ctx;
+    ctx = null;
+    buffers = {};
+    waiting = [];
+    try { c.close(); } catch (e) {}
+  }
+  window.addEventListener('pagehide', closeAudio);
+  window.addEventListener('pageshow', function(){ if (!ctx) openAudio(); });
 
   // iOS only unlocks audio from inside a gesture, and which events count has
   // shifted between versions -- so try on every touch/pointer event, not just
@@ -57,6 +79,8 @@
   // drag's touchend alone didn't unlock it there. A silent one-sample buffer
   // started inside the gesture is what some iOS versions need beyond resume().
   var primed = false;
+  var waiting = [];
+  openAudio();
   function unlock(e){
     if (!ctx) return;
     if (ctx.state !== 'running') {
@@ -142,21 +166,19 @@
     waiting.push({ render: render, at: performance.now() });
   }
 
-  var waiting = [];
   var MAX_WAIT_MS = 800;   // longer than this and the moment has passed
   var SETTLE_MS = 30;      // let freshly started audio settle first
-  if (ctx) {
-    ctx.onstatechange = function(){
-      if (ctx.state !== 'running' || !waiting.length) return;
-      var due = waiting;
-      waiting = [];
-      setTimeout(function(){
-        var now = performance.now();
-        due.forEach(function(w){
-          if (now - w.at <= MAX_WAIT_MS) { try { w.render(); } catch (e) {} }
-        });
-      }, SETTLE_MS);
-    };
+  function onAudioState(){
+    if (!ctx || ctx.state !== 'running' || !waiting.length) return;
+    var due = waiting;
+    waiting = [];
+    setTimeout(function(){
+      if (!ctx) return;
+      var now = performance.now();
+      due.forEach(function(w){
+        if (now - w.at <= MAX_WAIT_MS) { try { w.render(); } catch (e) {} }
+      });
+    }, SETTLE_MS);
   }
 
   function renderClick(){
