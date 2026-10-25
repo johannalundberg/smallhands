@@ -195,14 +195,19 @@
     .pad:hover{ transform:scale(1.035); }
   }
   .pad.wrong{ background:var(--incorrect); }
-  /* Before the first pattern: all four pads breathe together, inviting a tap
-     (no words needed). Tapping any pad starts the game -- that tap is also
-     what lets the phone play the pattern's notes. Paused while pressed so the
-     press feedback above still shows. */
-  .pad-grid.await-start .pad:not(:active){ animation: pad-breathe 1600ms ease-in-out infinite; }
-  @keyframes pad-breathe{
-    0%, 100%{ transform:scale(1); }
-    50%{ transform:scale(1.045); }
+  /* Before the first pattern: the pads pulse one at a time, going round the
+     grid clockwise (purple, orange, blue, yellow), inviting a tap (no words
+     needed). Tapping any pad starts the game -- that tap is also what lets the
+     phone play the pattern's notes. Paused while pressed so the press
+     feedback above still shows. */
+  .pad-grid.await-start .pad:not(:active){ animation: pad-pulse 2400ms ease-in-out infinite; }
+  .pad-grid.await-start .pad:nth-child(1){ animation-delay:0ms; }
+  .pad-grid.await-start .pad:nth-child(2){ animation-delay:600ms; }
+  .pad-grid.await-start .pad:nth-child(4){ animation-delay:1200ms; }
+  .pad-grid.await-start .pad:nth-child(3){ animation-delay:1800ms; }
+  @keyframes pad-pulse{
+    0%, 28%, 100%{ transform:scale(1); }
+    12%{ transform:scale(1.06); }
   }
 
   @keyframes bounce-in{
