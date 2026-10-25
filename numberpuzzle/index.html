@@ -207,7 +207,7 @@
      gap (or overlap) between some pieces depending on n and the board's
      current rendered size. Explicit shared-boundary pixels can't gap. */
   .slot{ position:absolute; }
-  .slot.hover::after{
+  .slot.hover::after, .slot.selected::after{
     content:'';
     position:absolute;
     inset:0;
@@ -238,8 +238,6 @@
     pointer-events:none;
   }
   .piece.lifted{ opacity:0.25; }
-  /* A tile picked up by tapping (tap-to-swap): faded, no outline. */
-  .slot.selected .piece{ opacity:0.5; }
   .piece.pop{ animation: piece-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
   @keyframes piece-pop{
     0%{ transform:scale(0.88); }
