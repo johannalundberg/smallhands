@@ -33,7 +33,9 @@
   }
   if (ctx) {
     Object.keys(FILES).forEach(function(name){
-      fetch(base + FILES[name])
+      // Versioned like sound.js itself, so a browser can't reuse a stale
+      // cached copy (or a cached "not found" from when the file was removed).
+      fetch(base + FILES[name] + '?v=20261025n')
         .then(function(r){ return r.arrayBuffer(); })
         .then(function(data){
           // Callback form, not the promise form: older iOS Safari only has this one.
