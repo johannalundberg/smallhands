@@ -41,7 +41,7 @@
   var buffers = {};
   if (ctx) {
     Object.keys(FILES).forEach(function(name){
-      fetch(base + FILES[name] + '?v=20261025zb')
+      fetch(base + FILES[name] + '?v=20261025zc')
         .then(function(r){ return r.arrayBuffer(); })
         .then(function(data){
           // Callback form, not the promise form: older iOS Safari only has this one.
@@ -206,6 +206,9 @@
   function go(url){
     if (leaving) return;
     leaving = true;
+    // Safety net: if the page is somehow still here a few seconds later (the
+    // change didn't happen), accept taps again rather than stay frozen.
+    setTimeout(function(){ leaving = false; }, 3000);
     if (isMuted() || !ctx) { window.location.href = url; return; }
     var left = false;
     function leave(){ if (!left) { left = true; window.location.href = url; } }
@@ -235,9 +238,13 @@
     }
     if (el.hasAttribute('data-own-sound')) return;
     play('click');
-    // Plain same-tab links (hub tiles, "?", About's back arrow): delay the
-    // page change like go() does. Modified clicks open new tabs, leave them be.
+    // Plain same-tab links to this site's own pages (hub tiles, "?", About's
+    // back arrow): delay the page change like go() does. Anything else -- the
+    // email link, outside sites, modified clicks that open new tabs -- is left
+    // to the browser: those don't leave the page, so treating them as a page
+    // change froze it (every later tap ignored).
     if (el.tagName === 'A' && !el.target && !e.defaultPrevented &&
+        el.origin === window.location.origin &&
         !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
       e.preventDefault();
       go(el.href);
