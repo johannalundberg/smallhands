@@ -117,11 +117,11 @@
 
   // The tap click, rebuilt in code from Magnus's click (PLAY&LEARN_UI_01.mp3):
   // measured as a pure ~1075 Hz tone that reaches full level in 1ms, holds
-  // ~4ms and is gone by ~9ms. Played at 70% of the original's level.
+  // ~4ms and is gone by ~9ms. Played at 45% of the original's level.
   // Synthesized rather than played from the file: Safari only plays a
   // fraction of that very short MP3, so the file sounded different per browser.
   var CLICK_HZ = 1075;
-  var CLICK_LEVEL = 0.28 * 0.7;
+  var CLICK_LEVEL = 0.28 * 0.45;
   function click(){
     if (!ctx || isMuted()) return;
     // Not gated on 'running': a tap is itself the unlocking gesture, so audio
