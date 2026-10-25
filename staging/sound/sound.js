@@ -1,8 +1,8 @@
-// Sound for the site: Copy the Pattern's pad tones -- the only sound there is.
-// Loaded with a plain <script src> by Copy the Pattern (to play) and by the
-// hub (whose speaker button sets the site-wide mute flag read here).
-//
-// The tones are synthesized with Web Audio (no sound files). Browsers keep a
+// Sound for the site, all synthesized with Web Audio (no sound files): a soft
+// thud on every tap, and Copy the Pattern's pad tones. Loaded with a plain
+// <script src> by every page; the hub's speaker button sets the site-wide
+// mute flag read here.
+// Browsers keep a
 // page silent until it has been tapped; an AudioContext resumed once inside a
 // tap stays unlocked for the rest of the page, so later tones play on time.
 (function(){
@@ -115,5 +115,90 @@
     } catch (e) {}
   }
 
-  window.PLSound = { tone: tone, isMuted: isMuted, setMuted: setMuted };
+  // A soft thud for taps: a low "tok" whose pitch drops quickly (240 -> 90 Hz),
+  // plus a tiny muffled noise tap at the very start for the contact. Phone
+  // speakers can't play real bass, so the body starts high enough to be
+  // heard on a phone and only slides down into the low range.
+  var THUD_LEVEL = 0.45;
+  var noiseBuf = null;
+  function thud(){
+    if (!ctx || isMuted()) return;
+    // Not gated on 'running': a tap is itself the unlocking gesture, so audio
+    // is about to start, and the thud plays the moment it does.
+    var t = ctx.currentTime;
+    try {
+      var out = ctx.createGain();
+      out.gain.setValueAtTime(0.0001, t);
+      out.gain.exponentialRampToValueAtTime(THUD_LEVEL, t + 0.004);
+      out.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+      out.connect(ctx.destination);
+
+      var body = ctx.createOscillator();
+      body.type = 'sine';
+      body.frequency.setValueAtTime(240, t);
+      body.frequency.exponentialRampToValueAtTime(90, t + 0.12);
+      body.connect(out);
+      body.start(t);
+      body.stop(t + 0.16);
+
+      if (!noiseBuf) {
+        noiseBuf = ctx.createBuffer(1, Math.round(ctx.sampleRate * 0.03), ctx.sampleRate);
+        var d = noiseBuf.getChannelData(0);
+        for (var k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
+      }
+      var noise = ctx.createBufferSource();
+      noise.buffer = noiseBuf;
+      var muffle = ctx.createBiquadFilter();
+      muffle.type = 'lowpass';
+      muffle.frequency.value = 900;
+      var noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.18, t);
+      noiseGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+      noise.connect(muffle);
+      muffle.connect(noiseGain);
+      noiseGain.connect(out);
+      noise.start(t);
+      debug('thud (audio ' + ctx.state + ')');
+    } catch (e) {}
+  }
+
+  // A tap that leaves the page (hub tiles, "?", back buttons) would cut its
+  // own thud off. Hold the page change until audio is running -- the first
+  // tap on a page can take several hundred ms on an iPhone to get there --
+  // and then a short beat more for the thud to sound.
+  var NAV_DELAY = 150;
+  var NAV_MAX_WAIT = 700;
+  function go(url){
+    if (isMuted() || !ctx) { window.location.href = url; return; }
+    var left = false;
+    function leave(){ if (!left) { left = true; window.location.href = url; } }
+    var started = performance.now();
+    (function waitForAudio(){
+      if (ctx.state === 'running') setTimeout(leave, NAV_DELAY);
+      else if (performance.now() - started > NAV_MAX_WAIT) leave();
+      else setTimeout(waitForAudio, 20);
+    })();
+  }
+
+  // One thud for every tap on something tappable, on pages that opt in with
+  // <html data-tap-sound> (being tried on Memory first). 'click' rather than
+  // pointerdown so scrolling over tiles stays silent. Elements marked
+  // data-own-sound (Copy the Pattern's pads) play their own sound instead.
+  var TAPPABLE = 'a[href], button, .tile, .cell, .tap-cell, .pad, .cluster-card, .equation-tap';
+  document.addEventListener('click', function(e){
+    if (!document.documentElement.hasAttribute('data-tap-sound')) return;
+    var el = e.target.closest && e.target.closest(TAPPABLE);
+    if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+    if (el.hasAttribute('data-own-sound')) return;
+    thud();
+    // Plain same-tab links: delay the page change like go() does. Modified
+    // clicks open new tabs -- leave them be.
+    if (el.tagName === 'A' && !el.target && !e.defaultPrevented &&
+        !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
+      e.preventDefault();
+      go(el.href);
+    }
+  }, true);
+
+  window.PLSound = { tone: tone, thud: thud, go: go, isMuted: isMuted, setMuted: setMuted };
 })();

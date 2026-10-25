@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-tap-sound>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -376,6 +376,7 @@
 
   <div class="celebration" id="celebration"></div>
 
+<script src="../sound.js?v=20261025f"></script>
 <script>
 (function(){
   "use strict";
@@ -1012,7 +1013,7 @@
     buildBoard();
   });
   els.refreshBtn.addEventListener('click', buildBoard);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // Re-lay the grid in the right orientation if the viewport crosses the
   // mobile breakpoint (rotating a real device, or resizing a window).
