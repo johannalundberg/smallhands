@@ -14,12 +14,6 @@
   "use strict";
 
   var MUTE_KEY = 'playandlearn.soundMuted';
-  var base = document.currentScript.src.replace(/[^\/]*$/, '') + 'sounds/';
-  var FILES = {
-    click:    'click.mp3'
-  };
-  // Per-sound playback level (1 = as delivered); none adjusted at the moment.
-  var VOLUME = {};
 
   // Mix with (not stop) whatever else is playing, and follow the iPhone's
   // silent switch -- a kids' site shouldn't override either.
@@ -27,22 +21,8 @@
 
   var AC = window.AudioContext || window.webkitAudioContext;
   var ctx = null;
-  var buffers = {};
   if (AC) {
     try { ctx = new AC(); } catch (e) { ctx = null; }
-  }
-  if (ctx) {
-    Object.keys(FILES).forEach(function(name){
-      // Versioned like sound.js itself, so a browser can't reuse a stale
-      // cached copy (or a cached "not found" from when the file was removed).
-      fetch(base + FILES[name] + '?v=20261025n')
-        .then(function(r){ return r.arrayBuffer(); })
-        .then(function(data){
-          // Callback form, not the promise form: older iOS Safari only has this one.
-          ctx.decodeAudioData(data, function(buf){ buffers[name] = buf; }, function(){});
-        })
-        .catch(function(){});
-    });
   }
 
   // iOS only unlocks audio from inside a gesture, and which events count has
@@ -104,23 +84,32 @@
     debugEl.textContent = (t + 's ' + msg + '\n' + debugEl.textContent).slice(0, 3000);
   }
 
+  // The click, rebuilt in code from Magnus's click file (PLAY&LEARN_UI_01.mp3):
+  // measured as a pure ~1075 Hz tone that reaches full level in 1ms, holds
+  // ~4ms and is gone by ~9ms. Played at 45% of the original's level. In code
+  // rather than from the file because Safari played that very short MP3
+  // silently, while every browser plays this the same.
+  var CLICK_HZ = 1075;
+  var CLICK_LEVEL = 0.28 * 0.45;
+
   function play(name){
-    debug(name + ': audio ' + (ctx ? ctx.state : 'none') +
-      (buffers[name] ? '' : ', NOT LOADED') + (isMuted() ? ', MUTED' : ''));
-    if (!ctx || !buffers[name] || isMuted()) return;
+    debug(name + ': audio ' + (ctx ? ctx.state : 'none') + (isMuted() ? ', MUTED' : ''));
+    if (!ctx || name !== 'click' || isMuted()) return;
     unlock();
     try {
-      var src = ctx.createBufferSource();
-      src.buffer = buffers[name];
-      if (VOLUME[name] != null) {
-        var gain = ctx.createGain();
-        gain.gain.value = VOLUME[name];
-        src.connect(gain);
-        gain.connect(ctx.destination);
-      } else {
-        src.connect(ctx.destination);
-      }
-      src.start(0);
+      var t = ctx.currentTime;
+      var gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(CLICK_LEVEL, t + 0.001);
+      gain.gain.setValueAtTime(CLICK_LEVEL, t + 0.005);
+      gain.gain.linearRampToValueAtTime(0, t + 0.0095);
+      gain.connect(ctx.destination);
+      var src = ctx.createOscillator();
+      src.type = 'sine';
+      src.frequency.value = CLICK_HZ;
+      src.connect(gain);
+      src.start(t);
+      src.stop(t + 0.012);
       // Asked for while iOS still has the page locked: it would sit queued
       // and burst out on the next real tap (Number Puzzle's sounds
       // playing when Back was pressed). Keep it only if the unlock lands
