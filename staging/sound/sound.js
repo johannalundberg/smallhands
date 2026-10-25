@@ -115,11 +115,11 @@
     } catch (e) {}
   }
 
-  // A soft thud for taps: a low "tok" whose pitch drops quickly (200 -> 90 Hz),
+  // A soft thud for taps: a low "tok" whose pitch drops quickly (170 -> 80 Hz),
   // plus a tiny muffled noise tap at the very start for the contact. Phone
   // speakers can't play real bass, so the body starts high enough to be
   // heard on a phone and only slides down into the low range.
-  var THUD_LEVEL = 0.25;
+  var THUD_LEVEL = 0.22;
   var noiseBuf = null;
   function thud(){
     if (!ctx || isMuted()) return;
@@ -129,14 +129,20 @@
     try {
       var out = ctx.createGain();
       out.gain.setValueAtTime(0.0001, t);
-      out.gain.exponentialRampToValueAtTime(THUD_LEVEL, t + 0.012); // eased in, not a hard hit
-      out.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
-      out.connect(ctx.destination);
+      out.gain.exponentialRampToValueAtTime(THUD_LEVEL, t + 0.02); // eased in, not a hard hit
+      out.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+      // Everything through one low-pass, so nothing in it has an edge -- muffled,
+      // like tapping through cloth.
+      var dull = ctx.createBiquadFilter();
+      dull.type = 'lowpass';
+      dull.frequency.value = 450;
+      out.connect(dull);
+      dull.connect(ctx.destination);
 
       var body = ctx.createOscillator();
       body.type = 'sine';
-      body.frequency.setValueAtTime(200, t);
-      body.frequency.exponentialRampToValueAtTime(90, t + 0.12);
+      body.frequency.setValueAtTime(170, t);
+      body.frequency.exponentialRampToValueAtTime(80, t + 0.12);
       body.connect(out);
       body.start(t);
       body.stop(t + 0.16);
@@ -150,9 +156,9 @@
       noise.buffer = noiseBuf;
       var muffle = ctx.createBiquadFilter();
       muffle.type = 'lowpass';
-      muffle.frequency.value = 600;
+      muffle.frequency.value = 400;
       var noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.07, t);
+      noiseGain.gain.setValueAtTime(0.03, t);
       noiseGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
       noise.connect(muffle);
       muffle.connect(noiseGain);
