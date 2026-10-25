@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tap-sound>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -376,7 +376,7 @@
     </svg>
   </div>
 
-<script src="../sound.js?v=20261025l"></script>
+<script src="../sound.js?v=20261025m"></script>
 <script>
 (function(){
   "use strict";
@@ -573,7 +573,7 @@
     setTimeout(function(){
       var move = computerMove();
       place(move, 'O');
-      PLSound.click({ ifRunning: true });
+      PLSound.play('click');
       state.busy = false;
       els.boardWrap.classList.remove('busy');
       checkEnd();

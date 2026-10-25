@@ -1,14 +1,25 @@
-// Sound for the site, all synthesized with Web Audio (no sound files): a short
-// click on every tap, and Copy the Pattern's pad tones. Loaded with a plain
-// <script src> by every page; the hub's speaker button sets the site-wide
-// mute flag read here.
-// Browsers keep a
-// page silent until it has been tapped; an AudioContext resumed once inside a
-// tap stays unlocked for the rest of the page, so later tones play on time.
+// Shared sound player for every page. Loaded with a plain <script src> from
+// each page (../sound.js from a game, sound.js from the hub), so sound files
+// resolve next to this file no matter which page loaded it.
+//
+// Web Audio instead of <audio> elements: iOS only lets a page start sound
+// from inside a tap, but most of these sounds fire later from a setTimeout
+// (a celebration 700ms after the last answer, the bot's winning move...).
+// An AudioContext resumed once inside any tap stays unlocked for the rest of
+// the page, so later sounds play whenever they're asked for.
+//
+// Mute state lives in localStorage and is only toggled from the hub's speaker
+// button; every page just reads it before playing.
 (function(){
   "use strict";
 
   var MUTE_KEY = 'playandlearn.soundMuted';
+  var base = document.currentScript.src.replace(/[^\/]*$/, '') + 'sounds/';
+  var FILES = {
+    click:    'click.mp3'
+  };
+  // Per-sound playback level (1 = as delivered); none adjusted at the moment.
+  var VOLUME = {};
 
   // Mix with (not stop) whatever else is playing, and follow the iPhone's
   // silent switch -- a kids' site shouldn't override either.
@@ -16,33 +27,27 @@
 
   var AC = window.AudioContext || window.webkitAudioContext;
   var ctx = null;
+  var buffers = {};
   if (AC) {
     try { ctx = new AC(); } catch (e) { ctx = null; }
   }
-
-  // ?sounddebug in the URL shows a small on-screen log of every tone and the
-  // audio state at that moment -- for diagnosing phone-only silence, where
-  // there's no console to look at.
-  var debugEl = null;
-  if (/[?&]sounddebug\b/.test(location.search)) {
-    document.addEventListener('DOMContentLoaded', function(){
-      debugEl = document.createElement('pre');
-      debugEl.style.cssText = 'position:fixed;left:4px;right:4px;bottom:4px;z-index:99999;margin:0;' +
-        'max-height:40vh;overflow:auto;padding:6px 8px;background:rgba(0,0,0,0.8);color:#0f0;' +
-        'font:11px/1.35 monospace;white-space:pre-wrap;pointer-events:none;';
-      document.body.appendChild(debugEl);
-      debug('loaded, audio ' + (ctx ? ctx.state : 'unsupported'));
+  if (ctx) {
+    Object.keys(FILES).forEach(function(name){
+      fetch(base + FILES[name])
+        .then(function(r){ return r.arrayBuffer(); })
+        .then(function(data){
+          // Callback form, not the promise form: older iOS Safari only has this one.
+          ctx.decodeAudioData(data, function(buf){ buffers[name] = buf; }, function(){});
+        })
+        .catch(function(){});
     });
   }
-  function debug(msg){
-    if (!debugEl) return;
-    var t = (performance.now() / 1000).toFixed(1);
-    debugEl.textContent = (t + 's ' + msg + '\n' + debugEl.textContent).slice(0, 3000);
-  }
 
-  // Which events count as the unlocking tap differs between browsers and iOS
-  // versions, so try on all of them. A silent one-sample buffer started inside
-  // the gesture is what some iOS versions need beyond resume().
+  // iOS only unlocks audio from inside a gesture, and which events count has
+  // shifted between versions -- so try on every touch/pointer event, not just
+  // the end of a tap: Number Puzzle is played entirely by dragging, and a
+  // drag's touchend alone didn't unlock it there. A silent one-sample buffer
+  // started inside the gesture is what some iOS versions need beyond resume().
   var primed = false;
   function unlock(e){
     if (!ctx) return;
@@ -60,7 +65,7 @@
         silent.connect(ctx.destination);
         silent.start(0);
         primed = true;
-      } catch (err) {}
+      } catch (e) {}
     }
   }
   ['touchstart', 'touchend', 'pointerdown', 'pointerup', 'mousedown', 'click', 'keydown'].forEach(function(type){
@@ -70,57 +75,124 @@
   function isMuted(){
     try { return localStorage.getItem(MUTE_KEY) === '1'; } catch (e) { return false; }
   }
-
-  // Keep the audio output awake while the page is open. After a few quiet
-  // seconds the Mac/iPhone powers its audio output down; the next tap then
-  // has to wake it, so that click came late (Back felt "very delayed") and
-  // the wake-up itself could pop, sounding like a second click. A 30 Hz hum
-  // at -66 dB is far below hearing (and below what speakers can play) but
-  // counts as "playing", so the output stays on. Stopped while the tab is
-  // hidden or sound is muted, so it costs nothing then.
-  var keepAlive = null;
-  function updateKeepAlive(){
-    var want = ctx && ctx.state === 'running' && !document.hidden && !isMuted();
-    if (want && !keepAlive) {
-      try {
-        var osc = ctx.createOscillator();
-        var g = ctx.createGain();
-        osc.frequency.value = 30;
-        g.gain.value = 0.0005;
-        osc.connect(g);
-        g.connect(ctx.destination);
-        osc.start();
-        keepAlive = osc;
-        debug('keep-alive on');
-      } catch (e) {}
-    } else if (!want && keepAlive) {
-      try { keepAlive.stop(); } catch (e) {}
-      keepAlive = null;
-      debug('keep-alive off');
-    }
-  }
-  if (ctx) {
-    ctx.onstatechange = updateKeepAlive;
-    document.addEventListener('visibilitychange', updateKeepAlive);
-    updateKeepAlive(); // browsers that start the page with audio already running
-  }
   function setMuted(muted){
     try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch (e) {}
-    updateKeepAlive();
   }
 
-  // A soft, marimba-like note: a sine at the pitch plus a brief quiet overtone
-  // four times higher for the mallet "knock", fast attack, ~0.45s decay.
-  // Notes are C5 E5 G5 A5, a pentatonic set, so any sequence sounds musical.
+  // ?sounddebug in the URL shows a small on-screen log of every sound request
+  // and the audio state at that moment -- for diagnosing iPhone-only silence,
+  // where there's no console to look at.
+  var debugEl = null;
+  if (/[?&]sounddebug\b/.test(location.search)) {
+    document.addEventListener('DOMContentLoaded', function(){
+      debugEl = document.createElement('pre');
+      debugEl.style.cssText = 'position:fixed;left:4px;right:4px;bottom:4px;z-index:99999;margin:0;' +
+        'max-height:40vh;overflow:auto;padding:6px 8px;background:rgba(0,0,0,0.8);color:#0f0;' +
+        'font:11px/1.35 monospace;white-space:pre-wrap;pointer-events:none;';
+      document.body.appendChild(debugEl);
+      debug('loaded, audio ' + (ctx ? ctx.state : 'unsupported'));
+    });
+    setInterval(function(){
+      if (debugEl) debugEl.dataset.state = ctx ? ctx.state : '-';
+    }, 500);
+  }
+  function debug(msg){
+    if (!debugEl) return;
+    var t = (performance.now() / 1000).toFixed(1);
+    debugEl.textContent = (t + 's ' + msg + '\n' + debugEl.textContent).slice(0, 3000);
+  }
+
+  function play(name){
+    debug(name + ': audio ' + (ctx ? ctx.state : 'none') +
+      (buffers[name] ? '' : ', NOT LOADED') + (isMuted() ? ', MUTED' : ''));
+    if (!ctx || !buffers[name] || isMuted()) return;
+    unlock();
+    try {
+      var src = ctx.createBufferSource();
+      src.buffer = buffers[name];
+      if (VOLUME[name] != null) {
+        var gain = ctx.createGain();
+        gain.gain.value = VOLUME[name];
+        src.connect(gain);
+        gain.connect(ctx.destination);
+      } else {
+        src.connect(ctx.destination);
+      }
+      src.start(0);
+      // Asked for while iOS still has the page locked: it would sit queued
+      // and burst out on the next real tap (Number Puzzle's sounds
+      // playing when Back was pressed). Keep it only if the unlock lands
+      // right away, as it does when this tap itself is the unlocking one.
+      if (ctx.state !== 'running') pending.push({ src: src, at: performance.now() });
+    } catch (e) {}
+  }
+  var pending = [];
+  // Generous: on an iPhone the first tap's unlock can take a good fraction
+  // of a second to get audio running, and that tap's own click must survive
+  // it. Only sounds left over from long before (drag-only play) are dropped.
+  var STALE_MS = 1000;
+  if (ctx) {
+    ctx.onstatechange = function(){
+      if (ctx.state !== 'running') return;
+      var now = performance.now();
+      pending.forEach(function(p){
+        if (now - p.at > STALE_MS) { try { p.src.stop(); } catch (e) {} }
+      });
+      pending = [];
+    };
+  }
+
+  // Leaving the page stops its sound instantly, so a tap that navigates (a
+  // hub tile, a back button) would cut its own click off before it's heard.
+  // Hold the page change just long enough for the click to play.
+  // If this tap is the page's first, audio is still starting up (it can take
+  // several hundred ms on an iPhone) -- wait for it to be running before
+  // counting the delay, or the page changes before the click ever sounds.
+  var NAV_DELAY = 150;
+  var NAV_MAX_WAIT = 700;
+  function go(url){
+    if (isMuted() || !ctx) { window.location.href = url; return; }
+    var left = false;
+    function leave(){ if (!left) { left = true; window.location.href = url; } }
+    var started = performance.now();
+    (function waitForAudio(){
+      if (ctx.state === 'running') setTimeout(leave, NAV_DELAY);
+      else if (performance.now() - started > NAV_MAX_WAIT) leave();
+      else setTimeout(waitForAudio, 20);
+    })();
+  }
+
+  // One click sound for every tap on something tappable, site-wide, so no page
+  // has to wire it per button. 'click' rather than pointerdown so scrolling the
+  // hub over its tiles stays silent. Number Puzzle's pieces are dragged, not
+  // clicked, so that page plays its own click on pickup instead.
+  // Elements marked data-own-sound (Copy the Pattern's pads) play their own
+  // sound instead of the click.
+  var CLICKABLE = 'a[href], button, .tile, .cell, .tap-cell, .pad, .cluster-card, .equation-tap';
+  document.addEventListener('click', function(e){
+    var el = e.target.closest && e.target.closest(CLICKABLE);
+    if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+    if (el.hasAttribute('data-own-sound')) return;
+    play('click');
+    // Plain same-tab links (hub tiles, "?", About's back arrow): delay the
+    // page change like go() does. Modified clicks open new tabs, leave them be.
+    if (el.tagName === 'A' && !el.target && !e.defaultPrevented &&
+        !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
+      e.preventDefault();
+      go(el.href);
+    }
+  }, true);
+
+  // Synthesized tones (no sound files): a soft, marimba-like note -- a sine
+  // at the pitch plus a brief quiet overtone four times higher for the
+  // mallet "knock", fast attack, ~0.45s decay. Notes are C5 E5 G5 A5, a
+  // pentatonic set, so any sequence of them sounds musical.
   var TONE_HZ = [523.25, 659.25, 783.99, 880.00];
   var TONE_LEVEL = 0.3;
   function tone(i){
-    // Never queued while the page is still locked -- a pattern's notes only
-    // make sense in time with the pads lighting up.
-    if (!ctx || isMuted() || ctx.state !== 'running') {
-      debug('tone ' + i + ': skipped (audio ' + (ctx ? ctx.state : 'none') + (isMuted() ? ', muted' : '') + ')');
-      return;
-    }
+    // Not queued while iOS still has the page locked -- a pattern's notes
+    // only make sense in time with the pads lighting up.
+    if (!ctx || isMuted() || ctx.state !== 'running') { debug('tone ' + i + ': skipped'); return; }
     var f = TONE_HZ[i % TONE_HZ.length];
     var t = ctx.currentTime;
     try {
@@ -150,77 +222,5 @@
     } catch (e) {}
   }
 
-  // The tap click, rebuilt in code from Magnus's click (PLAY&LEARN_UI_01.mp3):
-  // measured as a pure ~1075 Hz tone that reaches full level in 1ms, holds
-  // ~4ms and is gone by ~9ms. Played at 45% of the original's level.
-  // Synthesized rather than played from the file: Safari only plays a
-  // fraction of that very short MP3, so the file sounded different per browser.
-  var CLICK_HZ = 1075;
-  var CLICK_LEVEL = 0.28 * 0.45;
-  // ifRunning: for clicks not caused by a tap on this page (a bot's move,
-  // picking up a dragged piece, typing). Those play only if audio is already
-  // on -- otherwise they'd queue up while iOS keeps the page locked (drags
-  // never unlock it) and burst out together on the next real tap.
-  function click(opts){
-    if (!ctx || isMuted()) return;
-    if (opts && opts.ifRunning && ctx.state !== 'running') return;
-    // A tap's own click isn't gated on 'running': the tap is itself the
-    // unlocking gesture, so audio is about to start and it plays then.
-    var t = ctx.currentTime;
-    try {
-      var out = ctx.createGain();
-      out.gain.setValueAtTime(0, t);
-      out.gain.linearRampToValueAtTime(CLICK_LEVEL, t + 0.001);
-      out.gain.setValueAtTime(CLICK_LEVEL, t + 0.005);
-      out.gain.linearRampToValueAtTime(0, t + 0.0095);
-      out.connect(ctx.destination);
-      var osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = CLICK_HZ;
-      osc.connect(out);
-      osc.start(t);
-      osc.stop(t + 0.012);
-      debug('click (audio ' + ctx.state + ')');
-    } catch (e) {}
-  }
-
-  // A tap that leaves the page (hub tiles, "?", back buttons) would cut its
-  // own click off. Hold the page change until audio is running -- the first
-  // tap on a page can take several hundred ms on an iPhone to get there --
-  // and then a short beat more for the click to sound.
-  var NAV_DELAY = 150;
-  var NAV_MAX_WAIT = 700;
-  function go(url){
-    if (isMuted() || !ctx) { window.location.href = url; return; }
-    var left = false;
-    function leave(){ if (!left) { left = true; window.location.href = url; } }
-    var started = performance.now();
-    (function waitForAudio(){
-      if (ctx.state === 'running') setTimeout(leave, NAV_DELAY);
-      else if (performance.now() - started > NAV_MAX_WAIT) leave();
-      else setTimeout(waitForAudio, 20);
-    })();
-  }
-
-  // One click for every tap on something tappable, on pages that opt in with
-  // <html data-tap-sound> (being tried on Memory first). 'click' rather than
-  // pointerdown so scrolling over tiles stays silent. Elements marked
-  // data-own-sound (Copy the Pattern's pads) play their own sound instead.
-  var TAPPABLE = 'a[href], button, .tile, .cell, .tap-cell, .pad, .cluster-card, .equation-tap';
-  document.addEventListener('click', function(e){
-    if (!document.documentElement.hasAttribute('data-tap-sound')) return;
-    var el = e.target.closest && e.target.closest(TAPPABLE);
-    if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
-    if (el.hasAttribute('data-own-sound')) return;
-    click();
-    // Plain same-tab links: delay the page change like go() does. Modified
-    // clicks open new tabs -- leave them be.
-    if (el.tagName === 'A' && !el.target && !e.defaultPrevented &&
-        !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
-      e.preventDefault();
-      go(el.href);
-    }
-  }, true);
-
-  window.PLSound = { tone: tone, click: click, go: go, isMuted: isMuted, setMuted: setMuted };
+  window.PLSound = { play: play, tone: tone, go: go, isMuted: isMuted, setMuted: setMuted };
 })();

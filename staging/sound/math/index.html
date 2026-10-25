@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-tap-sound>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -494,7 +494,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025l"></script>
+<script src="../sound.js?v=20261025m"></script>
 <script>
 (function(){
   "use strict";
@@ -780,11 +780,12 @@
     }
   }
 
+  // A click per typed (or deleted) digit, like every other tap on the site.
   els.answerInput.addEventListener('input', function(){
     var digits = els.answerInput.value.replace(/[^0-9]/g, '');
     var maxLen = String(state.answerValue).length;
     if (digits.length > maxLen) digits = digits.slice(0, maxLen);
-    if (digits !== state.input) PLSound.click({ ifRunning: true }); // a click per typed/deleted digit
+    if (digits !== state.input) PLSound.play('click');
     state.input = digits;
     if (els.answerInput.value !== digits) els.answerInput.value = digits;
     render();
