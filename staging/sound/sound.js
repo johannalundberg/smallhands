@@ -41,7 +41,7 @@
   var buffers = {};
   if (ctx) {
     Object.keys(FILES).forEach(function(name){
-      fetch(base + FILES[name] + '?v=20261025z')
+      fetch(base + FILES[name] + '?v=20261025za')
         .then(function(r){ return r.arrayBuffer(); })
         .then(function(data){
           // Callback form, not the promise form: older iOS Safari only has this one.
@@ -232,7 +232,7 @@
   // mallet "knock", fast attack, ~0.45s decay. Notes are C5 E5 G5 A5, a
   // pentatonic set, so any sequence of them sounds musical.
   var TONE_HZ = [523.25, 659.25, 783.99, 880.00];
-  var TONE_LEVEL = 0.3 * 0.45; // 45% of the tones' original level, like the other sounds
+  var TONE_LEVEL = 0.3 * 0.35; // 35% of the tones' original level
   function tone(i){
     // Not queued while iOS still has the page locked -- a pattern's notes
     // only make sense in time with the pads lighting up.
