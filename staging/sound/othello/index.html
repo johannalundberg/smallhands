@@ -371,7 +371,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025u"></script>
+<script src="../sound.js?v=20261025v"></script>
 <script>
 (function(){
   "use strict";
@@ -629,7 +629,9 @@
       state.busy = true;
       setTimeout(function(){
         var move = computerMove();
-        if (move) { playMove(move, 'W'); PLSound.play('click'); }
+        // Click on the next tick: right after the bot's (sometimes heavy)
+        // thinking, the audio clock reading is still stale.
+        if (move) { playMove(move, 'W'); setTimeout(function(){ PLSound.play('click'); }, 0); }
       }, 500 + Math.random() * 400);
     }
   }

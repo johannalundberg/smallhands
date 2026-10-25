@@ -41,7 +41,7 @@
   var buffers = {};
   if (ctx) {
     Object.keys(FILES).forEach(function(name){
-      fetch(base + FILES[name] + '?v=20261025u')
+      fetch(base + FILES[name] + '?v=20261025v')
         .then(function(r){ return r.arrayBuffer(); })
         .then(function(data){
           // Callback form, not the promise form: older iOS Safari only has this one.
@@ -115,6 +115,12 @@
   // ~4ms and is gone by ~9ms. Played at 45% of the original's level. In code
   // rather than from the file because Safari played that very short MP3
   // silently, while every browser plays this the same.
+  // Every click and tone is scheduled a hair ahead of the audio clock. Asked
+  // to start at exactly currentTime, it can land a few ms in the past (that
+  // clock reading goes stale while the page is busy, e.g. Othello's bot
+  // thinking) and then starts partway into its 9ms shape -- the soft start
+  // cut off, so the same click sounded sharper or thinner now and then.
+  var LOOKAHEAD = 0.015;
   var CLICK_HZ = 1075;
   var CLICK_LEVEL = 0.28 * 0.45;
 
@@ -126,7 +132,7 @@
     if (!isClick) { playFile(name); return; }
     unlock();
     try {
-      var t = ctx.currentTime;
+      var t = ctx.currentTime + LOOKAHEAD;
       var gain = ctx.createGain();
       gain.gain.setValueAtTime(0, t);
       gain.gain.linearRampToValueAtTime(CLICK_LEVEL, t + 0.001);
@@ -232,7 +238,7 @@
     // only make sense in time with the pads lighting up.
     if (!ctx || isMuted() || ctx.state !== 'running') { debug('tone ' + i + ': skipped'); return; }
     var f = TONE_HZ[i % TONE_HZ.length];
-    var t = ctx.currentTime;
+    var t = ctx.currentTime + LOOKAHEAD;
     try {
       var out = ctx.createGain();
       out.gain.setValueAtTime(0.0001, t);
