@@ -41,7 +41,7 @@
   var buffers = {};
   if (ctx) {
     Object.keys(FILES).forEach(function(name){
-      fetch(base + FILES[name] + '?v=20261025zc')
+      fetch(base + FILES[name] + '?v=20261025zd')
         .then(function(r){ return r.arrayBuffer(); })
         .then(function(data){
           // Callback form, not the promise form: older iOS Safari only has this one.
@@ -129,61 +129,64 @@
     debug(name + ': audio ' + (ctx ? ctx.state : 'none') +
       (isClick || buffers[name] ? '' : ', NOT LOADED') + (isMuted() ? ', MUTED' : ''));
     if (!ctx || isMuted()) return;
-    if (!isClick) { playFile(name); return; }
+    if (!isClick && !buffers[name]) return;
     unlock();
-    try {
-      var t = ctx.currentTime + LOOKAHEAD;
-      var gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(CLICK_LEVEL, t + 0.001);
-      gain.gain.setValueAtTime(CLICK_LEVEL, t + 0.005);
-      gain.gain.linearRampToValueAtTime(0, t + 0.0095);
-      gain.connect(ctx.destination);
-      var src = ctx.createOscillator();
-      src.type = 'sine';
-      src.frequency.value = CLICK_HZ;
-      src.connect(gain);
-      src.start(t);
-      src.stop(t + 0.012);
-      // Asked for while iOS still has the page locked: it would sit queued
-      // and burst out on the next real tap (Number Puzzle's sounds
-      // playing when Back was pressed). Keep it only if the unlock lands
-      // right away, as it does when this tap itself is the unlocking one.
-      if (ctx.state !== 'running') pending.push({ src: src, at: performance.now() });
-    } catch (e) {}
+    var render = isClick ? renderClick : function(){ renderFile(name); };
+    if (ctx.state === 'running') { render(); return; }
+    // Audio is still starting (the first tap on a page is what switches it
+    // on). Don't schedule into that start-up: on an iPad, sound scheduled
+    // there was sometimes lost and sometimes heard several times over. Wait
+    // until audio is fully on, then play it once -- or skip it if that takes
+    // too long (also drops anything left from drag-only play, where audio
+    // never starts until a real tap).
+    waiting.push({ render: render, at: performance.now() });
   }
-  function playFile(name){
-    if (!buffers[name]) return;
-    unlock();
-    try {
-      var src = ctx.createBufferSource();
-      src.buffer = buffers[name];
-      if (VOLUME[name] != null) {
-        var level = ctx.createGain();
-        level.gain.value = VOLUME[name];
-        src.connect(level);
-        level.connect(ctx.destination);
-      } else {
-        src.connect(ctx.destination);
-      }
-      src.start(0);
-      if (ctx.state !== 'running') pending.push({ src: src, at: performance.now() });
-    } catch (e) {}
-  }
-  var pending = [];
-  // Generous: on an iPhone the first tap's unlock can take a good fraction
-  // of a second to get audio running, and that tap's own click must survive
-  // it. Only sounds left over from long before (drag-only play) are dropped.
-  var STALE_MS = 1000;
+
+  var waiting = [];
+  var MAX_WAIT_MS = 800;   // longer than this and the moment has passed
+  var SETTLE_MS = 30;      // let freshly started audio settle first
   if (ctx) {
     ctx.onstatechange = function(){
-      if (ctx.state !== 'running') return;
-      var now = performance.now();
-      pending.forEach(function(p){
-        if (now - p.at > STALE_MS) { try { p.src.stop(); } catch (e) {} }
-      });
-      pending = [];
+      if (ctx.state !== 'running' || !waiting.length) return;
+      var due = waiting;
+      waiting = [];
+      setTimeout(function(){
+        var now = performance.now();
+        due.forEach(function(w){
+          if (now - w.at <= MAX_WAIT_MS) { try { w.render(); } catch (e) {} }
+        });
+      }, SETTLE_MS);
     };
+  }
+
+  function renderClick(){
+    var t = ctx.currentTime + LOOKAHEAD;
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(CLICK_LEVEL, t + 0.001);
+    gain.gain.setValueAtTime(CLICK_LEVEL, t + 0.005);
+    gain.gain.linearRampToValueAtTime(0, t + 0.0095);
+    gain.connect(ctx.destination);
+    var src = ctx.createOscillator();
+    src.type = 'sine';
+    src.frequency.value = CLICK_HZ;
+    src.connect(gain);
+    src.start(t);
+    src.stop(t + 0.012);
+  }
+
+  function renderFile(name){
+    var src = ctx.createBufferSource();
+    src.buffer = buffers[name];
+    if (VOLUME[name] != null) {
+      var level = ctx.createGain();
+      level.gain.value = VOLUME[name];
+      src.connect(level);
+      level.connect(ctx.destination);
+    } else {
+      src.connect(ctx.destination);
+    }
+    src.start(ctx.currentTime + LOOKAHEAD);
   }
 
   // Leaving the page stops its sound instantly, so a tap that navigates (a
