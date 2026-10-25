@@ -494,7 +494,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025p"></script>
+<script src="../sound.js?v=20261025q"></script>
 <script>
 (function(){
   "use strict";
@@ -802,6 +802,7 @@
 
   function flashCorrect(){
     state.busy = true;
+    PLSound.play('positive');
     clearTimeout(flashTimer);
     document.body.style.background = 'var(--success)';
     flashTimer = setTimeout(function(){
@@ -850,6 +851,7 @@
 
   function flashIncorrect(){
     state.busy = true;
+    PLSound.play('negative');
     clearTimeout(flashTimer);
     document.body.style.background = 'var(--incorrect)';
     flashTimer = setTimeout(function(){

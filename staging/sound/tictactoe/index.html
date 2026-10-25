@@ -376,7 +376,7 @@
     </svg>
   </div>
 
-<script src="../sound.js?v=20261025p"></script>
+<script src="../sound.js?v=20261025q"></script>
 <script>
 (function(){
   "use strict";
@@ -589,9 +589,9 @@
     var res = getResult(state.board);
     if(!res.winner) return false;
     state.over = true;
-    if(res.winner === 'draw') runFade(allIndices(), '--draw', resetBoard);
-    else if(res.winner === 'X') runFade(res.line, '--success', onWinResolved);
-    else runFade(res.line, '--incorrect', onLoseResolved);
+    if(res.winner === 'draw'){ PLSound.play('negative'); runFade(allIndices(), '--draw', resetBoard); }
+    else if(res.winner === 'X'){ PLSound.play('positive'); runFade(res.line, '--success', onWinResolved); }
+    else { PLSound.play('negative'); runFade(res.line, '--incorrect', onLoseResolved); }
     return true;
   }
 

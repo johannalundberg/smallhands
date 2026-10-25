@@ -357,7 +357,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025p"></script>
+<script src="../sound.js?v=20261025q"></script>
 <script>
 (function(){
   "use strict";
@@ -594,6 +594,8 @@
         if (state.progress >= ROUND_SIZE) {
           showCelebration();
         } else {
+          // A beat after the last note, so the two don't land on top of each other.
+          guardedTimeout(function(){ PLSound.play('positive'); }, 250);
           // Block input for the gap before playback resumes -- otherwise a tap
           // landing in this window is checked against the stale inputIndex/
           // sequence pairing and can double-advance or crash.
@@ -604,6 +606,7 @@
         }
       }
     } else {
+      PLSound.play('negative');
       state.roundAttempts += 1;
       if (state.roundAttempts >= MAX_ROUND_ATTEMPTS) {
         // Unlike every other game on the site, Copy the Pattern has a real

@@ -388,7 +388,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025p"></script>
+<script src="../sound.js?v=20261025q"></script>
 <script>
 (function(){
   "use strict";
@@ -903,6 +903,7 @@
 
   function onSolved(){
     state.busy = true;
+    PLSound.play('positive');
     document.body.style.background = 'var(--success)';
     els.boardLines.classList.add('solved');
     var boardPx = state.bounds[state.bounds.length - 1];

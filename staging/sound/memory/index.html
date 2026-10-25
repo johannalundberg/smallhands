@@ -376,7 +376,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025p"></script>
+<script src="../sound.js?v=20261025q"></script>
 <script>
 (function(){
   "use strict";
@@ -954,6 +954,7 @@
     state.busy = true;
     var a = state.open[0], b = state.open[1];
     if (a.dataset.pair === b.dataset.pair) {
+      PLSound.play('positive');
       a.classList.add('matched');
       b.classList.add('matched');
       a.classList.remove('open');
@@ -973,6 +974,7 @@
         if (isFinalPair) showCelebration();
       }, 750);
     } else {
+      PLSound.play('negative');
       setTimeout(function(){
         a.classList.remove('open');
         b.classList.remove('open');

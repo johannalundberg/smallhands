@@ -331,7 +331,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025p"></script>
+<script src="../sound.js?v=20261025q"></script>
 <script>
 (function(){
   "use strict";
@@ -581,6 +581,7 @@
 
   function flashWrong(card){
     state.busy = true;
+    PLSound.play('negative');
     card.classList.add('wrong', 'pop');
     setTimeout(function(){
       card.classList.remove('wrong', 'pop');
@@ -590,6 +591,7 @@
 
   function flashCorrect(card){
     state.busy = true;
+    PLSound.play('positive');
     card.classList.add('correct', 'pop');
     setTimeout(function(){
       state.progress++;

@@ -25,6 +25,27 @@
     try { ctx = new AC(); } catch (e) { ctx = null; }
   }
 
+  // Recorded sounds (Magnus's UI toolbox, PLAY&LEARN_UI_03 / _04), kept as
+  // WAV: Safari's Web Audio played a short MP3 silently. URLs are versioned
+  // so a browser never reuses a stale cached copy.
+  var base = document.currentScript.src.replace(/[^\/]*$/, '') + 'sounds/';
+  var FILES = {
+    positive: 'positive.wav',
+    negative: 'negative.wav'
+  };
+  var buffers = {};
+  if (ctx) {
+    Object.keys(FILES).forEach(function(name){
+      fetch(base + FILES[name] + '?v=20261025q')
+        .then(function(r){ return r.arrayBuffer(); })
+        .then(function(data){
+          // Callback form, not the promise form: older iOS Safari only has this one.
+          ctx.decodeAudioData(data, function(buf){ buffers[name] = buf; }, function(){});
+        })
+        .catch(function(){});
+    });
+  }
+
   // iOS only unlocks audio from inside a gesture, and which events count has
   // shifted between versions -- so try on every touch/pointer event, not just
   // the end of a tap: Number Puzzle is played entirely by dragging, and a
@@ -93,8 +114,11 @@
   var CLICK_LEVEL = 0.28 * 0.45;
 
   function play(name){
-    debug(name + ': audio ' + (ctx ? ctx.state : 'none') + (isMuted() ? ', MUTED' : ''));
-    if (!ctx || name !== 'click' || isMuted()) return;
+    var isClick = name === 'click';
+    debug(name + ': audio ' + (ctx ? ctx.state : 'none') +
+      (isClick || buffers[name] ? '' : ', NOT LOADED') + (isMuted() ? ', MUTED' : ''));
+    if (!ctx || isMuted()) return;
+    if (!isClick) { playFile(name); return; }
     unlock();
     try {
       var t = ctx.currentTime;
@@ -114,6 +138,17 @@
       // and burst out on the next real tap (Number Puzzle's sounds
       // playing when Back was pressed). Keep it only if the unlock lands
       // right away, as it does when this tap itself is the unlocking one.
+      if (ctx.state !== 'running') pending.push({ src: src, at: performance.now() });
+    } catch (e) {}
+  }
+  function playFile(name){
+    if (!buffers[name]) return;
+    unlock();
+    try {
+      var src = ctx.createBufferSource();
+      src.buffer = buffers[name];
+      src.connect(ctx.destination);
+      src.start(0);
       if (ctx.state !== 'running') pending.push({ src: src, at: performance.now() });
     } catch (e) {}
   }
