@@ -70,8 +70,43 @@
   function isMuted(){
     try { return localStorage.getItem(MUTE_KEY) === '1'; } catch (e) { return false; }
   }
+
+  // Keep the audio output awake while the page is open. After a few quiet
+  // seconds the Mac/iPhone powers its audio output down; the next tap then
+  // has to wake it, so that click came late (Back felt "very delayed") and
+  // the wake-up itself could pop, sounding like a second click. A 30 Hz hum
+  // at -66 dB is far below hearing (and below what speakers can play) but
+  // counts as "playing", so the output stays on. Stopped while the tab is
+  // hidden or sound is muted, so it costs nothing then.
+  var keepAlive = null;
+  function updateKeepAlive(){
+    var want = ctx && ctx.state === 'running' && !document.hidden && !isMuted();
+    if (want && !keepAlive) {
+      try {
+        var osc = ctx.createOscillator();
+        var g = ctx.createGain();
+        osc.frequency.value = 30;
+        g.gain.value = 0.0005;
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start();
+        keepAlive = osc;
+        debug('keep-alive on');
+      } catch (e) {}
+    } else if (!want && keepAlive) {
+      try { keepAlive.stop(); } catch (e) {}
+      keepAlive = null;
+      debug('keep-alive off');
+    }
+  }
+  if (ctx) {
+    ctx.onstatechange = updateKeepAlive;
+    document.addEventListener('visibilitychange', updateKeepAlive);
+    updateKeepAlive(); // browsers that start the page with audio already running
+  }
   function setMuted(muted){
     try { localStorage.setItem(MUTE_KEY, muted ? '1' : '0'); } catch (e) {}
+    updateKeepAlive();
   }
 
   // A soft, marimba-like note: a sine at the pitch plus a brief quiet overtone
