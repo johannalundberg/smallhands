@@ -35,12 +35,13 @@
     complete: 'complete.wav',  // with the big win smiley
     tryagain: 'tryagain.wav'   // with the sad face
   };
-  // Playback level per sound (1 = as delivered); all four sit at 45%.
-  var VOLUME = { positive: 0.45, negative: 0.45, complete: 0.45, tryagain: 0.45 };
+  // Playback level per sound (1 = as delivered). The short right/wrong sounds
+  // play many times per game, so they sit lowest.
+  var VOLUME = { positive: 0.35, negative: 0.35, complete: 0.45, tryagain: 0.45 };
   var buffers = {};
   if (ctx) {
     Object.keys(FILES).forEach(function(name){
-      fetch(base + FILES[name] + '?v=20261025t')
+      fetch(base + FILES[name] + '?v=20261025u')
         .then(function(r){ return r.arrayBuffer(); })
         .then(function(data){
           // Callback form, not the promise form: older iOS Safari only has this one.
