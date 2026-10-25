@@ -41,7 +41,7 @@
   var buffers = {};
   if (ctx) {
     Object.keys(FILES).forEach(function(name){
-      fetch(base + FILES[name] + '?v=20261025za')
+      fetch(base + FILES[name] + '?v=20261025zb')
         .then(function(r){ return r.arrayBuffer(); })
         .then(function(data){
           // Callback form, not the promise form: older iOS Safari only has this one.
@@ -194,7 +194,18 @@
   // counting the delay, or the page changes before the click ever sounds.
   var NAV_DELAY = 150;
   var NAV_MAX_WAIT = 700;
+  // Once a tap has started leaving the page, it's leaving: further taps are
+  // ignored. Waiting for audio can take a moment on an iPad, and a second tap
+  // in that gap used to queue another click and another page change -- then
+  // several clicks burst out together once audio started.
+  var leaving = false;
+  // Coming back with the browser's Back button can restore this page exactly
+  // as it was left (mid-leave), so reset then.
+  window.addEventListener('pageshow', function(){ leaving = false; });
+
   function go(url){
+    if (leaving) return;
+    leaving = true;
     if (isMuted() || !ctx) { window.location.href = url; return; }
     var left = false;
     function leave(){ if (!left) { left = true; window.location.href = url; } }
@@ -216,6 +227,12 @@
   document.addEventListener('click', function(e){
     var el = e.target.closest && e.target.closest(CLICKABLE);
     if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+    if (leaving) {
+      // Already on the way out: swallow the tap -- no click, no second page change.
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     if (el.hasAttribute('data-own-sound')) return;
     play('click');
     // Plain same-tab links (hub tiles, "?", About's back arrow): delay the
