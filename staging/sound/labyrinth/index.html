@@ -295,7 +295,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025q"></script>
+<script src="../sound.js?v=20261025r"></script>
 <script>
 (function(){
   "use strict";
@@ -810,6 +810,7 @@
   function showCelebration(){
     updateAppHeight();
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){

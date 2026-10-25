@@ -376,7 +376,7 @@
     </svg>
   </div>
 
-<script src="../sound.js?v=20261025q"></script>
+<script src="../sound.js?v=20261025r"></script>
 <script>
 (function(){
   "use strict";
@@ -638,12 +638,14 @@
   function showComputerMilestone(){
     updateAppHeight();
     els.loseOverlay.classList.add('show');
+    PLSound.play('tryagain');
     dismissTimer = setTimeout(finishMilestone, 3000);
   }
 
   function showYay(){
     updateAppHeight();
     els.yayOverlay.classList.add('show');
+    PLSound.play('complete');
     dismissTimer = setTimeout(finishMilestone, 3000);
   }
 

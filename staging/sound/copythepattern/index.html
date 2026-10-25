@@ -357,7 +357,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025q"></script>
+<script src="../sound.js?v=20261025r"></script>
 <script>
 (function(){
   "use strict";
@@ -647,6 +647,8 @@
   function showCelebration(){
     updateAppHeight();
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    // A beat after the winning tap's tone, so the two don't land together.
+    setTimeout(function(){ PLSound.play('complete'); }, 250);
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
@@ -671,6 +673,7 @@
   function showLoss(){
     updateAppHeight();
     els.celebration.innerHTML = SAD_FACE_SVG;
+    PLSound.play('tryagain');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){

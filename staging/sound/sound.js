@@ -25,18 +25,20 @@
     try { ctx = new AC(); } catch (e) { ctx = null; }
   }
 
-  // Recorded sounds (Magnus's UI toolbox, PLAY&LEARN_UI_03 / _04), kept as
+  // Recorded sounds (Magnus's UI toolbox, PLAY&LEARN_UI_03 / _04 / _07 / _08), kept as
   // WAV: Safari's Web Audio played a short MP3 silently. URLs are versioned
   // so a browser never reuses a stale cached copy.
   var base = document.currentScript.src.replace(/[^\/]*$/, '') + 'sounds/';
   var FILES = {
     positive: 'positive.wav',
-    negative: 'negative.wav'
+    negative: 'negative.wav',
+    complete: 'complete.wav',  // with the big win smiley
+    tryagain: 'tryagain.wav'   // with the sad face
   };
   var buffers = {};
   if (ctx) {
     Object.keys(FILES).forEach(function(name){
-      fetch(base + FILES[name] + '?v=20261025q')
+      fetch(base + FILES[name] + '?v=20261025r')
         .then(function(r){ return r.arrayBuffer(); })
         .then(function(data){
           // Callback form, not the promise form: older iOS Safari only has this one.

@@ -494,7 +494,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025q"></script>
+<script src="../sound.js?v=20261025r"></script>
 <script>
 (function(){
   "use strict";
@@ -838,6 +838,7 @@
     // center against the known full-height value instead of waiting for it.
     document.documentElement.style.setProperty('--app-height', noKeyboardHeight + 'px');
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
     els.equationTap.style.display = 'none';
     els.celebration.style.display = 'flex';
     flashTimer = setTimeout(function(){
