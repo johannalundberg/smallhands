@@ -115,11 +115,11 @@
     } catch (e) {}
   }
 
-  // A soft thud for taps: a low "tok" whose pitch drops quickly (240 -> 90 Hz),
+  // A soft thud for taps: a low "tok" whose pitch drops quickly (200 -> 90 Hz),
   // plus a tiny muffled noise tap at the very start for the contact. Phone
   // speakers can't play real bass, so the body starts high enough to be
   // heard on a phone and only slides down into the low range.
-  var THUD_LEVEL = 0.45;
+  var THUD_LEVEL = 0.25;
   var noiseBuf = null;
   function thud(){
     if (!ctx || isMuted()) return;
@@ -129,13 +129,13 @@
     try {
       var out = ctx.createGain();
       out.gain.setValueAtTime(0.0001, t);
-      out.gain.exponentialRampToValueAtTime(THUD_LEVEL, t + 0.004);
+      out.gain.exponentialRampToValueAtTime(THUD_LEVEL, t + 0.012); // eased in, not a hard hit
       out.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
       out.connect(ctx.destination);
 
       var body = ctx.createOscillator();
       body.type = 'sine';
-      body.frequency.setValueAtTime(240, t);
+      body.frequency.setValueAtTime(200, t);
       body.frequency.exponentialRampToValueAtTime(90, t + 0.12);
       body.connect(out);
       body.start(t);
@@ -150,9 +150,9 @@
       noise.buffer = noiseBuf;
       var muffle = ctx.createBiquadFilter();
       muffle.type = 'lowpass';
-      muffle.frequency.value = 900;
+      muffle.frequency.value = 600;
       var noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.18, t);
+      noiseGain.gain.setValueAtTime(0.07, t);
       noiseGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
       noise.connect(muffle);
       muffle.connect(noiseGain);
