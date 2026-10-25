@@ -1,5 +1,5 @@
-// Sound for the site, all synthesized with Web Audio (no sound files): a soft
-// thud on every tap, and Copy the Pattern's pad tones. Loaded with a plain
+// Sound for the site, all synthesized with Web Audio (no sound files): a short
+// click on every tap, and Copy the Pattern's pad tones. Loaded with a plain
 // <script src> by every page; the hub's speaker button sets the site-wide
 // mute flag read here.
 // Browsers keep a
@@ -115,63 +115,39 @@
     } catch (e) {}
   }
 
-  // A soft thud for taps: a low "tok" whose pitch drops quickly (170 -> 80 Hz),
-  // plus a tiny muffled noise tap at the very start for the contact. Phone
-  // speakers can't play real bass, so the body starts high enough to be
-  // heard on a phone and only slides down into the low range.
-  var THUD_LEVEL = 0.22;
-  var noiseBuf = null;
-  function thud(){
+  // The tap click, rebuilt in code from Magnus's click (PLAY&LEARN_UI_01.mp3):
+  // measured as a pure ~1075 Hz tone that reaches full level in 1ms, holds
+  // ~4ms and is gone by ~9ms. Played at 70% of the original's level.
+  // Synthesized rather than played from the file: Safari only plays a
+  // fraction of that very short MP3, so the file sounded different per browser.
+  var CLICK_HZ = 1075;
+  var CLICK_LEVEL = 0.28 * 0.7;
+  function click(){
     if (!ctx || isMuted()) return;
     // Not gated on 'running': a tap is itself the unlocking gesture, so audio
-    // is about to start, and the thud plays the moment it does.
+    // is about to start, and the click plays the moment it does.
     var t = ctx.currentTime;
     try {
       var out = ctx.createGain();
-      out.gain.setValueAtTime(0.0001, t);
-      out.gain.exponentialRampToValueAtTime(THUD_LEVEL, t + 0.02); // eased in, not a hard hit
-      out.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-      // Everything through one low-pass, so nothing in it has an edge -- muffled,
-      // like tapping through cloth.
-      var dull = ctx.createBiquadFilter();
-      dull.type = 'lowpass';
-      dull.frequency.value = 450;
-      out.connect(dull);
-      dull.connect(ctx.destination);
-
-      var body = ctx.createOscillator();
-      body.type = 'sine';
-      body.frequency.setValueAtTime(170, t);
-      body.frequency.exponentialRampToValueAtTime(80, t + 0.12);
-      body.connect(out);
-      body.start(t);
-      body.stop(t + 0.16);
-
-      if (!noiseBuf) {
-        noiseBuf = ctx.createBuffer(1, Math.round(ctx.sampleRate * 0.03), ctx.sampleRate);
-        var d = noiseBuf.getChannelData(0);
-        for (var k = 0; k < d.length; k++) d[k] = Math.random() * 2 - 1;
-      }
-      var noise = ctx.createBufferSource();
-      noise.buffer = noiseBuf;
-      var muffle = ctx.createBiquadFilter();
-      muffle.type = 'lowpass';
-      muffle.frequency.value = 400;
-      var noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.03, t);
-      noiseGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
-      noise.connect(muffle);
-      muffle.connect(noiseGain);
-      noiseGain.connect(out);
-      noise.start(t);
-      debug('thud (audio ' + ctx.state + ')');
+      out.gain.setValueAtTime(0, t);
+      out.gain.linearRampToValueAtTime(CLICK_LEVEL, t + 0.001);
+      out.gain.setValueAtTime(CLICK_LEVEL, t + 0.005);
+      out.gain.linearRampToValueAtTime(0, t + 0.0095);
+      out.connect(ctx.destination);
+      var osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = CLICK_HZ;
+      osc.connect(out);
+      osc.start(t);
+      osc.stop(t + 0.012);
+      debug('click (audio ' + ctx.state + ')');
     } catch (e) {}
   }
 
   // A tap that leaves the page (hub tiles, "?", back buttons) would cut its
-  // own thud off. Hold the page change until audio is running -- the first
+  // own click off. Hold the page change until audio is running -- the first
   // tap on a page can take several hundred ms on an iPhone to get there --
-  // and then a short beat more for the thud to sound.
+  // and then a short beat more for the click to sound.
   var NAV_DELAY = 150;
   var NAV_MAX_WAIT = 700;
   function go(url){
@@ -186,7 +162,7 @@
     })();
   }
 
-  // One thud for every tap on something tappable, on pages that opt in with
+  // One click for every tap on something tappable, on pages that opt in with
   // <html data-tap-sound> (being tried on Memory first). 'click' rather than
   // pointerdown so scrolling over tiles stays silent. Elements marked
   // data-own-sound (Copy the Pattern's pads) play their own sound instead.
@@ -196,7 +172,7 @@
     var el = e.target.closest && e.target.closest(TAPPABLE);
     if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
     if (el.hasAttribute('data-own-sound')) return;
-    thud();
+    click();
     // Plain same-tab links: delay the page change like go() does. Modified
     // clicks open new tabs -- leave them be.
     if (el.tagName === 'A' && !el.target && !e.defaultPrevented &&
@@ -206,5 +182,5 @@
     }
   }, true);
 
-  window.PLSound = { tone: tone, thud: thud, go: go, isMuted: isMuted, setMuted: setMuted };
+  window.PLSound = { tone: tone, click: click, go: go, isMuted: isMuted, setMuted: setMuted };
 })();
