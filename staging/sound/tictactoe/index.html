@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-tap-sound>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
@@ -376,6 +376,7 @@
     </svg>
   </div>
 
+<script src="../sound.js?v=20261025k"></script>
 <script>
 (function(){
   "use strict";
@@ -572,6 +573,7 @@
     setTimeout(function(){
       var move = computerMove();
       place(move, 'O');
+      PLSound.click({ ifRunning: true });
       state.busy = false;
       els.boardWrap.classList.remove('busy');
       checkEnd();
@@ -683,7 +685,7 @@
   els.yayOverlay.addEventListener('click', finishMilestone);
   els.loseOverlay.addEventListener('click', finishMilestone);
   els.refreshBtn.addEventListener('click', restartRound);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   els.diffGroup.addEventListener('click', function(e){
     var btn = e.target.closest('.diff-btn');

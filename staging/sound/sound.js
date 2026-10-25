@@ -122,10 +122,15 @@
   // fraction of that very short MP3, so the file sounded different per browser.
   var CLICK_HZ = 1075;
   var CLICK_LEVEL = 0.28 * 0.45;
-  function click(){
+  // ifRunning: for clicks not caused by a tap on this page (a bot's move,
+  // picking up a dragged piece, typing). Those play only if audio is already
+  // on -- otherwise they'd queue up while iOS keeps the page locked (drags
+  // never unlock it) and burst out together on the next real tap.
+  function click(opts){
     if (!ctx || isMuted()) return;
-    // Not gated on 'running': a tap is itself the unlocking gesture, so audio
-    // is about to start, and the click plays the moment it does.
+    if (opts && opts.ifRunning && ctx.state !== 'running') return;
+    // A tap's own click isn't gated on 'running': the tap is itself the
+    // unlocking gesture, so audio is about to start and it plays then.
     var t = ctx.currentTime;
     try {
       var out = ctx.createGain();
