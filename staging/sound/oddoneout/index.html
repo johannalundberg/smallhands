@@ -555,6 +555,9 @@
       var card = document.createElement('div');
       card.className = 'cluster-card';
       card.dataset.index = i;
+      // Every card tap already plays positive or negative -- skip the click
+      // so two sounds never land at once.
+      card.setAttribute('data-own-sound', '');
       card.innerHTML = '<svg viewBox="0 0 100 100">' + shapes.map(shapeSvg).join('') + '</svg>';
       card.addEventListener('click', onCardTap);
       els.clusterRow.appendChild(card);
