@@ -207,7 +207,7 @@
      gap (or overlap) between some pieces depending on n and the board's
      current rendered size. Explicit shared-boundary pixels can't gap. */
   .slot{ position:absolute; }
-  .slot.hover::after{
+  .slot.hover::after, .slot.selected::after{
     content:'';
     position:absolute;
     inset:0;
@@ -228,6 +228,7 @@
     background-color:var(--piece);
     cursor:grab;
     touch-action:none;
+    -webkit-touch-callout:none;
     transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 150ms ease;
   }
   .piece img{
@@ -387,6 +388,7 @@
 
   <div class="celebration" id="celebration"></div>
 
+<script src="../sound.js?v=20261025za"></script>
 <script>
 (function(){
   "use strict";
@@ -695,6 +697,7 @@
     state.blanks = BLANK_CACHE[state.digit + '_' + n] || null;
     state.slots = shufflePieces(total, state.blanks);
     state.busy = false;
+    state.selected = null;
     els.board.innerHTML = '';
     for (var i = 0; i < total; i++) {
       var slot = document.createElement('div');
@@ -768,7 +771,13 @@
   function onPieceDown(e){
     if (state.busy) return;
     forceEndDrag(); // guard against a stale drag from a previous pointer sequence that never cleaned up
-    e.preventDefault();
+    // Mouse only: cancelling a touch's pointerdown also stops iOS from seeing
+    // it as a tap, so no click fires -- and a click is the one gesture iOS
+    // accepts to let the page play sound (drags never unlock it). touch-action
+    // :none and -webkit-touch-callout:none already cover what this was for.
+    if (e.pointerType === 'mouse') e.preventDefault();
+    suppressClick = false;
+    PLSound.play('click');
     var piece = e.currentTarget;
     var slotEl = piece.parentElement;
     var rect = piece.getBoundingClientRect();
@@ -785,6 +794,9 @@
     drag = {
       piece: piece,
       ghost: ghost,
+      startX: e.clientX,
+      startY: e.clientY,
+      moved: false,
       sourceSlot: Number(slotEl.dataset.slot),
       offsetX: e.clientX - rect.left,
       offsetY: e.clientY - rect.top,
@@ -800,6 +812,10 @@
 
   function onPointerMove(e){
     if (!drag) return;
+    if (!drag.moved && Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) > TAP_SLOP) {
+      drag.moved = true;
+      clearSelection(); // a real drag overrides a half-finished tap-to-move
+    }
     drag.ghost.style.left = (e.clientX - drag.offsetX) + 'px';
     drag.ghost.style.top = (e.clientY - drag.offsetY) + 'px';
 
@@ -819,7 +835,12 @@
     try { drag.piece.releasePointerCapture(e.pointerId); } catch (err) {}
     var targetSlot = drag.hoverSlot;
     var sourceSlot = drag.sourceSlot;
+    var moved = drag.moved;
     forceEndDrag();
+    // A press that never really moved is a tap -- the click handler below
+    // owns it (select / swap). A real drag must not also count as a click.
+    if (!moved) return;
+    suppressClick = true;
 
     if (targetSlot !== null && targetSlot !== sourceSlot) {
       swapSlots(sourceSlot, targetSlot);
@@ -843,6 +864,38 @@
     checkSolved();
   }
 
+  // ---------- tap to swap ----------
+  // Alongside dragging: tap a piece to pick it up (white frame), tap another
+  // to swap them, tap the same one again to put it back. Easier for small
+  // fingers than a precise drag -- and since it runs on real click events, it
+  // is also what lets iOS start the page's sound (a drag alone never does).
+  var TAP_SLOP = 10;
+  var suppressClick = false;
+
+  function clearSelection(){
+    if (state.selected == null) return;
+    var el = els.board.children[state.selected];
+    if (el) el.classList.remove('selected');
+    state.selected = null;
+  }
+
+  els.board.addEventListener('click', function(e){
+    if (suppressClick) { suppressClick = false; return; }
+    var slotEl = e.target.closest ? e.target.closest('.slot') : null;
+    if (!slotEl || state.busy) return;
+    var idx = Number(slotEl.dataset.slot);
+    if (state.selected == null) {
+      state.selected = idx;
+      slotEl.classList.add('selected');
+    } else if (state.selected === idx) {
+      clearSelection();
+    } else {
+      var from = state.selected;
+      clearSelection();
+      swapSlots(from, idx);
+    }
+  });
+
   function checkSolved(){
     if (!isSolved(state.slots, state.blanks)) return;
     onSolved();
@@ -850,6 +903,7 @@
 
   function onSolved(){
     state.busy = true;
+    PLSound.play('positive');
     document.body.style.background = 'var(--success)';
     els.boardLines.classList.add('solved');
     var boardPx = state.bounds[state.bounds.length - 1];
@@ -880,6 +934,7 @@
   function showCelebration(){
     updateAppHeight();
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
@@ -906,7 +961,7 @@
   });
 
   els.refreshBtn.addEventListener('click', restartRound);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls (there are more icons than fit on a phone screen), then ease back to

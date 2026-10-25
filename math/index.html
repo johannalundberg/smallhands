@@ -494,6 +494,7 @@
 
   <div class="celebration" id="celebration"></div>
 
+<script src="../sound.js?v=20261025za"></script>
 <script>
 (function(){
   "use strict";
@@ -779,10 +780,12 @@
     }
   }
 
+  // A click per typed (or deleted) digit, like every other tap on the site.
   els.answerInput.addEventListener('input', function(){
     var digits = els.answerInput.value.replace(/[^0-9]/g, '');
     var maxLen = String(state.answerValue).length;
     if (digits.length > maxLen) digits = digits.slice(0, maxLen);
+    if (digits !== state.input) PLSound.play('click');
     state.input = digits;
     if (els.answerInput.value !== digits) els.answerInput.value = digits;
     render();
@@ -799,6 +802,7 @@
 
   function flashCorrect(){
     state.busy = true;
+    PLSound.play('positive');
     clearTimeout(flashTimer);
     document.body.style.background = 'var(--success)';
     flashTimer = setTimeout(function(){
@@ -834,6 +838,7 @@
     // center against the known full-height value instead of waiting for it.
     document.documentElement.style.setProperty('--app-height', noKeyboardHeight + 'px');
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
     els.equationTap.style.display = 'none';
     els.celebration.style.display = 'flex';
     flashTimer = setTimeout(function(){
@@ -847,6 +852,7 @@
 
   function flashIncorrect(){
     state.busy = true;
+    PLSound.play('negative');
     clearTimeout(flashTimer);
     document.body.style.background = 'var(--incorrect)';
     flashTimer = setTimeout(function(){
@@ -902,7 +908,7 @@
   });
 
   els.refreshBtn.addEventListener('click', restartRound);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls (there are more icons than fit on a phone screen), then ease back to

@@ -371,6 +371,7 @@
 
   <div class="celebration" id="celebration"></div>
 
+<script src="../sound.js?v=20261025za"></script>
 <script>
 (function(){
   "use strict";
@@ -628,7 +629,9 @@
       state.busy = true;
       setTimeout(function(){
         var move = computerMove();
-        if (move) playMove(move, 'W');
+        // Click on the next tick: right after the bot's (sometimes heavy)
+        // thinking, the audio clock reading is still stale.
+        if (move) { playMove(move, 'W'); setTimeout(function(){ PLSound.play('click'); }, 0); }
       }, 500 + Math.random() * 400);
     }
   }
@@ -777,6 +780,7 @@
   function showCelebration(isWin){
     updateAppHeight();
     els.celebration.innerHTML = isWin ? CELEBRATION_FACE_SVG : SAD_FACE_SVG;
+    PLSound.play(isWin ? 'complete' : 'tryagain');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
@@ -795,7 +799,7 @@
     startGame();
   });
   els.refreshBtn.addEventListener('click', startGame);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls (there are more icons than fit on a phone screen), then ease back to

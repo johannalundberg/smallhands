@@ -195,6 +195,20 @@
     .pad:hover{ transform:scale(1.035); }
   }
   .pad.wrong{ background:var(--incorrect); }
+  /* Before the first pattern: the pads pulse one at a time, going round the
+     grid clockwise (purple, orange, blue, yellow), inviting a tap (no words
+     needed). Tapping any pad starts the game -- that tap is also what lets the
+     phone play the pattern's notes. Paused while pressed so the press
+     feedback above still shows. */
+  .pad-grid.await-start .pad:not(:active){ animation: pad-pulse 2400ms ease-in-out infinite; }
+  .pad-grid.await-start .pad:nth-child(1){ animation-delay:0ms; }
+  .pad-grid.await-start .pad:nth-child(2){ animation-delay:600ms; }
+  .pad-grid.await-start .pad:nth-child(4){ animation-delay:1200ms; }
+  .pad-grid.await-start .pad:nth-child(3){ animation-delay:1800ms; }
+  @keyframes pad-pulse{
+    0%, 28%, 100%{ transform:scale(1); }
+    12%{ transform:scale(1.06); }
+  }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -339,15 +353,16 @@
 
   <div class="board-wrap" id="boardWrap">
     <div class="pad-grid" id="padGrid">
-      <button class="pad" data-index="0" aria-label="Purple"></button>
-      <button class="pad" data-index="1" aria-label="Orange"></button>
-      <button class="pad" data-index="2" aria-label="Yellow"></button>
-      <button class="pad" data-index="3" aria-label="Blue"></button>
+      <button class="pad" data-index="0" data-own-sound aria-label="Purple"></button>
+      <button class="pad" data-index="1" data-own-sound aria-label="Orange"></button>
+      <button class="pad" data-index="2" data-own-sound aria-label="Yellow"></button>
+      <button class="pad" data-index="3" data-own-sound aria-label="Blue"></button>
     </div>
   </div>
 
   <div class="celebration" id="celebration"></div>
 
+<script src="../sound.js?v=20261025za"></script>
 <script>
 (function(){
   "use strict";
@@ -493,8 +508,16 @@
 
   function tierConfig(){ return TIER_CONFIG[state.difficulty]; }
 
-  function startGame(){
+  // waitForTap: on page load only. The pattern's notes can't play until the
+  // player has tapped the page (a phone rule), and the pattern used to start
+  // on its own -- so the very first one was always silent. Instead, the pads
+  // breathe until any of them is tapped, and that tap starts the round.
+  // Later rounds (difficulty, refresh, after a win) start on their own as
+  // before, since the page has been tapped by then.
+  function startGame(waitForTap){
     state.gen += 1;
+    state.awaitingStart = !!waitForTap;
+    els.padGrid.classList.toggle('await-start', state.awaitingStart);
     // Clears any pad still visually 'lit'/'wrong' from a chain this same
     // reset is about to supersede -- the gen bump stops it from animating
     // any FURTHER, but doesn't by itself undo whatever it already applied.
@@ -512,6 +535,16 @@
     // difficulty/refresh icon elsewhere on screen) -- give it a beat. Mid-
     // round replays (growing the sequence, retrying after a mistake) skip
     // this and start instantly, since the player is already watching by then.
+    if (state.awaitingStart) return;
+    state.busy = true;
+    els.boardWrap.classList.add('busy');
+    guardedTimeout(playSequence, 600);
+  }
+
+  function beginFirstRound(){
+    state.awaitingStart = false;
+    els.padGrid.classList.remove('await-start');
+    PLSound.play('click');
     state.busy = true;
     els.boardWrap.classList.add('busy');
     guardedTimeout(playSequence, 600);
@@ -528,6 +561,7 @@
     function playStep(i){
       var pad = els.pads[state.sequence[i]];
       pad.classList.add('lit');
+      PLSound.tone(state.sequence[i]);
       guardedTimeout(function(){
         pad.classList.remove('lit');
         if (i + 1 < state.sequence.length) {
@@ -550,11 +584,16 @@
   }
 
   function onPadTap(i){
+    if (state.awaitingStart) { beginFirstRound(); return; }
     if (state.busy) return;
     var pad = els.pads[i];
     if (i === state.sequence[state.inputIndex]) {
       markTraceDot(state.inputIndex, i);
       pad.classList.add('lit');
+      // One sound per tap: the tap that finishes the round plays only the
+      // result (positive, or the win sound) -- not its tone as well.
+      var finishesRound = state.inputIndex + 1 >= state.sequence.length;
+      if (!finishesRound) PLSound.tone(i);
       guardedTimeout(function(){ pad.classList.remove('lit'); }, 150);
       state.inputIndex += 1;
       if (state.inputIndex >= state.sequence.length) {
@@ -563,6 +602,7 @@
         if (state.progress >= ROUND_SIZE) {
           showCelebration();
         } else {
+          PLSound.play('positive');
           // Block input for the gap before playback resumes -- otherwise a tap
           // landing in this window is checked against the stale inputIndex/
           // sequence pairing and can double-advance or crash.
@@ -573,6 +613,7 @@
         }
       }
     } else {
+      PLSound.play('negative');
       state.roundAttempts += 1;
       if (state.roundAttempts >= MAX_ROUND_ATTEMPTS) {
         // Unlike every other game on the site, Copy the Pattern has a real
@@ -613,6 +654,7 @@
   function showCelebration(){
     updateAppHeight();
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
@@ -637,6 +679,7 @@
   function showLoss(){
     updateAppHeight();
     els.celebration.innerHTML = SAD_FACE_SVG;
+    PLSound.play('tryagain');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
@@ -654,8 +697,8 @@
     btn.classList.add('active');
     startGame();
   });
-  els.refreshBtn.addEventListener('click', startGame);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.refreshBtn.addEventListener('click', function(){ startGame(); });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls, then ease back to the correct resting view with + as the leftmost
@@ -691,7 +734,7 @@
   introduceTraySlider();
 
   els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  startGame();
+  startGame(true);
 })();
 </script>
 </body>

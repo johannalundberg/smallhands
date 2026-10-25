@@ -376,6 +376,7 @@
 
   <div class="celebration" id="celebration"></div>
 
+<script src="../sound.js?v=20261025za"></script>
 <script>
 (function(){
   "use strict";
@@ -855,6 +856,9 @@
     var tile = document.createElement('div');
     tile.className = 'tile';
     tile.dataset.pair = pairId;
+    // Tiles play their own sound (see onTileClick): a click on the first tile,
+    // only positive/negative on the second -- never two sounds at once.
+    tile.setAttribute('data-own-sound', '');
 
     var inner = document.createElement('div');
     inner.className = 'tile-inner';
@@ -948,11 +952,12 @@
 
     tile.classList.add('open');
     state.open.push(tile);
-    if (state.open.length < 2) return;
+    if (state.open.length < 2) { PLSound.play('click'); return; }
 
     state.busy = true;
     var a = state.open[0], b = state.open[1];
     if (a.dataset.pair === b.dataset.pair) {
+      PLSound.play('positive');
       a.classList.add('matched');
       b.classList.add('matched');
       a.classList.remove('open');
@@ -972,6 +977,7 @@
         if (isFinalPair) showCelebration();
       }, 750);
     } else {
+      PLSound.play('negative');
       setTimeout(function(){
         a.classList.remove('open');
         b.classList.remove('open');
@@ -994,6 +1000,7 @@
   function showCelebration(){
     updateAppHeight();
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
@@ -1012,7 +1019,7 @@
     buildBoard();
   });
   els.refreshBtn.addEventListener('click', buildBoard);
-  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // Re-lay the grid in the right orientation if the viewport crosses the
   // mobile breakpoint (rotating a real device, or resizing a window).
