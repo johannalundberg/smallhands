@@ -158,10 +158,13 @@
   // has to wire it per button. 'click' rather than pointerdown so scrolling the
   // hub over its tiles stays silent. Number Puzzle's pieces are dragged, not
   // clicked, so that page plays its own click on pickup instead.
+  // Elements marked data-own-sound (Copy the Pattern's pads) play their own
+  // sound instead of the click.
   var CLICKABLE = 'a[href], button, .tile, .cell, .tap-cell, .pad, .cluster-card, .equation-tap';
   document.addEventListener('click', function(e){
     var el = e.target.closest && e.target.closest(CLICKABLE);
     if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+    if (el.hasAttribute('data-own-sound')) return;
     play('click');
     // Plain same-tab links (hub tiles, "?", About's back arrow): delay the
     // page change like go() does. Modified clicks open new tabs, leave them be.
@@ -172,5 +175,44 @@
     }
   }, true);
 
-  window.PLSound = { play: play, go: go, isMuted: isMuted, setMuted: setMuted };
+  // Synthesized tones (no sound files): a soft, marimba-like note -- a sine
+  // at the pitch plus a brief quiet overtone four times higher for the
+  // mallet "knock", fast attack, ~0.45s decay. Notes are C5 E5 G5 A5, a
+  // pentatonic set, so any sequence of them sounds musical.
+  var TONE_HZ = [523.25, 659.25, 783.99, 880.00];
+  var TONE_LEVEL = 0.3;
+  function tone(i){
+    // Not queued while iOS still has the page locked -- a pattern's notes
+    // only make sense in time with the pads lighting up.
+    if (!ctx || isMuted() || ctx.state !== 'running') { debug('tone ' + i + ': skipped'); return; }
+    var f = TONE_HZ[i % TONE_HZ.length];
+    var t = ctx.currentTime;
+    try {
+      var out = ctx.createGain();
+      out.gain.setValueAtTime(0.0001, t);
+      out.gain.exponentialRampToValueAtTime(TONE_LEVEL, t + 0.006);
+      out.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+      out.connect(ctx.destination);
+
+      var body = ctx.createOscillator();
+      body.type = 'sine';
+      body.frequency.value = f;
+      body.connect(out);
+
+      var knock = ctx.createOscillator();
+      var knockGain = ctx.createGain();
+      knock.type = 'sine';
+      knock.frequency.value = f * 4;
+      knockGain.gain.setValueAtTime(0.25, t);
+      knockGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+      knock.connect(knockGain);
+      knockGain.connect(out);
+
+      body.start(t); knock.start(t);
+      body.stop(t + 0.5); knock.stop(t + 0.5);
+      debug('tone ' + i);
+    } catch (e) {}
+  }
+
+  window.PLSound = { play: play, tone: tone, go: go, isMuted: isMuted, setMuted: setMuted };
 })();

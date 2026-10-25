@@ -339,10 +339,10 @@
 
   <div class="board-wrap" id="boardWrap">
     <div class="pad-grid" id="padGrid">
-      <button class="pad" data-index="0" aria-label="Purple"></button>
-      <button class="pad" data-index="1" aria-label="Orange"></button>
-      <button class="pad" data-index="2" aria-label="Yellow"></button>
-      <button class="pad" data-index="3" aria-label="Blue"></button>
+      <button class="pad" data-index="0" data-own-sound aria-label="Purple"></button>
+      <button class="pad" data-index="1" data-own-sound aria-label="Orange"></button>
+      <button class="pad" data-index="2" data-own-sound aria-label="Yellow"></button>
+      <button class="pad" data-index="3" data-own-sound aria-label="Blue"></button>
     </div>
   </div>
 
@@ -529,6 +529,7 @@
     function playStep(i){
       var pad = els.pads[state.sequence[i]];
       pad.classList.add('lit');
+      PLSound.tone(state.sequence[i]);
       guardedTimeout(function(){
         pad.classList.remove('lit');
         if (i + 1 < state.sequence.length) {
@@ -556,6 +557,7 @@
     if (i === state.sequence[state.inputIndex]) {
       markTraceDot(state.inputIndex, i);
       pad.classList.add('lit');
+      PLSound.tone(i);
       guardedTimeout(function(){ pad.classList.remove('lit'); }, 150);
       state.inputIndex += 1;
       if (state.inputIndex >= state.sequence.length) {
@@ -564,7 +566,8 @@
         if (state.progress >= ROUND_SIZE) {
           showCelebration();
         } else {
-          PLSound.play('positive');
+          // A beat after the last note, so the two don't land on top of each other.
+          guardedTimeout(function(){ PLSound.play('positive'); }, 250);
           // Block input for the gap before playback resumes -- otherwise a tap
           // landing in this window is checked against the stale inputIndex/
           // sequence pairing and can double-advance or crash.
