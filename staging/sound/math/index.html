@@ -494,7 +494,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025b"></script>
+<script src="../sound.js?v=20261025c"></script>
 <script>
 (function(){
   "use strict";
@@ -780,14 +780,12 @@
     }
   }
 
-  // One sound per typed (or deleted) digit. Two candidates being compared on
-  // staging: the site's click by default, sound 02 when the URL has ?typing=02.
-  var TYPING_SOUND = /[?&]typing=02\b/.test(location.search) ? 'drag' : 'click';
+  // A click per typed (or deleted) digit, like every other tap on the site.
   els.answerInput.addEventListener('input', function(){
     var digits = els.answerInput.value.replace(/[^0-9]/g, '');
     var maxLen = String(state.answerValue).length;
     if (digits.length > maxLen) digits = digits.slice(0, maxLen);
-    if (digits !== state.input) PLSound.play(TYPING_SOUND);
+    if (digits !== state.input) PLSound.play('click');
     state.input = digits;
     if (els.answerInput.value !== digits) els.answerInput.value = digits;
     render();
@@ -804,7 +802,6 @@
 
   function flashCorrect(){
     state.busy = true;
-    PLSound.play('positive');
     clearTimeout(flashTimer);
     document.body.style.background = 'var(--success)';
     flashTimer = setTimeout(function(){
@@ -840,7 +837,6 @@
     // center against the known full-height value instead of waiting for it.
     document.documentElement.style.setProperty('--app-height', noKeyboardHeight + 'px');
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
-    PLSound.play('complete');
     els.equationTap.style.display = 'none';
     els.celebration.style.display = 'flex';
     flashTimer = setTimeout(function(){
@@ -854,7 +850,6 @@
 
   function flashIncorrect(){
     state.busy = true;
-    PLSound.play('negative');
     clearTimeout(flashTimer);
     document.body.style.background = 'var(--incorrect)';
     flashTimer = setTimeout(function(){

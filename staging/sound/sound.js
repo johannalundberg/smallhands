@@ -16,16 +16,10 @@
   var MUTE_KEY = 'playandlearn.soundMuted';
   var base = document.currentScript.src.replace(/[^\/]*$/, '') + 'sounds/';
   var FILES = {
-    click:    'click.mp3',
-    drag:     'drag.mp3',
-    positive: 'positive.mp3',
-    negative: 'negative.mp3',
-    complete: 'complete.mp3',
-    tryagain: 'tryagain.mp3'
+    click:    'click.mp3'
   };
-  // Per-sound playback level (1 = as delivered). The right/wrong sounds play
-  // many times per game, so they sit a bit under the click.
-  var VOLUME = { positive: 0.6, negative: 0.6 };
+  // Per-sound playback level (1 = as delivered); none adjusted at the moment.
+  var VOLUME = {};
 
   // Mix with (not stop) whatever else is playing, and follow the iPhone's
   // silent switch -- a kids' site shouldn't override either.
@@ -126,7 +120,7 @@
       }
       src.start(0);
       // Asked for while iOS still has the page locked: it would sit queued
-      // and burst out on the next real tap (Number Puzzle's positive sound
+      // and burst out on the next real tap (Number Puzzle's sounds
       // playing when Back was pressed). Keep it only if the unlock lands
       // right away, as it does when this tap itself is the unlocking one.
       if (ctx.state !== 'running') pending.push({ src: src, at: performance.now() });

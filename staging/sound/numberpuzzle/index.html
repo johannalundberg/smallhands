@@ -388,7 +388,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025b"></script>
+<script src="../sound.js?v=20261025c"></script>
 <script>
 (function(){
   "use strict";
@@ -903,7 +903,6 @@
 
   function onSolved(){
     state.busy = true;
-    PLSound.play('positive');
     document.body.style.background = 'var(--success)';
     els.boardLines.classList.add('solved');
     var boardPx = state.bounds[state.bounds.length - 1];
@@ -934,7 +933,6 @@
   function showCelebration(){
     updateAppHeight();
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
-    PLSound.play('complete');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
