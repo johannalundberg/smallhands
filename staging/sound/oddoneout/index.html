@@ -331,7 +331,6 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025d"></script>
 <script>
 (function(){
   "use strict";
@@ -646,7 +645,7 @@
     buildRound(); // new composition for the new tier, but keep progress (matches Math/Number Puzzle)
   });
   els.refreshBtn.addEventListener('click', startGame);
-  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls (there are more icons than fit on a phone screen), then ease back to

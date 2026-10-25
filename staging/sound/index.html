@@ -741,7 +741,7 @@
   </button>
   </div>
 
-<script src="sound.js?v=20261025d"></script>
+<script src="sound.js?v=20261025e"></script>
 <script>
 (function(){
   "use strict";
@@ -751,9 +751,8 @@
   // page has a touch listener -- this is that listener (a no-op is enough).
   document.addEventListener('touchstart', function(){}, { passive: true });
 
-  // Sound toggle: flips the site-wide mute flag every game reads. Unmuting
-  // plays one click as confirmation (the shared tap sound was skipped for
-  // this tap, since it checked the flag while still muted).
+  // Sound toggle: flips the site-wide mute flag (today it silences Copy the
+  // Pattern's pad tones, the only sound on the site).
   var soundBtn = document.querySelector('.sound-btn');
   function renderSoundBtn(){
     var muted = PLSound.isMuted();
@@ -764,7 +763,6 @@
     var nowMuted = !PLSound.isMuted();
     PLSound.setMuted(nowMuted);
     renderSoundBtn();
-    if (!nowMuted) PLSound.play('click');
   });
   renderSoundBtn();
   window.addEventListener('pageshow', renderSoundBtn);

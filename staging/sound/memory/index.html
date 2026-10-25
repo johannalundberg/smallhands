@@ -376,7 +376,6 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025d"></script>
 <script>
 (function(){
   "use strict";
@@ -1013,7 +1012,7 @@
     buildBoard();
   });
   els.refreshBtn.addEventListener('click', buildBoard);
-  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
 
   // Re-lay the grid in the right orientation if the viewport crosses the
   // mobile breakpoint (rotating a real device, or resizing a window).

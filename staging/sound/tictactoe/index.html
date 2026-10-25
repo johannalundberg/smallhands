@@ -376,7 +376,6 @@
     </svg>
   </div>
 
-<script src="../sound.js?v=20261025d"></script>
 <script>
 (function(){
   "use strict";
@@ -573,7 +572,6 @@
     setTimeout(function(){
       var move = computerMove();
       place(move, 'O');
-      PLSound.play('click');
       state.busy = false;
       els.boardWrap.classList.remove('busy');
       checkEnd();
@@ -685,7 +683,7 @@
   els.yayOverlay.addEventListener('click', finishMilestone);
   els.loseOverlay.addEventListener('click', finishMilestone);
   els.refreshBtn.addEventListener('click', restartRound);
-  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
 
   els.diffGroup.addEventListener('click', function(e){
     var btn = e.target.closest('.diff-btn');

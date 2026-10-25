@@ -348,16 +348,16 @@
 
   <div class="board-wrap" id="boardWrap">
     <div class="pad-grid" id="padGrid">
-      <button class="pad" data-index="0" data-own-sound aria-label="Purple"></button>
-      <button class="pad" data-index="1" data-own-sound aria-label="Orange"></button>
-      <button class="pad" data-index="2" data-own-sound aria-label="Yellow"></button>
-      <button class="pad" data-index="3" data-own-sound aria-label="Blue"></button>
+      <button class="pad" data-index="0" aria-label="Purple"></button>
+      <button class="pad" data-index="1" aria-label="Orange"></button>
+      <button class="pad" data-index="2" aria-label="Yellow"></button>
+      <button class="pad" data-index="3" aria-label="Blue"></button>
     </div>
   </div>
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../sound.js?v=20261025d"></script>
+<script src="../sound.js?v=20261025e"></script>
 <script>
 (function(){
   "use strict";
@@ -539,7 +539,6 @@
   function beginFirstRound(){
     state.awaitingStart = false;
     els.padGrid.classList.remove('await-start');
-    PLSound.play('click');
     state.busy = true;
     els.boardWrap.classList.add('busy');
     guardedTimeout(playSequence, 600);
@@ -686,7 +685,7 @@
     startGame();
   });
   els.refreshBtn.addEventListener('click', function(){ startGame(); });
-  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
+  els.backBtn.addEventListener('click', function(){ window.location.href = '../index.html'; });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls, then ease back to the correct resting view with + as the leftmost
