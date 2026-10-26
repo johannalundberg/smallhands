@@ -595,10 +595,10 @@
     if (i === state.sequence[state.inputIndex]) {
       markTraceDot(state.inputIndex, i);
       pad.classList.add('lit');
-      // One sound per tap: the tap that finishes the round plays only the
-      // result (positive, or the win sound) -- not its tone as well.
-      var finishesRound = state.inputIndex + 1 >= state.sequence.length;
-      if (!finishesRound) PLSound.tone(i);
+      // Every correct tap plays its own tone, the last one of the round too --
+      // no separate "right!" sound here; the pattern itself is the feedback.
+      // A wrong pad plays the short negative instead (below).
+      PLSound.tone(i);
       guardedTimeout(function(){ pad.classList.remove('lit'); }, 150);
       state.inputIndex += 1;
       if (state.inputIndex >= state.sequence.length) {
@@ -607,7 +607,6 @@
         if (state.progress >= ROUND_SIZE) {
           showCelebration();
         } else {
-          PLSound.play('positive');
           // Block input for the gap before playback resumes -- otherwise a tap
           // landing in this window is checked against the stale inputIndex/
           // sequence pairing and can double-advance or crash.
@@ -659,7 +658,9 @@
   function showCelebration(){
     updateAppHeight();
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
-    PLSound.play('complete');
+    // The winning tap just played its tone; let it ring out before the win
+    // sound so the two don't land on top of each other.
+    setTimeout(function(){ PLSound.play('complete'); }, 400);
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
