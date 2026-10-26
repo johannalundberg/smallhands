@@ -94,8 +94,14 @@
      floor to 80px. */
   .footer-spacer{ flex:1 0 auto; min-height:20px; }
   .grid-overflows .footer-spacer{ min-height:80px; }
+  /* Reduce Motion (an iPhone/iPad accessibility setting): freeze the tile
+     animations on a still frame instead of skipping them. Several icons only
+     become visible through their animation (the Math symbols, the Number
+     Puzzle / Labyrinth / Odd One Out pictures, Copy the Pattern's colours), so
+     skipping it left those tiles blank. Paused, each one shows its first
+     frame -- staggered parts keep their offset, so it's still a whole picture. */
   @media (prefers-reduced-motion: reduce){
-    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+    *{ animation-play-state:paused !important; transition-duration:0.001ms !important; }
   }
 
   .tiles{
@@ -464,6 +470,11 @@
     .info-btn:active .qmark, .sound-btn:active .sglyph{ fill:#E4E4E4; }
     .sound-btn:active .sglyph-stroke{ stroke:#E4E4E4; }
   }
+  /* No double-tap zoom anywhere. touch-action doesn't reach into a scrolling
+     element (the mobile tray scrolls sideways), so the tray needs its own:
+     two quick taps on the level buttons there zoomed the whole page in, and
+     with zoom otherwise locked there was no way back out. */
+  html, body, .controls-slider{ touch-action:manipulation; }
 </style>
 </head>
 <body>

@@ -142,6 +142,11 @@
   @media (max-width:767px){
     .back-btn:active{ transform:scale(1.035); filter: brightness(0.7); }
   }
+  /* No double-tap zoom anywhere. touch-action doesn't reach into a scrolling
+     element (the mobile tray scrolls sideways), so the tray needs its own:
+     two quick taps on the level buttons there zoomed the whole page in, and
+     with zoom otherwise locked there was no way back out. */
+  html, body, .controls-slider{ touch-action:manipulation; }
 </style>
 </head>
 <body>

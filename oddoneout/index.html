@@ -284,6 +284,11 @@
   @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
     .rotate-block{ display:flex; }
   }
+  /* No double-tap zoom anywhere. touch-action doesn't reach into a scrolling
+     element (the mobile tray scrolls sideways), so the tray needs its own:
+     two quick taps on the level buttons there zoomed the whole page in, and
+     with zoom otherwise locked there was no way back out. */
+  html, body, .controls-slider{ touch-action:manipulation; }
 </style>
 </head>
 <body>
