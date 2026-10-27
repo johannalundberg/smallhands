@@ -599,6 +599,7 @@
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
     if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
       location.reload();
     }
     wasInLandscapeBlock = e.matches;
@@ -607,6 +608,102 @@
     landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
   } else if (landscapeBlockMQ.addListener) {
     landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
+  }
+
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.numberpuzzle';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // slots: null means "the last puzzle was just solved, start the next digit".
+  function snapshotGame(){
+    if (els.celebration.style.display === 'flex') return null; // round already won, a fresh round is right
+    if (!state.slots || !state.slots.length) return null; // still preloading, nothing played yet
+    var progress = state.progress;
+    var slots = state.slots.slice();
+    if (state.busy) {
+      // Mid solved-reveal: its timeout won't survive the reload, so count the
+      // solve here and let restore move on to the next digit.
+      progress += 1;
+      if (progress >= ROUND_SIZE) return null;
+      slots = null;
+    }
+    return {
+      difficulty: state.difficulty,
+      progress: progress,
+      digit: state.digit,
+      slots: slots,
+      digitOrder: state.digitOrder.slice(),
+      digitCursor: state.digitCursor
+    };
+  }
+
+  function isWholeNumber(v, min, max){
+    return typeof v === 'number' && Math.floor(v) === v && v >= min && v <= max;
+  }
+
+  // Everything is checked before touching state or the DOM, so bad data just
+  // falls back to a fresh round instead of leaving a half-built board.
+  function restoreGame(data){
+    if (!data || typeof data !== 'object') return false;
+    if (!TIER_N.hasOwnProperty(data.difficulty)) return false;
+    var n = TIER_N[data.difficulty];
+    if (!isWholeNumber(data.progress, 0, ROUND_SIZE - 1)) return false;
+    var order = data.digitOrder;
+    if (!Array.isArray(order) || order.length !== 10) return false;
+    for (var i = 0; i < order.length; i++) {
+      if (!isWholeNumber(order[i], 0, 9)) return false;
+    }
+    if (!isWholeNumber(data.digitCursor, 0, order.length)) return false;
+    var slots = data.slots;
+    if (slots != null) {
+      if (!isWholeNumber(data.digit, 0, 9) || !DIGIT_IMG[data.digit]) return false;
+      var total = n * n;
+      if (!Array.isArray(slots) || slots.length !== total) return false;
+      var seen = {};
+      for (var s = 0; s < total; s++) {
+        if (!isWholeNumber(slots[s], 0, total - 1) || seen[slots[s]]) return false;
+        seen[slots[s]] = true;
+      }
+    }
+
+    state.difficulty = data.difficulty;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === data.difficulty);
+    });
+    els.celebration.style.display = 'none';
+    els.boardWrap.style.display = '';
+    document.body.style.background = '';
+    state.progress = data.progress;
+    updateProgressDots();
+    state.digitOrder = order.slice();
+    state.digitCursor = data.digitCursor;
+    if (slots != null) {
+      state.digit = data.digit;
+      buildBoard(slots); // same arrangement as before the reload, no reshuffle
+    } else {
+      nextPuzzle();
+    }
+    return true;
   }
 
   // --board-size is viewport-relative, so the board's actual rendered pixel size
@@ -691,7 +788,9 @@
     }
   }
 
-  function buildBoard(){
+  // presetSlots (optional): a saved slot arrangement to use instead of a new
+  // shuffle -- only passed when resuming after the rotate-block reload.
+  function buildBoard(presetSlots){
     forceEndDrag(); // a drag mid-flight would otherwise orphan its ghost tile once the board under it is torn down
     var n = TIER_N[state.difficulty];
     state.n = n;
@@ -700,7 +799,7 @@
     renderGridLines(n);
     var total = n * n;
     state.blanks = BLANK_CACHE[state.digit + '_' + n] || null;
-    state.slots = shufflePieces(total, state.blanks);
+    state.slots = presetSlots ? presetSlots.slice() : shufflePieces(total, state.blanks);
     state.busy = false;
     state.selected = null;
     els.board.innerHTML = '';
@@ -1005,7 +1104,13 @@
   introduceTraySlider();
 
   els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  preloadBlankData(restartRound);
+  // Blank-cell data loads first either way; a saved game (from the rotate-block
+  // reload) is only restored once BLANK_CACHE and the digit images are ready.
+  var resumed = takeResume();
+  preloadBlankData(function(){
+    if (resumed && restoreGame(resumed)) return;
+    restartRound();
+  });
 })();
 </script>
 

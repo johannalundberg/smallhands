@@ -838,6 +838,7 @@
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
     if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
       location.reload();
     }
     wasInLandscapeBlock = e.matches;
@@ -846,6 +847,30 @@
     landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
   } else if (landscapeBlockMQ.addListener) {
     landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
+  }
+
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.memory';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
   }
 
   function shuffle(arr){
@@ -911,20 +936,40 @@
   // landscape-shaped and leaving empty space above/below.
   var mobileMQ = window.matchMedia('(max-width: 767px), (max-height: 500px)');
 
-  function buildBoard(){
+  // The grid's cols/rows for the current tier -- swapped to a portrait shape on
+  // the phone breakpoint. Total tile count is the same either way.
+  function boardShape(){
     var tier = TIERS[state.difficulty];
     var cols = tier.cols, rows = tier.rows;
     if (mobileMQ.matches) { cols = tier.rows; rows = tier.cols; }
-    var total = cols * rows;
-    state.pairsNeeded = total / 2;
+    return { cols: cols, rows: rows };
+  }
+
+  // Fresh game: new random art and a new shuffled layout.
+  function buildBoard(){
+    var shape = boardShape();
+    state.pairsNeeded = shape.cols * shape.rows / 2;
     state.arts = buildPairArts(state.pairsNeeded);
-    state.open = [];
-    state.matched = 0;
-    state.busy = false;
 
     var ids = [];
     for (var p = 0; p < state.pairsNeeded; p++) { ids.push(p); ids.push(p); }
     shuffle(ids);
+
+    renderBoard(ids, null);
+  }
+
+  // Sizes the grid and lays out one tile per entry of ids (pair id, in tile
+  // order), using whatever is in state.arts/state.pairsNeeded. matchedFlags
+  // (optional, same order as ids) marks tiles already matched and cleared
+  // away -- only used when resuming a saved game.
+  function renderBoard(ids, matchedFlags){
+    var tier = TIERS[state.difficulty];
+    var shape = boardShape();
+    var cols = shape.cols, rows = shape.rows;
+    var total = cols * rows;
+    state.open = [];
+    state.matched = 0;
+    state.busy = false;
 
     els.grid.style.setProperty('--cols', cols);
     els.grid.style.setProperty('--aspect', cols / rows);
@@ -947,7 +992,110 @@
 
     els.grid.innerHTML = '';
     for (var t = 0; t < total; t++) {
-      els.grid.appendChild(makeTile(ids[t]));
+      var tile = makeTile(ids[t]);
+      if (matchedFlags && matchedFlags[t]) {
+        // Same end state a match leaves behind once it has cleared away.
+        tile.classList.add('matched');
+        tile.classList.add('gone');
+      }
+      els.grid.appendChild(tile);
+    }
+    if (matchedFlags) {
+      var matchedTiles = 0;
+      for (var m = 0; m < total; m++) { if (matchedFlags[m]) matchedTiles++; }
+      state.matched = matchedTiles / 2;
+    }
+  }
+
+  // ---------- snapshot / restore for the rotate-block resume ----------
+  // Art is saved by name (finished icons) or shape+color (placeholders) rather
+  // than the art objects themselves, since those carry the icon's SVG markup --
+  // the name looks the same icon back up in REAL_ICONS on restore.
+  function snapshotGame(){
+    // Win celebration showing, or the last pair just matched and it's about to
+    // show: the game is over, so a fresh board is the right thing after reload.
+    if (els.celebration.style.display === 'flex') return null;
+    if (state.matched >= state.pairsNeeded) return null;
+    var tiles = els.grid.children;
+    if (!tiles.length || tiles.length !== state.pairsNeeded * 2) return null;
+
+    var layout = [], matched = [];
+    for (var i = 0; i < tiles.length; i++) {
+      layout.push(parseInt(tiles[i].dataset.pair, 10));
+      // A half-open turn (one or two unmatched tiles face up) is left out on
+      // purpose -- those tiles come back face down.
+      matched.push(tiles[i].classList.contains('matched'));
+    }
+    var arts = state.arts.map(function(art){
+      return art.icon ? { icon: art.icon.name } : { shape: art.shape, color: art.color };
+    });
+    return { difficulty: state.difficulty, layout: layout, arts: arts, matched: matched };
+  }
+
+  function findIcon(name){
+    for (var i = 0; i < REAL_ICONS.length; i++) {
+      if (REAL_ICONS[i].name === name) return REAL_ICONS[i];
+    }
+    return null;
+  }
+
+  // Rebuilds the saved board. Everything is validated before anything on the
+  // page is touched, so a bad snapshot returns false and the normal fresh
+  // start runs instead.
+  function restoreGame(data){
+    var prevDifficulty = state.difficulty;
+    try {
+      if (!data || !TIERS.hasOwnProperty(data.difficulty)) return false;
+      var tier = TIERS[data.difficulty];
+      var total = tier.cols * tier.rows;
+      var pairsNeeded = total / 2;
+      var layout = data.layout, matched = data.matched, savedArts = data.arts;
+      if (!Array.isArray(layout) || layout.length !== total) return false;
+      if (!Array.isArray(matched) || matched.length !== total) return false;
+      if (!Array.isArray(savedArts) || savedArts.length !== pairsNeeded) return false;
+
+      // Every pair id appears exactly twice, and a pair is matched on both
+      // tiles or neither.
+      var seen = [], pairMatched = [], matchedPairs = 0;
+      for (var t = 0; t < total; t++) {
+        var id = layout[t];
+        if (typeof id !== 'number' || id % 1 !== 0 || id < 0 || id >= pairsNeeded) return false;
+        if (typeof matched[t] !== 'boolean') return false;
+        var isMatched = matched[t];
+        seen[id] = (seen[id] || 0) + 1;
+        if (seen[id] === 1) {
+          pairMatched[id] = isMatched;
+        } else if (pairMatched[id] !== isMatched) {
+          return false;
+        } else if (isMatched) {
+          matchedPairs++;
+        }
+      }
+      for (var p = 0; p < pairsNeeded; p++) { if (seen[p] !== 2) return false; }
+      if (matchedPairs >= pairsNeeded) return false;
+
+      var arts = [];
+      for (var a = 0; a < savedArts.length; a++) {
+        var saved = savedArts[a];
+        if (!saved) return false;
+        if (saved.icon) {
+          var icon = findIcon(saved.icon);
+          if (!icon) return false;
+          arts.push({ icon: icon });
+        } else {
+          if (SHAPES.indexOf(saved.shape) === -1 || typeof saved.color !== 'string') return false;
+          arts.push({ shape: saved.shape, color: saved.color });
+        }
+      }
+
+      state.difficulty = data.difficulty;
+      state.pairsNeeded = pairsNeeded;
+      state.arts = arts;
+      renderBoard(layout, matched);
+      return true;
+    } catch (e) {
+      state.difficulty = prevDifficulty;
+      return false;
     }
   }
 
@@ -1070,8 +1218,15 @@
   }
   introduceTraySlider();
 
-  els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  buildBoard();
+  // Back from the rotate-block reload: continue the saved game. Otherwise (or
+  // if the saved game doesn't restore cleanly) start fresh on easy.
+  var resumed = takeResume();
+  if (resumed && restoreGame(resumed)) {
+    els.diffGroup.querySelector('[data-tier="' + state.difficulty + '"]').classList.add('active');
+  } else {
+    els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    buildBoard();
+  }
 })();
 </script>
 </body>

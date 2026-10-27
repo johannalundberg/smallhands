@@ -457,6 +457,7 @@
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
     if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
       location.reload();
     }
     wasInLandscapeBlock = e.matches;
@@ -465,6 +466,74 @@
     landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
   } else if (landscapeBlockMQ.addListener) {
     landscapeBlockMQ.addListener(onLandscapeBlockChange);
+  }
+
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.copythepattern';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // Only the round itself is saved: difficulty, the whole pattern so far, the
+  // round count and the mistakes made on this round. Where the player was
+  // inside the pattern isn't -- a half-entered pattern is replayed from the
+  // start after the reload anyway.
+  function snapshotGame(){
+    // Win or loss face showing (or about to): nothing left to resume.
+    if (els.celebration.style.display === 'flex') return null;
+    if (state.progress >= ROUND_SIZE || state.roundAttempts >= MAX_ROUND_ATTEMPTS) return null;
+    // Fresh page, first tap not made yet: a new load gives the same thing.
+    if (state.awaitingStart && state.progress === 0 && state.roundAttempts === 0) return null;
+    return {
+      difficulty: state.difficulty,
+      sequence: state.sequence.slice(),
+      progress: state.progress,
+      roundAttempts: state.roundAttempts
+    };
+  }
+
+  // Checks everything before touching the page, so bad data falls back to a
+  // normal fresh start. The pattern grows by one step per finished round, so
+  // its length must match the tier's start length plus the rounds done.
+  function restoreGame(data){
+    if (!data || !TIER_CONFIG.hasOwnProperty(data.difficulty)) return false;
+    var seq = data.sequence;
+    var progress = data.progress;
+    var attempts = data.roundAttempts;
+    if (!Array.isArray(seq)) return false;
+    if (typeof progress !== 'number' || progress % 1 !== 0 || progress < 0 || progress >= ROUND_SIZE) return false;
+    if (typeof attempts !== 'number' || attempts % 1 !== 0 || attempts < 0 || attempts >= MAX_ROUND_ATTEMPTS) return false;
+    if (seq.length !== TIER_CONFIG[data.difficulty].startLen + progress) return false;
+    for (var i = 0; i < seq.length; i++) {
+      if (typeof seq[i] !== 'number' || seq[i] % 1 !== 0 || seq[i] < 0 || seq[i] >= PAD_COUNT) return false;
+    }
+    state.difficulty = data.difficulty;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.tier === data.difficulty);
+    });
+    // Same waiting-for-a-tap start as a fresh page load (sound can't play
+    // until the player taps after the reload), but keeping the saved pattern
+    // -- so that first tap replays it from the start.
+    startGame(true, data);
+    return true;
   }
 
   // Matches memory's own gap-to-tile-size ratio exactly (see memory/index.html's
@@ -519,7 +588,9 @@
   // breathe until any of them is tapped, and that tap starts the round.
   // Later rounds (difficulty, refresh, after a win) start on their own as
   // before, since the page has been tapped by then.
-  function startGame(waitForTap){
+  // resume: a saved round from restoreGame -- keeps its pattern, round count
+  // and mistakes instead of starting a new pattern.
+  function startGame(waitForTap, resume){
     state.gen += 1;
     state.awaitingStart = !!waitForTap;
     els.padGrid.classList.toggle('await-start', state.awaitingStart);
@@ -527,12 +598,18 @@
     // reset is about to supersede -- the gen bump stops it from animating
     // any FURTHER, but doesn't by itself undo whatever it already applied.
     els.pads.forEach(function(pad){ pad.classList.remove('lit', 'wrong'); });
-    var cfg = tierConfig();
-    state.sequence = [];
-    for (var i = 0; i < cfg.startLen; i++) state.sequence.push(Math.floor(Math.random() * PAD_COUNT));
+    if (resume) {
+      state.sequence = resume.sequence.slice();
+      state.progress = resume.progress;
+      state.roundAttempts = resume.roundAttempts;
+    } else {
+      var cfg = tierConfig();
+      state.sequence = [];
+      for (var i = 0; i < cfg.startLen; i++) state.sequence.push(Math.floor(Math.random() * PAD_COUNT));
+      state.progress = 0;
+      state.roundAttempts = 0;
+    }
     state.inputIndex = 0;
-    state.progress = 0;
-    state.roundAttempts = 0;
     updateProgressDots();
     updatePadGap();
     // A fresh round's first light can land before the player's eyes have
@@ -739,8 +816,12 @@
   }
   introduceTraySlider();
 
-  els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  startGame(true);
+  // A saved game from the rotate-block reload continues; otherwise a fresh start.
+  var resumed = takeResume();
+  if (!(resumed && restoreGame(resumed))) {
+    els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    startGame(true);
+  }
 })();
 </script>
 </body>

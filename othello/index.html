@@ -409,7 +409,8 @@
     current: 'B',    // 'B' = human, always moves first (standard Othello rule)
     difficulty: 'easy',
     busy: false,
-    over: false
+    over: false,
+    justMoved: null  // 'B' | 'W' during the 500ms gap between playMove and advanceTurn, else null
   };
 
   var els = {
@@ -450,6 +451,7 @@
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
     if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
       location.reload();
     }
     wasInLandscapeBlock = e.matches;
@@ -587,6 +589,7 @@
     state.current = 'B';
     state.busy = false;
     state.over = false;
+    state.justMoved = null;
     els.boardWrap.classList.remove('busy');
     els.board.classList.remove('pass-flash', 'pass-dim-black', 'pass-dim-white');
     buildBoardDom();
@@ -605,6 +608,7 @@
 
   function playMove(move, player){
     state.busy = true;
+    state.justMoved = player;
     applyMove(state.board, move, player);
     renderCell(idx(move.r, move.c));
     move.flips.forEach(function(i){ renderCell(i); });
@@ -629,6 +633,7 @@
   function setTurn(player){
     state.current = player;
     state.busy = false;
+    state.justMoved = null;
     renderAll();
     if (player === 'W') {
       state.busy = true;
@@ -842,8 +847,91 @@
   }
   introduceTraySlider();
 
-  els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  startGame();
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.othello';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // Nothing to resume once the game has ended (end flash, celebration / sad
+  // face, or the short pause before a tie restarts) -- a fresh game is right.
+  // justMoved is set only in the 500ms gap after a move is applied, before
+  // advanceTurn runs; the board already includes that move.
+  function snapshotGame(){
+    if (state.over) return null;
+    return {
+      difficulty: state.difficulty,
+      board: state.board.slice(),
+      current: state.current,
+      justMoved: state.justMoved,
+      dimBlack: els.board.classList.contains('pass-dim-black'),
+      dimWhite: els.board.classList.contains('pass-dim-white')
+    };
+  }
+
+  // Checks everything before touching the page, so bad data falls back to a
+  // normal fresh start instead of a half-built board.
+  function restoreGame(data){
+    if (!data || typeof data !== 'object') return false;
+    if (data.difficulty !== 'easy' && data.difficulty !== 'medium' && data.difficulty !== 'hard') return false;
+    if (!Array.isArray(data.board) || data.board.length !== N * N) return false;
+    for (var i = 0; i < data.board.length; i++) {
+      if (data.board[i] !== null && data.board[i] !== 'B' && data.board[i] !== 'W') return false;
+    }
+    if (data.current !== 'B' && data.current !== 'W') return false;
+    if (data.justMoved !== null && data.justMoved !== 'B' && data.justMoved !== 'W') return false;
+
+    state.difficulty = data.difficulty;
+    state.board = data.board.slice();
+    state.current = data.current;
+    state.busy = false;
+    state.over = false;
+    state.justMoved = null;
+    els.boardWrap.classList.remove('busy');
+    els.board.classList.remove('pass-flash', 'pass-dim-black', 'pass-dim-white');
+    if (data.dimBlack) els.board.classList.add('pass-dim-black');
+    if (data.dimWhite) els.board.classList.add('pass-dim-white');
+    buildBoardDom();
+    updateScore();
+    if (data.justMoved) {
+      // Saved mid-move: finish that move's turn hand-off (the 500ms pause
+      // already passed during the reload).
+      state.current = data.justMoved;
+      state.busy = true;
+      renderAll();
+      advanceTurn(data.justMoved);
+    } else {
+      // Player's turn: just wait. Bot's turn: setTurn schedules its move.
+      setTurn(data.current);
+    }
+    return true;
+  }
+
+  var resumed = takeResume();
+  if (resumed && restoreGame(resumed)) {
+    els.diffGroup.querySelector('[data-tier="' + state.difficulty + '"]').classList.add('active');
+  } else {
+    els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    startGame();
+  }
 })();
 </script>
 </body>

@@ -623,6 +623,7 @@
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
     if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
       location.reload();
     }
     wasInLandscapeBlock = e.matches;
@@ -631,6 +632,109 @@
     landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
   } else if (landscapeBlockMQ.addListener) {
     landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
+  }
+
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.math';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  var OP_SIGNS = { add: '+', sub: '−', mul: '×', div: '÷' };
+
+  // Everything needed to put the same equation back on screen. A reload mid-flash
+  // lands in the state the flash would have ended in: a correct answer is counted
+  // and moves on to a new problem, a wrong one keeps the problem with the input
+  // cleared (or moves on, if that was the last attempt).
+  function snapshotGame(){
+    // Round already won -- nothing left to resume, start fresh.
+    if (els.celebration.style.display === 'flex') return null;
+    var data = {
+      activeOp: state.activeOp,
+      difficulty: state.difficulty,
+      progress: state.progress,
+      a: state.a,
+      b: state.b,
+      answer: state.answerValue,
+      input: state.input,
+      attempts: state.attempts,
+      nextProblem: false
+    };
+    if (state.busy) {
+      data.input = '';
+      if (parseInt(state.input, 10) === state.answerValue) {
+        // Correct-answer flash: count it, then a new problem. If it was the
+        // round's last one, the celebration would follow and reset to 0.
+        data.progress = state.progress + 1;
+        if (data.progress >= ROUND_SIZE) data.progress = 0;
+        data.nextProblem = true;
+      } else if (state.attempts >= MAX_ATTEMPTS) {
+        // Wrong-answer flash on the last attempt: moves on to a new problem.
+        data.nextProblem = true;
+      }
+    }
+    return data;
+  }
+
+  function isWholeNumber(n, min, max){
+    return typeof n === 'number' && n % 1 === 0 && n >= min && n <= max;
+  }
+
+  // Check everything first, then rebuild -- bad data never touches the screen.
+  function restoreGame(data){
+    if (!data || !OP_SIGNS.hasOwnProperty(data.activeOp)) return false;
+    if (!TIER_MAX.hasOwnProperty(data.difficulty)) return false;
+    if (!isWholeNumber(data.progress, 0, ROUND_SIZE - 1)) return false;
+    if (!data.nextProblem) {
+      var a = data.a, b = data.b, answer = data.answer;
+      if (!isWholeNumber(a, 0, 10000) || !isWholeNumber(b, 0, 10000) || !isWholeNumber(answer, 0, 10000)) return false;
+      var expected = data.activeOp === 'add' ? a + b :
+                     data.activeOp === 'sub' ? a - b :
+                     data.activeOp === 'mul' ? a * b :
+                     (b > 0 ? a / b : -1);
+      if (expected !== answer) return false;
+      if (typeof data.input !== 'string' || !/^[0-9]*$/.test(data.input)) return false;
+      if (data.input.length > String(answer).length) return false;
+      if (!isWholeNumber(data.attempts, 0, MAX_ATTEMPTS - 1)) return false;
+    }
+
+    state.activeOp = data.activeOp;
+    state.difficulty = data.difficulty;
+    state.progress = data.progress;
+    state.busy = false;
+    if (data.nextProblem) {
+      newProblem();
+      return true;
+    }
+    state.a = data.a;
+    state.b = data.b;
+    state.answerValue = data.answer;
+    state.op = OP_SIGNS[data.activeOp];
+    state.input = data.input;
+    state.attempts = data.attempts;
+    els.answerInput.value = data.input;
+    els.answerInput.maxLength = String(state.answerValue).length;
+    // render() also redraws the progress dots and the active op/difficulty buttons.
+    render();
+    return true;
   }
 
   // iOS's own "hide keyboard" control dismisses the keyboard without blurring the
@@ -951,7 +1055,11 @@
   }
   introduceTraySlider();
 
-  newProblem();
+  // Pick up a game saved just before a rotate-block reload; otherwise a fresh start.
+  var resumed = takeResume();
+  if (!resumed || !restoreGame(resumed)) {
+    newProblem();
+  }
 })();
 </script>
 </body>

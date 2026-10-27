@@ -450,6 +450,7 @@
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
     if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
       location.reload();
     }
     wasInLandscapeBlock = e.matches;
@@ -480,7 +481,10 @@
     };
   }
 
-  function buildRound(){
+  // Random data for one round (every card's shapes + which card is odd),
+  // kept separate from the DOM so a resumed game can re-render the exact
+  // same round.
+  function generateRound(){
     var cfg = TIER_CONFIG[state.difficulty];
     var anchorType = shuffle(ANCHOR_SHAPES)[0];
     var pool = shuffle(SHAPES.filter(function(t){ return t !== anchorType; }));
@@ -523,9 +527,17 @@
       }
       clusters.push([anchor].concat(inner));
     }
-    state.clusters = clusters;
-    state.correctIndex = oddIndex;
+    return { clusters: clusters, correctIndex: oddIndex };
+  }
+
+  function renderRound(round){
+    state.clusters = round.clusters;
+    state.correctIndex = round.correctIndex;
     renderClusters();
+  }
+
+  function buildRound(){
+    renderRound(generateRound());
   }
 
   // ---------- rendering ----------
@@ -645,6 +657,80 @@
     buildRound();
   }
 
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.oddoneout';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // Difficulty, progress and the current round's exact cards. Null while the
+  // win celebration shows -- a fresh game is what comes next anyway.
+  function snapshotGame(){
+    if (els.celebration.style.display === 'flex') return null;
+    if (!state.clusters) return null;
+    var progress = state.progress;
+    var round = { clusters: state.clusters, correctIndex: state.correctIndex };
+    // Caught mid "correct" feedback, before the next round was built: count
+    // the answer and let restore deal a new round (null = generate one).
+    if (state.busy && els.clusterRow.querySelector('.cluster-card.correct')) {
+      progress++;
+      if (progress >= ROUND_SIZE) return null;
+      round = null;
+    }
+    return { difficulty: state.difficulty, progress: progress, round: round };
+  }
+
+  function isNum(v){ return typeof v === 'number' && isFinite(v); }
+  function isValidRound(round){
+    if (!round || !Array.isArray(round.clusters) || round.clusters.length !== CLUSTER_COUNT) return false;
+    var ci = round.correctIndex;
+    if (typeof ci !== 'number' || ci % 1 !== 0 || ci < 0 || ci >= CLUSTER_COUNT) return false;
+    return round.clusters.every(function(shapes){
+      return Array.isArray(shapes) && shapes.length > 0 && shapes.every(function(sh){
+        return sh && SHAPES.indexOf(sh.type) !== -1 &&
+          isNum(sh.x) && isNum(sh.y) && isNum(sh.size);
+      });
+    });
+  }
+
+  // Everything is checked before anything is touched, so bad data falls
+  // back to a normal fresh start without leaving a half-built board.
+  function restoreGame(data){
+    if (!data || !TIER_CONFIG.hasOwnProperty(data.difficulty)) return false;
+    var p = data.progress;
+    if (typeof p !== 'number' || p % 1 !== 0 || p < 0 || p >= ROUND_SIZE) return false;
+    if (data.round !== null && !isValidRound(data.round)) return false;
+    var btn = els.diffGroup.querySelector('[data-tier="' + data.difficulty + '"]');
+    if (!btn) return false;
+
+    state.difficulty = data.difficulty;
+    state.progress = p;
+    state.busy = false;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    updateProgressDots();
+    renderRound(data.round || generateRound());
+    return true;
+  }
+
   els.diffGroup.addEventListener('click', function(e){
     var btn = e.target.closest('.diff-btn');
     if (!btn) return;
@@ -695,8 +781,11 @@
   }
   introduceTraySlider();
 
-  els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  startGame();
+  var resumed = takeResume();
+  if (!(resumed && restoreGame(resumed))) {
+    els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    startGame();
+  }
 })();
 </script>
 </body>

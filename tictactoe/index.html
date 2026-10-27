@@ -457,6 +457,7 @@
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
     if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
       location.reload();
     }
     wasInLandscapeBlock = e.matches;
@@ -465,6 +466,30 @@
     landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
   } else if (landscapeBlockMQ.addListener) {
     landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
+  }
+
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.tictactoe';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
   }
 
   function bindPressFeedback(cell){
@@ -573,6 +598,12 @@
     if(state.busy || state.over || state.board[i]) return;
     place(i, 'X');
     if(checkEnd()) return;
+    startComputerTurn();
+  }
+
+  // The computer "thinks" for a moment, then places its O. Also used to
+  // finish the bot's turn when a game is resumed mid-think.
+  function startComputerTurn(){
     state.busy = true;
     els.boardWrap.classList.add('busy');
     setTimeout(function(){
@@ -689,6 +720,69 @@
     resetBoard();
   }
 
+  function countMarks(board, mark){
+    var n = 0;
+    for(var i=0;i<9;i++) if(board[i] === mark) n++;
+    return n;
+  }
+
+  // Plain-data copy of the game for saveResume. Null while a yay/lose
+  // milestone overlay is up -- that round is finished, so start fresh.
+  function snapshotGame(){
+    if (els.yayOverlay.classList.contains('show') || els.loseOverlay.classList.contains('show')) return null;
+    var scoreX = state.scoreX;
+    var scoreO = state.scoreO;
+    var board = state.board.slice();
+    // Mid end-of-round fade: settle the round now (as onWinResolved /
+    // onLoseResolved would) and resume on a fresh board. If that win reaches
+    // WINS_TO_GO the milestone would show and then zero the scores anyway, so
+    // just start fresh.
+    if (state.over) {
+      var res = getResult(board);
+      if (res.winner === 'X') scoreX += 1;
+      else if (res.winner === 'O') scoreO += 1;
+      if (scoreX >= WINS_TO_GO || scoreO >= WINS_TO_GO) return null;
+      board = Array(9).fill(null);
+    }
+    return { difficulty: state.difficulty, scoreX: scoreX, scoreO: scoreO, board: board };
+  }
+
+  // Rebuild the game from a snapshotGame object. Everything is checked before
+  // anything is touched, so bad data leaves the page as-is and returns false.
+  function restoreGame(data){
+    if (!data || typeof data !== 'object') return false;
+    var diffBtn = (data.difficulty === 'easy' || data.difficulty === 'medium' || data.difficulty === 'hard')
+      ? els.diffGroup.querySelector('[data-tier="' + data.difficulty + '"]') : null;
+    if (!diffBtn) return false;
+    function okScore(n){ return typeof n === 'number' && n % 1 === 0 && n >= 0 && n < WINS_TO_GO; }
+    if (!okScore(data.scoreX) || !okScore(data.scoreO)) return false;
+    var board = data.board;
+    if (!Array.isArray(board) || board.length !== 9) return false;
+    for (var i = 0; i < 9; i++) {
+      if (board[i] !== null && board[i] !== 'X' && board[i] !== 'O') return false;
+    }
+    // The player (X) always moves first, so X is level with O or one ahead
+    // (one ahead = the computer was still thinking). A finished board can't be
+    // resumed -- snapshotGame never saves one.
+    var xs = countMarks(board, 'X');
+    var os = countMarks(board, 'O');
+    if (xs !== os && xs !== os + 1) return false;
+    if (getResult(board).winner) return false;
+
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    diffBtn.classList.add('active');
+    state.difficulty = data.difficulty;
+    state.scoreX = data.scoreX;
+    state.scoreO = data.scoreO;
+    updateScoreDisplay();
+    resetBoard();
+    for (var j = 0; j < 9; j++) {
+      if (board[j]) place(j, board[j]);
+    }
+    if (xs === os + 1) startComputerTurn();
+    return true;
+  }
+
   els.yayOverlay.addEventListener('click', finishMilestone);
   els.loseOverlay.addEventListener('click', finishMilestone);
   els.refreshBtn.addEventListener('click', restartRound);
@@ -742,9 +836,14 @@
   introduceTraySlider();
 
   buildCells();
-  els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  updateScoreDisplay();
-  resetBoard();
+  // Coming back from the rotate-block reload: continue the saved game.
+  // Otherwise (or if the save is unusable) start fresh as usual.
+  var resumed = takeResume();
+  if (!(resumed && restoreGame(resumed))) {
+    els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    updateScoreDisplay();
+    resetBoard();
+  }
 })();
 </script>
 

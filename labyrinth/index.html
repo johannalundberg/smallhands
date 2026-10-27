@@ -396,6 +396,7 @@
   var wasInLandscapeBlock = landscapeBlockMQ.matches;
   function onLandscapeBlockChange(e){
     if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
       location.reload();
     }
     wasInLandscapeBlock = e.matches;
@@ -404,6 +405,90 @@
     landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
   } else if (landscapeBlockMQ.addListener) {
     landscapeBlockMQ.addListener(onLandscapeBlockChange);
+  }
+
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.labyrinth';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // The maze is random, so the whole wall bitmask array is stored, not
+  // regenerated. Mid-glide, the token counts as already at the end of that
+  // move (movingTo). Nothing to resume once the exit is reached/being reached
+  // or the win face is up -- a fresh maze is the right thing then.
+  function snapshotGame(){
+    if (!state.walls) return null;
+    if (els.celebration.style.display === 'flex') return null;
+    var player = (state.busy && movingTo !== null) ? movingTo : state.player;
+    if (player === state.exit) return null;
+    return {
+      difficulty: state.difficulty,
+      cols: state.cols,
+      rows: state.rows,
+      walls: Array.prototype.slice.call(state.walls),
+      player: player,
+      exit: state.exit
+    };
+  }
+
+  function isCellIndex(n, total){
+    return typeof n === 'number' && n % 1 === 0 && n >= 0 && n < total;
+  }
+
+  // Validates everything before touching state or the DOM, so bad data just
+  // falls back to a fresh game. Walls must agree on both sides of every
+  // opening and never open off the board (traceCorridor relies on that).
+  function restoreGame(data){
+    if (!data || typeof data !== 'object' || !TIER_MAZE.hasOwnProperty(data.difficulty)) return false;
+    var cols = data.cols, rows = data.rows;
+    if (!isCellIndex(cols, 101) || !isCellIndex(rows, 101) || cols < 2 || rows < 2) return false;
+    var total = cols * rows;
+    if (!Array.isArray(data.walls) || data.walls.length !== total) return false;
+    if (!isCellIndex(data.player, total) || !isCellIndex(data.exit, total) || data.player === data.exit) return false;
+
+    var walls = new Uint8Array(total);
+    for (var i = 0; i < total; i++) {
+      if (!isCellIndex(data.walls[i], 16)) return false;
+      walls[i] = data.walls[i];
+    }
+    for (var j = 0; j < total; j++) {
+      var r = Math.floor(j / cols), c = j % cols;
+      for (var k = 0; k < ALL_DIRS.length; k++) {
+        var dir = ALL_DIRS[k];
+        if (!(walls[j] & dir)) continue;
+        var d = DELTA[dir];
+        if (!inBounds(r + d[0], c + d[1], cols, rows)) return false;
+        if (!(walls[idx(r + d[0], c + d[1], cols)] & OPPOSITE[dir])) return false;
+      }
+    }
+
+    state.difficulty = data.difficulty;
+    state.cols = cols;
+    state.rows = rows;
+    state.walls = walls;
+    state.player = data.player;
+    state.exit = data.exit;
+    renderBoard();
+    return true;
   }
 
   // ---------- maze generation ----------
@@ -572,7 +657,8 @@
     svg.appendChild(token);
     els.playerToken = token;
 
-    setTokenPosition(0, 0);
+    // state.player is 0 on a fresh maze; a resumed game puts it back mid-maze.
+    setTokenPosition(Math.floor(state.player / cols), state.player % cols);
   }
 
   function buildTapGridDom(cols, rows){
@@ -739,9 +825,13 @@
   // cell -- the token visually follows the corridor's own turns (each cell
   // center is a keyframe), but plays as a single smooth motion.
   var STEP_MS = 150;
+  // Where the in-flight glide will land (state.player only updates when it
+  // finishes) -- read by snapshotGame if the page reloads mid-move.
+  var movingTo = null;
   function animateAlongPath(path){
     if (!path.length) return;
     state.busy = true;
+    movingTo = path[path.length - 1];
 
     var cells = [state.player].concat(path);
     var keyframes = cells.map(function(cell){
@@ -758,6 +848,7 @@
       state.player = lastCell;
       setTokenPosition(lastR, lastC);
       state.busy = false;
+      movingTo = null;
       updateReachableHints();
       if (state.player === state.exit) showCelebration();
     };
@@ -786,11 +877,18 @@
     braid(state.walls, dims.cols, dims.rows, tier.braid);
     state.player = 0;
     state.exit = dims.cols * dims.rows - 1;
+    renderBoard();
+  }
+
+  // Builds the whole board from what's already in state (dims, walls, player,
+  // exit) -- shared by startGame and restoreGame.
+  function renderBoard(){
     state.busy = false;
+    movingTo = null;
     els.boardWrap.classList.remove('busy');
-    sizeBoardWrap(dims.cols, dims.rows);
-    buildTapGridDom(dims.cols, dims.rows);
-    renderWalls(dims.cols, dims.rows);
+    sizeBoardWrap(state.cols, state.rows);
+    buildTapGridDom(state.cols, state.rows);
+    renderWalls(state.cols, state.rows);
     updateReachableHints();
   }
 
@@ -872,8 +970,13 @@
   }
   introduceTraySlider();
 
-  els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-  startGame();
+  var resumed = takeResume();
+  if (resumed && restoreGame(resumed)) {
+    els.diffGroup.querySelector('[data-tier="' + state.difficulty + '"]').classList.add('active');
+  } else {
+    els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    startGame();
+  }
 })();
 </script>
 </body>
