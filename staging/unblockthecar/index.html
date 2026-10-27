@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+<meta name="robots" content="noindex">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-45ZK78NND7');
+</script>
+
+<title>Unblock the Car</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<link rel="manifest" href="../../manifest.json">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://playandlearn.kids/unblockthecar/">
+<meta property="og:title" content="Unblock the Car — Play and Learn">
+<meta property="og:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta property="og:image" content="https://playandlearn.kids/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Unblock the Car — Play and Learn">
+<meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
+<style>
+  :root{
+    --bg:#2E8C8C;
+    --board:rgba(32,32,32,0.35);
+    --spot:rgba(32,32,32,0.18);
+    --red-car:#F2383B;
+    --bright:#E4E4E4;
+    --ink:#202020;
+    --ink-muted:rgba(32,32,32,0.4);
+    --success:#0DC754;
+    --incorrect:#F2383B;
+    /* Figma frame: 1728x1117 */
+    --board-size: min(76vmin, 76vw, 570px);
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+
+  /* Tablet/desktop: size the board against the room left between the top and
+     bottom icon rows, same as Number Puzzle and Othello. */
+  @media (min-width: 768px){
+    :root{
+      --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+      --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
+      --board-size: min(76vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 570px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+    transition: background 80ms ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ---------- icon buttons (difficulty / back / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 120ms ease;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ transform: translateZ(0) scale(1.035); }
+  }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  .progress-dots{
+    position:absolute;
+    right:var(--unit);
+    bottom:var(--unit);
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap: calc(var(--icon-size) * 0.08);
+  }
+  .progress-dots .dot{
+    width: calc(var(--icon-size) * 0.25);
+    height: calc(var(--icon-size) * 0.25);
+    border-radius:50%;
+    background: var(--ink-muted);
+    transition: background 150ms ease;
+  }
+  .progress-dots .dot.done{ background: var(--bright); }
+
+  /* ---------- the parking lot ---------- */
+  /* --pad is the frame around the 6x6 lot; --cell is one square of it. Cars
+     are placed with calc() off --cell, so a resize needs no JS at all. */
+  .board-wrap{
+    position:relative;
+    width:var(--board-size);
+    height:var(--board-size);
+    --pad: calc(var(--board-size) * 0.03);
+    --cell: calc((var(--board-size) - 2 * var(--pad)) / 6);
+    touch-action:none;
+  }
+  .board{
+    position:absolute;
+    inset:0;
+    background:var(--board);
+    border-radius: calc(var(--board-size) * 0.04);
+  }
+  .lot{
+    position:absolute;
+    left:var(--pad);
+    top:var(--pad);
+    width:calc(var(--cell) * 6);
+    height:calc(var(--cell) * 6);
+  }
+  .spot{
+    position:absolute;
+    width:var(--cell);
+    height:var(--cell);
+    padding:calc(var(--cell) * 0.06);
+  }
+  .spot::before{
+    content:'';
+    display:block;
+    width:100%;
+    height:100%;
+    border-radius:calc(var(--cell) * 0.14);
+    background:var(--spot);
+  }
+  /* The way out: a gap in the right side of the frame on the red car's row,
+     with an arrow pointing off the board. */
+  .exit{
+    position:absolute;
+    right:calc(var(--pad) * -1.5);
+    top:calc(var(--pad) + var(--cell) * 2);
+    width:calc(var(--pad) * 3);
+    height:var(--cell);
+    background:var(--bg);
+    transition: background 80ms ease;
+  }
+  .exit-arrow{
+    position:absolute;
+    left:calc(100% + var(--pad) * 0.6);
+    top:calc(var(--pad) + var(--cell) * 2.5);
+    width:calc(var(--cell) * 0.32);
+    height:calc(var(--cell) * 0.32);
+    transform:translateY(-50%);
+    pointer-events:none;
+  }
+  .exit-arrow svg{ width:100%; height:100%; display:block; }
+
+  .car{
+    position:absolute;
+    padding:calc(var(--cell) * 0.06);
+    cursor:grab;
+    touch-action:none;
+    -webkit-touch-callout:none;
+    z-index:1;
+    will-change:transform;
+  }
+  .car.snap{ transition: transform 160ms cubic-bezier(0.34, 1.4, 0.64, 1); }
+  .car.dragging{ cursor:grabbing; z-index:3; }
+  .car-body{
+    width:100%;
+    height:100%;
+    border-radius:calc(var(--cell) * 0.2);
+    background:var(--car-color);
+    position:relative;
+    transition: transform 120ms ease, box-shadow 120ms ease;
+  }
+  .car.dragging .car-body{
+    transform:scale(1.04);
+    box-shadow:0 8px 18px rgba(0,0,0,0.3);
+  }
+  /* Windscreen strip, so a car reads as a car and not a plain block. Sits at
+     the front end: the right for horizontal cars, the top for vertical ones. */
+  .car-body::after{
+    content:'';
+    position:absolute;
+    background:rgba(32,32,32,0.22);
+    border-radius:calc(var(--cell) * 0.08);
+  }
+  .car.h .car-body::after{ top:18%; bottom:18%; right:16%; width:calc(var(--cell) * 0.16); }
+  .car.v .car-body::after{ left:18%; right:18%; top:16%; height:calc(var(--cell) * 0.16); }
+  .car.red .car-body::after{ display:none; }
+  /* The red car looks toward the exit: two round eyes like the site's faces. */
+  .eyes{
+    position:absolute;
+    right:12%;
+    top:50%;
+    transform:translateY(-50%);
+    display:flex;
+    flex-direction:column;
+    gap:calc(var(--cell) * 0.12);
+  }
+  .eyes i{
+    display:block;
+    width:calc(var(--cell) * 0.2);
+    height:calc(var(--cell) * 0.2);
+    border-radius:50%;
+    background:var(--bright);
+  }
+  .car.bump .car-body{ animation: car-bump 220ms ease; }
+  @keyframes car-bump{
+    0%, 100%{ transform:translate(0,0); }
+    40%{ transform:translate(var(--bump-x, 0), var(--bump-y, 0)); }
+  }
+  /* Solved: the red car drives off through the exit. */
+  .car.driving{ transition: transform 520ms cubic-bezier(0.55, 0, 0.75, 0.4), opacity 520ms ease 200ms; opacity:0; }
+
+  @keyframes bounce-in{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(var(--final-scale)); opacity:1; }
+  }
+  .celebration{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:4;
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  @media (max-width: 767px), (max-height: 500px){
+    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
+       here -- darken on tap instead, so pressing any icon button is
+       actually visible. (The icons inside the tray deliberately don't grow:
+       the tray itself is the thing that grows, see .controls-slider:active.) */
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+      /* Bigger than the other games' 76vw: the cars are dragged by small
+         fingers, so every extra pixel of cell helps. Leaves room on the right
+         for the exit arrow. */
+      --board-size: min(86vw, calc(var(--app-height, 100vh) - var(--unit) * 4 - var(--icon-size) * 1.25), 520px);
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      background: rgba(32,32,32,0.4);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    /* Press feedback for the tray itself, like the icons and tiles: it grows
+       slightly while touched (:active also matches while any button inside it
+       is held, so tapping an icon gives both). */
+    .controls-slider{ transition: transform 120ms ease; }
+    .controls-slider:active{ transform: scale(1.03); }
+    .diff-group, .btn-row{ display:contents; }
+    .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
+    body{
+      padding-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
+      padding-bottom: calc(var(--unit) * 2 + var(--icon-size));
+    }
+  }
+
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    :root{
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+
+  /* No game here is designed to work in phone landscape — rather than a half-broken
+     cramped layout, block it outright with a plain "please rotate" screen. Matches
+     the same phone-landscape condition already used elsewhere (a landscape tablet has
+     enough height to stay excluded and keeps its normal, working layout). */
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:var(--incorrect);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    .rotate-block{ display:flex; }
+  }
+  /* No double-tap zoom anywhere. touch-action doesn't reach into a scrolling
+     element (the mobile tray scrolls sideways), so the tray needs its own:
+     two quick taps on the level buttons there zoomed the whole page in, and
+     with zoom otherwise locked there was no way back out. */
+  html, body, .controls-slider{ touch-action:manipulation; }
+</style>
+</head>
+<body>
+
+  <div class="rotate-block">
+    <!-- Pixel-art sad face (Figma node 198:1914), matching the site's other
+         lose-state faces, in place of the old curved-path frown. -->
+    <svg viewBox="0 0 973 366">
+      <circle fill="#202020" cx="65" cy="65" r="65"/>
+      <circle fill="#202020" cx="908" cy="65" r="65"/>
+      <rect fill="#202020" x="291" y="171" width="392" height="65"/>
+      <rect fill="#202020" x="161" y="236" width="130" height="130"/>
+      <rect fill="#202020" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
+
+  <div class="controls-slider" id="controlsSlider">
+    <div class="diff-group" id="diffGroup">
+      <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M114 75C114 53.4609 96.5391 36 75 36C53.4609 36 36 53.4609 36 75C36 96.5391 53.4609 114 75 114V150C33.5786 150 0 116.421 0 75C0 33.5786 33.5786 0 75 0C116.421 0 150 33.5786 150 75C150 116.421 116.421 150 75 150V114C96.5391 114 114 96.5391 114 75Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+        <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/></svg>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" aria-label="New puzzles">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M111.491 32.1671L112.864 53.5756L90.0895 53.5683"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M110.802 97.5619C106.102 105.702 98.8837 112.094 90.2343 115.774C81.5848 119.454 71.9735 120.223 62.8492 117.964C53.7249 115.705 45.5822 110.541 39.6485 103.251C33.7149 95.9607 30.312 86.9392 29.9527 77.5463C29.5935 68.1534 32.2974 58.8983 37.6569 51.1762C43.0164 43.454 50.7409 37.6834 59.666 34.7343C68.5911 31.7851 78.2331 31.8172 87.1383 34.8258C96.0436 37.8343 103.729 43.6563 109.037 51.4139"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="progress-dots" id="progressDots">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <div class="board"></div>
+    <div class="exit" id="exit"></div>
+    <div class="exit-arrow">
+      <svg viewBox="0 0 100 100"><path fill="var(--bright)" d="M20 8L80 50L20 92Z"/></svg>
+    </div>
+    <div class="lot" id="lot"></div>
+  </div>
+
+  <div class="celebration" id="celebration"></div>
+
+<script src="../../sound.js?v=20261025ze"></script>
+<script>
+(function(){
+  "use strict";
+
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
+
+  // Each level is a 6x6 board read row by row: '.' is empty, 'A' is the red
+  // car (always on row 3, heading for the exit on the right), every other
+  // letter is one car (2 long) or truck (3 long). The number is the fewest
+  // moves that solve it (one move = one slide, however far), found by a BFS
+  // solver offline -- every board here is checked solvable.
+  var LEVELS = {
+    easy: [
+      ['D.....D.....D.AAC.....C.......BB....', 2],
+      ['...CCC......AA..B.....B.............', 2],
+      ['...........BAA...B.E..DD.E........CC', 2],
+      ['............AAC....BC....BC.........', 2],
+      ['.E.....E.BBCAA...C...FFF......DD....', 2],
+      ['........B...AAB.......DD..........CC', 2],
+      ['.............AAB..CC.B..............', 2],
+      ['......CCEEDDAA...B.....B......FF....', 2],
+      ['.........C...AAC...........BB.......', 2],
+      ['.........DDD.AA..CBB...C....EE......', 3],
+      ['....DD.....BAA.C.B...C.B............', 3],
+      ['......B...F.BAACF.E..C..E.....DD....', 3],
+      ['....DD.....CAA...C.....C..........BB', 3],
+      ['....DD...CB.AA.CB....C..............', 3],
+      ['............AA.B.C...B.C............', 3],
+      ['...DD.....C.AA..C....BBB.E.....E....', 3],
+      ['...........DAA.C.D...C.E..BBBE.....E', 3],
+      ['.........E..AA.EB..DD.B...........CC', 3],
+      ['....FF...CDDAA.CB....CB....EEE......', 4],
+      ['....E.CCCDE.AA.DEF.....F.B...F.B....', 4],
+      ['...D.....D..AA.D...........BB.CC.EE.', 4],
+      ['........B.C.AAB.C...B....DD.........', 4],
+      ['.....C...EDCAA.EDCB...D.B.....B.....', 4],
+      ['...F.....F..AA.C.B...C.B...EE.DD....', 4],
+      ['.....B.....BAA...B....EE.C..DD.C....', 4],
+      ['........BBB.AAED.C..ED.C............', 4],
+      ['........CC..AA.E.D...E.D.FBB...F....', 4],
+      ['...CFF...C..AADCE...D.E..........BB.', 5],
+      ['...C.....CDB.AACDB...FFE.....E......', 5],
+      ['C...FFC....EAA...E..B..E..BDDD..B...', 5]
+    ],
+    medium: [
+      ['CCGGF.....FH.AADFH...DEE..........BB', 6],
+      ['..CFFF..CGGG..AAB.....B....EDD...E..', 6],
+      ['...III..DDE.AA.FEJBBBF.J.G.H...G.HCC', 6],
+      ['..FGHH..FGC.AAFGCEB...DEB...D.B.....', 6],
+      ['....GD....GD.AACGD...C..E.F...E.FBB.', 6],
+      ['...DDD..EEHIAA..HI.GG.HF..CCCF...BB.', 6],
+      ['.....C..BG.CAABGEC....E.F..D..F..DHH', 7],
+      ['...B..DD.BE.CAABEFC.GGGFH.....H.....', 7],
+      ['.HHDDD..IIIC..AABC...EB....EFF....GG', 7],
+      ['.HHHFF....CCAAJ.GE..J.GED...G.DII.BB', 7],
+      ['..CFHHIICFGE.DAAGE.D...B.D...B.....B', 7],
+      ['....CC...HHHAAFGDB..FGDB.I.G.B.I.EEE', 7],
+      ['EEDHH...DGGG.AAFBI...FBI...J..CC.J..', 8],
+      ['....H.....H.AA..B.DIGGB.DI.FCC.EEFJJ', 8],
+      ['.....D.....DAA...H.ECCCH.E.FGGBB.F..', 8],
+      ['.....CDDD.IC..AAICJ.EEBBJ..GGG..HHFF', 8],
+      ['BBBCC.....IF..AAIF..GG..J..HDDJ..HEE', 8],
+      ['...CCJ....HJ.AA.HBII...BEFGGDDEF....', 9],
+      ['.....B.....BAAF..BC.F...CGGGEEC.HHDD', 9],
+      ['..G.FF..G.BB..AAJI.EE.JI..CCD.HHH.D.', 9],
+      ['..........HB..AAHBGGEEH....CDDFFFC..', 9],
+      ['C.FIIIC.FEBBCAAEJG....JG....H.DD..H.', 10],
+      ['HHH..E...D.EAABD....B...F.GII.F.G.CC', 10],
+      ['.....G...JHGAA.JHG......CDBBFFCDEEII', 10],
+      ['..EDDD..ECFI.AACFI.HHHGB....GB......', 10],
+      ['.....E..B..E..BAAE..HDGGF.HD..FCCD..', 10],
+      ['..C.....C.JE..AAJEGGGBBEIHHDDDIFF...', 11],
+      ['.DJICC.DJIBFAA..BF..EEEH...G.H...G..', 11],
+      ['..B.D...B.D.AAB.D..F....CFEE..C.....', 11],
+      ['...BDD...B.HE.AAFHE...FHEGGGII...CCC', 11]
+    ],
+    hard: [
+      ['KDDDHHKGGGBEAA.JBE...J.E...CII.LLCFF', 12],
+      ['.GGCCC.LLBBB..AADK..JJDK..EFFH..EIIH', 12],
+      ['FFF.H.KK..HBAA..HBD.LLCCDEEIIJD..GGJ', 12],
+      ['EIIIB.E.CCBKAA..BK...FF..GGJDD...JHH', 12],
+      ['C.GGDDCIIHHHAA..LKFFBBLK.....E..JJJE', 12],
+      ['.GGGKK...BBLAA..CLFFJJC.E.HHIIE...DD', 13],
+      ['E.HIDDE.HI..EKAABJ.K..BJ....C.GGFFC.', 13],
+      ['H..JLLHGGJ.DH.AAIDKKCCIDB..MMMBEEFFF', 13],
+      ['I...B.I..GB.FAAGB.F.C...F.CDDJHHEE.J', 13],
+      ['.......C.HHD.CAAJDBBEEJD...GII...GFF', 13],
+      ['..CCJ..FE.JG.FEAAGIIBK.G..BKHH..DD..', 14],
+      ['C...GGC.JJKKAAEL..DDELI.BBHHIF.....F', 14],
+      ['JCC...JE.DDBJEAALBIIHHLB...FKK...FGG', 14],
+      ['GEEID.G.JID.AAJI....KBBH.FK.CH.FK.C.', 14],
+      ['FFFMMKDBBBJKD.AAJ.II.GJ..LLGCC..HHEE', 14],
+      ['JEHHB.JEGCBDAAGCID..FCID..F.....F...', 15],
+      ['D.....DHHHJ.AAGFJ...GFBB.CCC.I..EE.I', 15],
+      ['GGGEDI...EDIF.AADIF.J.....JBBB..HHCC', 15],
+      ['.KDI...KDI..CAAL..C.HLFFE.HBBJE.GGGJ', 15],
+      ['....FF..KGEEAAKG..DJKGIIDJHHBC....BC', 15],
+      ['MDHHCCMDJEE.AAJG..F..GKKF.II.LF.BB.L', 16],
+      ['FDDKKBF....BFAACI.JJHCI...HGGG..EE..', 16],
+      ['.JLL...JE..C.FEAACBFHKKCBFHDGGIIHD..', 17],
+      ['IIEEJ...K.JB..KAABGGGH.B.LLHFF.CCDD.', 18],
+      ['GG..I.JDD.IEJ.AAIEL.KBBFL.KHHFCCC..F', 18],
+      ['EEI...G.IBBBGAAJD....JD.HHFFF...CCC.', 19],
+      ['..DDLL...GGI..AAFIEECCFIMJJBKKM..BHH', 20],
+      ['HKKKB.H..CBGAA.CFGDDICF..EI....EJJJ.', 20],
+      ['CII..HCBBBJHC.AAJF.KEE.F.KMDGGLLMD..', 20],
+      ['CCC.IB..FGIBAAFGIBJ..LKKJDDL....HHEE', 20]
+    ]
+  };
+
+  var TIERS = ['easy', 'medium', 'hard'];
+  var ROUND_SIZE = 5;
+  var EXIT_ROW = 2;
+  var EXIT_POS = 4; // red car's column when it's at the exit
+  var TAP_SLOP = 10;
+
+  // Car colours from the site's other games; trucks get their own set so the
+  // long ones read as a different kind of vehicle.
+  var CAR_COLORS = ['#707EFF', '#E4AA2D', '#FD9162', '#C641FF', '#79A1FF', '#FFCE63', '#E4E4E4', '#FF8FB4'];
+  var TRUCK_COLORS = ['#3452A0', '#8104C9', '#FD6427', '#583813'];
+
+  var state = {
+    difficulty: 'easy',
+    round: [],      // level indices (into LEVELS[difficulty]) for this round
+    progress: 0,    // levels solved this round
+    cars: [],       // { h, len, lane, color } per vehicle; cars[0] is red
+    pos: [],        // each vehicle's position along its own lane
+    busy: false
+  };
+
+  var els = {
+    lot: document.getElementById('lot'),
+    boardWrap: document.getElementById('boardWrap'),
+    diffGroup: document.getElementById('diffGroup'),
+    backBtn: document.getElementById('backBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    progressDots: document.querySelectorAll('#progressDots .dot'),
+    celebration: document.getElementById('celebration'),
+    controlsSlider: document.getElementById('controlsSlider')
+  };
+
+  var winTimer = null;
+  var celebrationTimer = null;
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+
+  // iOS can leave --app-height stuck at a stale reading after the tab is
+  // backgrounded (app-switched away from, screen locked) and never self-
+  // correct on return, since nothing else re-fires resize/scroll -- force a
+  // fresh reading the moment the page becomes visible again.
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') updateAppHeight();
+  });
+
+  // Rotating out of the phone-landscape rotate-block and back to portrait can
+  // leave iOS's WebKit engine (Safari, Chrome, any iOS browser — Apple requires
+  // them all to use it) rendering at the previous orientation's zoom/scale, so
+  // the layout comes back oversized and spills past the screen edge. Toggling
+  // the viewport meta wasn't enough to unstick it, so instead: reload outright
+  // the moment the device leaves that blocked landscape state. A fresh load
+  // can't inherit a stuck scale — there's nothing left to get stuck.
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
+      location.reload();
+    }
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) {
+    landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  } else if (landscapeBlockMQ.addListener) {
+    landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
+  }
+
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.unblockthecar';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // pos: null means "the last level was just solved, start the next one".
+  function snapshotGame(){
+    if (els.celebration.style.display === 'flex') return null; // round already won, a fresh round is right
+    if (!state.cars.length) return null;
+    forceEndDrag();
+    var progress = state.progress;
+    var pos = state.pos.slice();
+    if (state.busy) {
+      // Mid drive-off: its timeout won't survive the reload, so count the
+      // solve here and let restore move on to the next level.
+      progress += 1;
+      if (progress >= ROUND_SIZE) return null;
+      pos = null;
+    }
+    return {
+      difficulty: state.difficulty,
+      round: state.round.slice(),
+      progress: progress,
+      pos: pos
+    };
+  }
+
+  function isWholeNumber(v, min, max){
+    return typeof v === 'number' && Math.floor(v) === v && v >= min && v <= max;
+  }
+
+  // Everything is checked before touching state or the DOM, so bad data just
+  // falls back to a fresh round instead of leaving a half-built board.
+  function restoreGame(data){
+    if (!data || typeof data !== 'object') return false;
+    if (TIERS.indexOf(data.difficulty) === -1) return false;
+    var pool = LEVELS[data.difficulty];
+    if (!Array.isArray(data.round) || data.round.length !== ROUND_SIZE) return false;
+    for (var i = 0; i < data.round.length; i++) {
+      if (!isWholeNumber(data.round[i], 0, pool.length - 1)) return false;
+    }
+    if (!isWholeNumber(data.progress, 0, ROUND_SIZE - 1)) return false;
+    if (data.pos != null) {
+      var cars = parseLevel(pool[data.round[data.progress]][0]);
+      if (!Array.isArray(data.pos) || data.pos.length !== cars.length) return false;
+      for (var c = 0; c < cars.length; c++) {
+        if (!isWholeNumber(data.pos[c], 0, 6 - cars[c].len)) return false;
+      }
+      if (!fitsTogether(cars, data.pos) || data.pos[0] === EXIT_POS) return false;
+    }
+
+    state.difficulty = data.difficulty;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === data.difficulty);
+    });
+    state.round = data.round.slice();
+    state.progress = data.progress;
+    updateProgressDots();
+    buildLevel(data.pos); // same car positions as before the reload
+    return true;
+  }
+
+  // ---------- levels ----------
+  function parseLevel(board){
+    var found = {}, order = [];
+    for (var i = 0; i < 36; i++) {
+      var ch = board.charAt(i);
+      if (ch === '.') continue;
+      if (!found[ch]) { found[ch] = []; order.push(ch); }
+      found[ch].push(i);
+    }
+    order.sort(); // 'A' (the red car) first
+    var cars = [], nTruck = 0, carUses = CAR_COLORS.map(function(){ return 0; });
+    order.forEach(function(ch){
+      var cells = found[ch];
+      var h = cells[1] - cells[0] === 1;
+      var len = cells.length;
+      var color = ch === 'A' ? 'var(--red-car)'
+        : len === 3 ? TRUCK_COLORS[nTruck++ % TRUCK_COLORS.length]
+        : pickCarColor(cells, cars, carUses);
+      cars.push({
+        h: h,
+        len: len,
+        lane: h ? Math.floor(cells[0] / 6) : cells[0] % 6,
+        start: h ? cells[0] % 6 : Math.floor(cells[0] / 6),
+        cells: cells,
+        color: color
+      });
+    });
+    return cars;
+  }
+
+  // Hard boards hold more cars than there are colours. Give each car the
+  // least-used colour that no car touching it already has, so two cars of
+  // the same colour never start side by side.
+  function pickCarColor(cells, cars, uses){
+    var nearby = {};
+    cars.forEach(function(other){
+      var touches = other.cells.some(function(a){
+        return cells.some(function(b){
+          return (a === b - 6 || a === b + 6) || (Math.floor(a / 6) === Math.floor(b / 6) && Math.abs(a - b) === 1);
+        });
+      });
+      if (touches) nearby[other.color] = true;
+    });
+    var best = -1;
+    for (var i = 0; i < CAR_COLORS.length; i++) {
+      if (nearby[CAR_COLORS[i]]) continue;
+      if (best === -1 || uses[i] < uses[best]) best = i;
+    }
+    if (best === -1) best = 0;
+    uses[best] += 1;
+    return CAR_COLORS[best];
+  }
+
+  // Which car (index) sits on each of the 36 squares, -1 for empty.
+  // skip: leave that car out (used to find where it may slide).
+  function occupancy(cars, pos, skip){
+    var g = [];
+    for (var i = 0; i < 36; i++) g.push(-1);
+    for (var c = 0; c < cars.length; c++) {
+      if (c === skip) continue;
+      for (var j = 0; j < cars[c].len; j++) g[squareOf(cars[c], pos[c] + j)] = c;
+    }
+    return g;
+  }
+  function squareOf(car, p){ return car.h ? car.lane * 6 + p : p * 6 + car.lane; }
+
+  function fitsTogether(cars, pos){
+    var seen = {};
+    for (var c = 0; c < cars.length; c++) {
+      for (var j = 0; j < cars[c].len; j++) {
+        var sq = squareOf(cars[c], pos[c] + j);
+        if (seen[sq]) return false;
+        seen[sq] = true;
+      }
+    }
+    return true;
+  }
+
+  // The furthest a car can slide each way from where it stands.
+  function slideRange(c){
+    var car = state.cars[c], g = occupancy(state.cars, state.pos, c);
+    var min = state.pos[c], max = state.pos[c];
+    while (min > 0 && g[squareOf(car, min - 1)] === -1) min--;
+    while (max + car.len < 6 && g[squareOf(car, max + car.len)] === -1) max++;
+    return { min: min, max: max };
+  }
+
+  function pickRound(tier){
+    var idx = [];
+    for (var i = 0; i < LEVELS[tier].length; i++) idx.push(i);
+    for (var k = idx.length - 1; k > 0; k--) {
+      var j = Math.floor(Math.random() * (k + 1));
+      var t = idx[k]; idx[k] = idx[j]; idx[j] = t;
+    }
+    // Levels are listed easiest first, so sorting the pick makes each round
+    // ramp up a little from its first level to its last.
+    return idx.slice(0, ROUND_SIZE).sort(function(a, b){ return a - b; });
+  }
+
+  // ---------- drawing ----------
+  function buildSpots(){
+    for (var i = 0; i < 36; i++) {
+      var s = document.createElement('div');
+      s.className = 'spot';
+      s.style.left = 'calc(var(--cell) * ' + (i % 6) + ')';
+      s.style.top = 'calc(var(--cell) * ' + Math.floor(i / 6) + ')';
+      els.lot.appendChild(s);
+    }
+  }
+
+  function placeCar(c){
+    var car = state.cars[c], el = car.el;
+    var col = car.h ? state.pos[c] : car.lane;
+    var row = car.h ? car.lane : state.pos[c];
+    el.style.left = 'calc(var(--cell) * ' + col + ')';
+    el.style.top = 'calc(var(--cell) * ' + row + ')';
+  }
+
+  // presetPos (optional): saved car positions to use instead of the level's
+  // start -- only passed when resuming after the rotate-block reload.
+  function buildLevel(presetPos){
+    forceEndDrag();
+    clearTimeout(winTimer);
+    var level = LEVELS[state.difficulty][state.round[state.progress]];
+    state.cars = parseLevel(level[0]);
+    state.pos = presetPos ? presetPos.slice() : state.cars.map(function(car){ return car.start; });
+    state.busy = false;
+    document.body.style.background = '';
+    els.celebration.style.display = 'none';
+    els.boardWrap.style.display = '';
+    var old = els.lot.querySelectorAll('.car');
+    for (var o = 0; o < old.length; o++) old[o].remove();
+    state.cars.forEach(function(car, c){
+      var el = document.createElement('div');
+      el.className = 'car ' + (car.h ? 'h' : 'v') + (c === 0 ? ' red' : '');
+      el.dataset.car = c;
+      el.style.width = 'calc(var(--cell) * ' + (car.h ? car.len : 1) + ')';
+      el.style.height = 'calc(var(--cell) * ' + (car.h ? 1 : car.len) + ')';
+      el.style.setProperty('--car-color', car.color);
+      el.innerHTML = '<div class="car-body">' + (c === 0 ? '<div class="eyes"><i></i><i></i></div>' : '') + '</div>';
+      el.addEventListener('pointerdown', onCarDown);
+      car.el = el;
+      els.lot.appendChild(el);
+      placeCar(c);
+    });
+  }
+
+  function updateProgressDots(){
+    els.progressDots.forEach(function(dot, i){
+      dot.classList.toggle('done', i < state.progress);
+    });
+  }
+
+  function restartRound(){
+    clearTimeout(celebrationTimer);
+    state.round = pickRound(state.difficulty);
+    state.progress = 0;
+    updateProgressDots();
+    buildLevel();
+  }
+
+  // ---------- drag to slide ----------
+  // A car follows the finger along its own lane, stopped by whatever is in
+  // the way (with a little give past the stop, so a blocked car feels
+  // blocked rather than frozen), and snaps to the nearest square on release.
+  var drag = null;
+
+  function onCarDown(e){
+    if (state.busy || drag) return; // one car at a time; a second finger is ignored
+    // Mouse only: cancelling a touch's pointerdown also stops iOS from seeing
+    // it as a tap, so no click fires -- and a click is the one gesture iOS
+    // accepts to let the page play sound (drags never unlock it).
+    if (e.pointerType === 'mouse') e.preventDefault();
+    PLSound.play('click');
+    var el = e.currentTarget;
+    var c = Number(el.dataset.car);
+    var range = slideRange(c);
+    el.classList.remove('snap');
+    el.classList.add('dragging');
+    drag = {
+      c: c,
+      el: el,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      startPos: state.pos[c],
+      min: range.min,
+      max: range.max,
+      cellPx: els.lot.getBoundingClientRect().width / 6,
+      offset: 0,
+      moved: false
+    };
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
+    el.addEventListener('pointermove', onCarMove);
+    el.addEventListener('pointerup', onCarUp);
+    el.addEventListener('pointercancel', onCarUp);
+  }
+
+  function onCarMove(e){
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    var dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+    if (!drag.moved && Math.abs(dx) + Math.abs(dy) > TAP_SLOP) drag.moved = true;
+    var car = state.cars[drag.c];
+    var along = car.h ? dx : dy;
+    var lo = (drag.min - drag.startPos) * drag.cellPx;
+    var hi = (drag.max - drag.startPos) * drag.cellPx;
+    var give = drag.cellPx * 0.12;
+    if (along < lo) along = lo - Math.min((lo - along) * 0.2, give);
+    else if (along > hi) along = hi + Math.min((along - hi) * 0.2, give);
+    drag.offset = along;
+    drag.el.style.transform = car.h ? 'translate(' + along + 'px,0)' : 'translate(0,' + along + 'px)';
+  }
+
+  function onCarUp(e){
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    var d = drag;
+    var car = state.cars[d.c];
+    var target = d.startPos;
+    if (d.moved) {
+      target = d.startPos + Math.round(d.offset / d.cellPx);
+    } else {
+      // A tap nudges the car one square toward the end that was tapped --
+      // easier than a drag for small fingers, and a real tap is also what
+      // lets iOS start the page's sound.
+      var rect = d.el.getBoundingClientRect();
+      var forward = car.h ? e.clientX > rect.left + rect.width / 2 : e.clientY > rect.top + rect.height / 2;
+      target = d.startPos + (forward ? 1 : -1);
+      if (target < d.min || target > d.max) {
+        target = d.startPos;
+        bump(d.el, car, forward);
+      }
+    }
+    target = Math.max(d.min, Math.min(d.max, target));
+    endDrag(target);
+    if (target !== d.startPos && d.c === 0 && target === EXIT_POS) onSolved();
+  }
+
+  // Settle the dragged car on square `target`: move its layout spot there,
+  // keep it visually where the finger left it, then let it ease the rest of
+  // the way in.
+  function endDrag(target){
+    var d = drag;
+    drag = null;
+    d.el.removeEventListener('pointermove', onCarMove);
+    d.el.removeEventListener('pointerup', onCarUp);
+    d.el.removeEventListener('pointercancel', onCarUp);
+    try { d.el.releasePointerCapture(d.pointerId); } catch (err) {}
+    var car = state.cars[d.c];
+    var rest = d.offset - (target - d.startPos) * d.cellPx;
+    state.pos[d.c] = target;
+    placeCar(d.c);
+    d.el.classList.remove('dragging');
+    d.el.style.transform = car.h ? 'translate(' + rest + 'px,0)' : 'translate(0,' + rest + 'px)';
+    void d.el.offsetWidth;
+    d.el.classList.add('snap');
+    d.el.style.transform = '';
+  }
+
+  // A drag that never got its pointerup (an OS gesture stole the touch, the
+  // tab was hidden, the board was rebuilt): put the car back where it was.
+  function forceEndDrag(){
+    if (!drag) return;
+    endDrag(drag.startPos);
+  }
+  // Bubble phase: the car's own pointerup runs first and commits the move.
+  window.addEventListener('pointerup', forceEndDrag);
+  window.addEventListener('pointercancel', forceEndDrag);
+  window.addEventListener('blur', forceEndDrag);
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) forceEndDrag();
+  });
+
+  // Blocked tap: a small shove toward the blocker and back.
+  function bump(el, car, forward){
+    var px = (forward ? 1 : -1) * 6;
+    el.style.setProperty('--bump-x', car.h ? px + 'px' : '0px');
+    el.style.setProperty('--bump-y', car.h ? '0px' : px + 'px');
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+  }
+
+  // ---------- solved ----------
+  function onSolved(){
+    state.busy = true;
+    PLSound.play('positive');
+    document.body.style.background = 'var(--success)';
+    var red = state.cars[0].el;
+    // Let the snap into the last square finish, then drive out of the exit.
+    winTimer = setTimeout(function(){
+      red.classList.remove('snap');
+      red.classList.add('driving');
+      red.style.transform = 'translate(' + (els.lot.getBoundingClientRect().width / 2) + 'px,0)';
+      winTimer = setTimeout(function(){
+        state.progress += 1;
+        updateProgressDots();
+        if (state.progress >= ROUND_SIZE) {
+          showCelebration(); // background stays green through the celebration; reset there instead
+        } else {
+          buildLevel();
+        }
+      }, 1100);
+    }, 180);
+  }
+
+  // Pixel-art smiley (Figma node 198:1809) -- two round eyes and a
+  // stepped-block smile.
+  var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="var(--bright)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--bright)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--bright)" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="291" y="301" width="392" height="65"/>' +
+    '</svg>';
+
+  function showCelebration(){
+    updateAppHeight();
+    els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
+    els.boardWrap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    celebrationTimer = setTimeout(restartRound, 3000);
+  }
+
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    var tier = btn.getAttribute('data-tier');
+    if (tier === state.difficulty) return; // already selected — keep the current puzzle
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.difficulty = tier;
+    restartRound();
+  });
+
+  els.refreshBtn.addEventListener('click', restartRound);
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../../index.html'); });
+
+  // First-visit only: gently peek-scroll the bottom slider tray so new users notice
+  // it scrolls (there are more icons than fit on a phone screen), then ease back to
+  // the correct resting view with the easy-difficulty icon as the leftmost icon.
+  // Jumps to the TRUE end (no partial-reveal cap -- a longer tray was never
+  // reaching its real end otherwise) immediately, before first paint, then eases
+  // back on the very next frame with no added hold -- both the jump and the
+  // start of the ease read as a glitchy stutter when delayed.
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'unblockthecar.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = maxScroll;
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  introduceTraySlider();
+
+  buildSpots();
+  // Coming back from the rotate-block reload: continue the saved game.
+  // Otherwise (or if the save is unusable) start fresh as usual.
+  var resumed = takeResume();
+  if (!(resumed && restoreGame(resumed))) {
+    els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    restartRound();
+  }
+})();
+</script>
+
+</body>
+</html>
