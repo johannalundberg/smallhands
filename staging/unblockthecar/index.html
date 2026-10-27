@@ -206,6 +206,11 @@
     position:relative;
     transition: transform 120ms ease, box-shadow 120ms ease;
   }
+  /* Mouse only: the car under the pointer grows like the site's buttons and
+     hub tiles do, so it reads as something you can pick up. */
+  @media (hover:hover) and (pointer:fine){
+    .car:hover .car-body{ transform:scale(1.035); }
+  }
   .car.dragging .car-body{
     transform:scale(1.04);
     box-shadow:0 8px 18px rgba(0,0,0,0.3);
@@ -398,36 +403,36 @@
   // solver offline -- every board here is checked solvable.
   var LEVELS = {
     easy: [
-      ['D.....D.....D.AAC.....C.......BB....', 2],
-      ['...CCC......AA..B.....B.............', 2],
-      ['...........BAA...B.E..DD.E........CC', 2],
-      ['............AAC....BC....BC.........', 2],
-      ['.E.....E.BBCAA...C...FFF......DD....', 2],
-      ['........B...AAB.......DD..........CC', 2],
-      ['.............AAB..CC.B..............', 2],
-      ['......CCEEDDAA...B.....B......FF....', 2],
-      ['.........C...AAC...........BB.......', 2],
-      ['.........DDD.AA..CBB...C....EE......', 3],
-      ['....DD.....BAA.C.B...C.B............', 3],
-      ['......B...F.BAACF.E..C..E.....DD....', 3],
-      ['....DD.....CAA...C.....C..........BB', 3],
-      ['....DD...CB.AA.CB....C..............', 3],
-      ['............AA.B.C...B.C............', 3],
-      ['...DD.....C.AA..C....BBB.E.....E....', 3],
-      ['...........DAA.C.D...C.E..BBBE.....E', 3],
-      ['.........E..AA.EB..DD.B...........CC', 3],
-      ['....FF...CDDAA.CB....CB....EEE......', 4],
-      ['....E.CCCDE.AA.DEF.....F.B...F.B....', 4],
-      ['...D.....D..AA.D...........BB.CC.EE.', 4],
-      ['........B.C.AAB.C...B....DD.........', 4],
-      ['.....C...EDCAA.EDCB...D.B.....B.....', 4],
-      ['...F.....F..AA.C.B...C.B...EE.DD....', 4],
-      ['.....B.....BAA...B....EE.C..DD.C....', 4],
-      ['........BBB.AAED.C..ED.C............', 4],
-      ['........CC..AA.E.D...E.D.FBB...F....', 4],
-      ['...CFF...C..AADCE...D.E..........BB.', 5],
-      ['...C.....CDB.AACDB...FFE.....E......', 5],
-      ['C...FFC....EAA...E..B..E..BDDD..B...', 5]
+      ['....CC..F.D.AAF.D...BBB.......GGEE..', 4],
+      ['...FFF..GGB.AA..B.E...B.E...CCE..DDD', 4],
+      ['F...BBF..DDD.AA..G.....GEEE..C.....C', 4],
+      ['.....C.....C..AA.C......E..D..E..DBB', 4],
+      ['.........G..AA.GBF.E..BF.E..DDCC....', 4],
+      ['...B.....B..AADBC...D.C.............', 4],
+      ['..........C.AA..CB....CB.E.....E..DD', 4],
+      ['FF......C...AACD.....D..B..D..B.EE..', 4],
+      ['.....BCCC.FBAAG.FB.EG...DEG...D.....', 4],
+      ['.EC....EC...AAC....B.....B...D.FFF.D', 4],
+      ['.CC.....G...AAGB..DDDB...F.EE..F....', 4],
+      ['.....E....BEAA.FBE...F..GD....GD.CCC', 5],
+      ['CCGGG...FBD.AAFBD..EE.D.............', 5],
+      ['..CC....E..DAAE.FD....F...BB........', 5],
+      ['CCC........D.AA..D.B...D.B.EEE.FFGGG', 5],
+      ['...CCC...EEEAA.GF....GF..D.BBB.D....', 5],
+      ['.EEE.D..F..DAAF..D..C...G.C...G...BB', 5],
+      ['...FGG...FD.AA.FD.BB......CEEE..C...', 5],
+      ['....GG...CCCAA.DEF...DEF...BE....B..', 5],
+      ['...CBB...C....AAE.....E..DDDF.....F.', 6],
+      ['..C.....C...AAC..G..DD.G..EEF...BBF.', 6],
+      ['....B.....B.AA..BE...FFE....CC...DD.', 6],
+      ['...F.....F..AACF....C..B.DGGEB.D..E.', 6],
+      ['.........E..AA.E.....EBBFFCCD.....D.', 6],
+      ['BB..C.....C.AA..CGFF...G.E.....EDDD.', 6],
+      ['...FD....FD.AA.FD.CC....E.....E..BBB', 6],
+      ['....FFGG..C..AA.C.....C...EDD...EBBB', 6],
+      ['...E.....E..AA.ED...BBD...GGG.CCCFF.', 6],
+      ['..BDD...B...AABG...CCG.......EFFF..E', 6],
+      ['....E...G.E.AAG.EF.CBBBFDC....D.....', 6]
     ],
     medium: [
       ['CCGGF.....FH.AADFH...DEE..........BB', 6],
