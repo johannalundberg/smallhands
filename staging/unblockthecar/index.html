@@ -32,9 +32,10 @@
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
 <style>
   :root{
-    --bg:#2E8C8C;
-    --board:rgba(32,32,32,0.35);
-    --spot:rgba(32,32,32,0.18);
+    /* Figma node 392:1976 */
+    --bg:#42382C;
+    --spot:#372F25;
+    --frame:#000000;
     --red-car:#F2383B;
     --bright:#E4E4E4;
     --ink:#202020;
@@ -55,12 +56,13 @@
   }
 
   /* Tablet/desktop: size the board against the room left between the top and
-     bottom icon rows, same as Number Puzzle and Othello. */
+     bottom icon rows, same as Number Puzzle and Othello. 743px is the board's
+     size in the Figma frame. */
   @media (min-width: 768px){
     :root{
       --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
       --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
-      --board-size: min(76vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 570px);
+      --board-size: min(76vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 743px);
     }
   }
 
@@ -145,68 +147,49 @@
   .progress-dots .dot.done{ background: var(--bright); }
 
   /* ---------- the parking lot ---------- */
-  /* --pad is the frame around the 6x6 lot; --cell is one square of it. Cars
-     are placed with calc() off --cell, so a resize needs no JS at all. */
+  /* Figma node 392:1976: a 2px black outline around the lot, with an opening
+     on the right of the red car's row. Sizes are fractions of the board's
+     Figma width (743px) so it scales to every screen: --pad is the space
+     inside the outline, --gap the space between squares, --cell one square. */
   .board-wrap{
     position:relative;
     width:var(--board-size);
     height:var(--board-size);
-    --pad: calc(var(--board-size) * 0.03);
-    --cell: calc((var(--board-size) - 2 * var(--pad)) / 6);
+    border:2px solid var(--frame);
+    --pad: calc(var(--board-size) * 0.025536);
+    --gap: calc(var(--board-size) * 0.012649);
+    --cell: calc((var(--board-size) - 4px - 2 * var(--pad) - 5 * var(--gap)) / 6);
+    --step: calc(var(--cell) + var(--gap));
+    --radius: calc(var(--cell) * 0.12843);
     touch-action:none;
-  }
-  .board{
-    position:absolute;
-    inset:0;
-    background:var(--board);
-    border-radius: calc(var(--board-size) * 0.04);
   }
   .lot{
     position:absolute;
     left:var(--pad);
     top:var(--pad);
-    width:calc(var(--cell) * 6);
-    height:calc(var(--cell) * 6);
+    width:calc(var(--cell) * 6 + var(--gap) * 5);
+    height:calc(var(--cell) * 6 + var(--gap) * 5);
   }
   .spot{
     position:absolute;
     width:var(--cell);
     height:var(--cell);
-    padding:calc(var(--cell) * 0.06);
-  }
-  .spot::before{
-    content:'';
-    display:block;
-    width:100%;
-    height:100%;
-    border-radius:calc(var(--cell) * 0.14);
+    border-radius:var(--radius);
     background:var(--spot);
   }
-  /* The way out: a gap in the right side of the frame on the red car's row,
-     with an arrow pointing off the board. */
+  /* The way out: a patch of page background over the outline, one square
+     tall. */
   .exit{
     position:absolute;
-    right:calc(var(--pad) * -1.5);
-    top:calc(var(--pad) + var(--cell) * 2);
-    width:calc(var(--pad) * 3);
+    right:calc(-2px - var(--board-size) * 0.018843);
+    top:calc(var(--pad) + var(--step) * 2);
+    width:calc(var(--board-size) * 0.037685);
     height:var(--cell);
     background:var(--bg);
-    transition: background 80ms ease;
   }
-  .exit-arrow{
-    position:absolute;
-    left:calc(100% + var(--pad) * 0.6);
-    top:calc(var(--pad) + var(--cell) * 2.5);
-    width:calc(var(--cell) * 0.32);
-    height:calc(var(--cell) * 0.32);
-    transform:translateY(-50%);
-    pointer-events:none;
-  }
-  .exit-arrow svg{ width:100%; height:100%; display:block; }
 
   .car{
     position:absolute;
-    padding:calc(var(--cell) * 0.06);
     cursor:grab;
     touch-action:none;
     -webkit-touch-callout:none;
@@ -218,7 +201,7 @@
   .car-body{
     width:100%;
     height:100%;
-    border-radius:calc(var(--cell) * 0.2);
+    border-radius:var(--radius);
     background:var(--car-color);
     position:relative;
     transition: transform 120ms ease, box-shadow 120ms ease;
@@ -227,41 +210,31 @@
     transform:scale(1.04);
     box-shadow:0 8px 18px rgba(0,0,0,0.3);
   }
-  /* Windscreen strip, so a car reads as a car and not a plain block. Sits at
-     the front end: the right for horizontal cars, the top for vertical ones. */
-  .car-body::after{
-    content:'';
-    position:absolute;
-    background:rgba(32,32,32,0.22);
-    border-radius:calc(var(--cell) * 0.08);
-  }
-  .car.h .car-body::after{ top:18%; bottom:18%; right:16%; width:calc(var(--cell) * 0.16); }
-  .car.v .car-body::after{ left:18%; right:18%; top:16%; height:calc(var(--cell) * 0.16); }
-  .car.red .car-body::after{ display:none; }
-  /* The red car looks toward the exit: two round eyes like the site's faces. */
+  /* The red car looks toward the exit: two round white eyes near its front. */
   .eyes{
     position:absolute;
-    right:12%;
+    right:calc(var(--cell) * 0.1743);
     top:50%;
     transform:translateY(-50%);
     display:flex;
     flex-direction:column;
-    gap:calc(var(--cell) * 0.12);
+    gap:calc(var(--cell) * 0.15595);
   }
   .eyes i{
     display:block;
-    width:calc(var(--cell) * 0.2);
-    height:calc(var(--cell) * 0.2);
+    width:calc(var(--cell) * 0.24768);
+    height:calc(var(--cell) * 0.24768);
     border-radius:50%;
-    background:var(--bright);
+    background:#FFFFFF;
   }
   .car.bump .car-body{ animation: car-bump 220ms ease; }
   @keyframes car-bump{
     0%, 100%{ transform:translate(0,0); }
     40%{ transform:translate(var(--bump-x, 0), var(--bump-y, 0)); }
   }
-  /* Solved: the red car drives off through the exit. */
-  .car.driving{ transition: transform 520ms cubic-bezier(0.55, 0, 0.75, 0.4), opacity 520ms ease 200ms; opacity:0; }
+  /* Solved: the red car drives straight out of the opening and off the
+     right edge of the screen, speeding up as it goes. */
+  .car.driving{ z-index:3; transition: transform 700ms cubic-bezier(0.5, 0, 0.9, 0.5); }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -402,11 +375,7 @@
   </div>
 
   <div class="board-wrap" id="boardWrap">
-    <div class="board"></div>
-    <div class="exit" id="exit"></div>
-    <div class="exit-arrow">
-      <svg viewBox="0 0 100 100"><path fill="var(--bright)" d="M20 8L80 50L20 92Z"/></svg>
-    </div>
+    <div class="exit"></div>
     <div class="lot" id="lot"></div>
   </div>
 
@@ -532,10 +501,9 @@
   var EXIT_POS = 4; // red car's column when it's at the exit
   var TAP_SLOP = 10;
 
-  // Car colours from the site's other games; trucks get their own set so the
-  // long ones read as a different kind of vehicle.
-  var CAR_COLORS = ['#707EFF', '#E4AA2D', '#FD9162', '#C641FF', '#79A1FF', '#FFCE63', '#E4E4E4', '#FF8FB4'];
-  var TRUCK_COLORS = ['#3452A0', '#8104C9', '#FD6427', '#583813'];
+  // Vehicle colours, picked by Johanna. None of them is red: the red car is
+  // the only red vehicle.
+  var VEHICLE_COLORS = ['#74D5CA', '#C1C95C', '#6047F0', '#EBB133', '#516666', '#E88CE5'];
 
   var state = {
     difficulty: 'easy',
@@ -693,14 +661,13 @@
       found[ch].push(i);
     }
     order.sort(); // 'A' (the red car) first
-    var cars = [], nTruck = 0, carUses = CAR_COLORS.map(function(){ return 0; });
+    var cars = [], uses = {};
     order.forEach(function(ch){
       var cells = found[ch];
       var h = cells[1] - cells[0] === 1;
       var len = cells.length;
       var color = ch === 'A' ? 'var(--red-car)'
-        : len === 3 ? TRUCK_COLORS[nTruck++ % TRUCK_COLORS.length]
-        : pickCarColor(cells, cars, carUses);
+        : pickColor(cells, cars, uses);
       cars.push({
         h: h,
         len: len,
@@ -713,10 +680,10 @@
     return cars;
   }
 
-  // Hard boards hold more cars than there are colours. Give each car the
-  // least-used colour that no car touching it already has, so two cars of
-  // the same colour never start side by side.
-  function pickCarColor(cells, cars, uses){
+  // Hard boards hold more vehicles than there are colours. Give each one the
+  // least-used colour that nothing touching it already has, so two vehicles
+  // of the same colour never start side by side.
+  function pickColor(cells, cars, uses){
     var nearby = {};
     cars.forEach(function(other){
       var touches = other.cells.some(function(a){
@@ -726,14 +693,14 @@
       });
       if (touches) nearby[other.color] = true;
     });
-    var best = -1;
-    for (var i = 0; i < CAR_COLORS.length; i++) {
-      if (nearby[CAR_COLORS[i]]) continue;
-      if (best === -1 || uses[i] < uses[best]) best = i;
-    }
-    if (best === -1) best = 0;
-    uses[best] += 1;
-    return CAR_COLORS[best];
+    var best = null;
+    VEHICLE_COLORS.forEach(function(c){
+      if (nearby[c]) return;
+      if (best === null || (uses[c] || 0) < (uses[best] || 0)) best = c;
+    });
+    if (best === null) best = VEHICLE_COLORS[0];
+    uses[best] = (uses[best] || 0) + 1;
+    return best;
   }
 
   // Which car (index) sits on each of the 36 squares, -1 for empty.
@@ -787,8 +754,8 @@
     for (var i = 0; i < 36; i++) {
       var s = document.createElement('div');
       s.className = 'spot';
-      s.style.left = 'calc(var(--cell) * ' + (i % 6) + ')';
-      s.style.top = 'calc(var(--cell) * ' + Math.floor(i / 6) + ')';
+      s.style.left = 'calc(var(--step) * ' + (i % 6) + ')';
+      s.style.top = 'calc(var(--step) * ' + Math.floor(i / 6) + ')';
       els.lot.appendChild(s);
     }
   }
@@ -797,8 +764,8 @@
     var car = state.cars[c], el = car.el;
     var col = car.h ? state.pos[c] : car.lane;
     var row = car.h ? car.lane : state.pos[c];
-    el.style.left = 'calc(var(--cell) * ' + col + ')';
-    el.style.top = 'calc(var(--cell) * ' + row + ')';
+    el.style.left = 'calc(var(--step) * ' + col + ')';
+    el.style.top = 'calc(var(--step) * ' + row + ')';
   }
 
   // presetPos (optional): saved car positions to use instead of the level's
@@ -810,7 +777,6 @@
     state.cars = parseLevel(level[0]);
     state.pos = presetPos ? presetPos.slice() : state.cars.map(function(car){ return car.start; });
     state.busy = false;
-    document.body.style.background = '';
     els.celebration.style.display = 'none';
     els.boardWrap.style.display = '';
     var old = els.lot.querySelectorAll('.car');
@@ -819,8 +785,10 @@
       var el = document.createElement('div');
       el.className = 'car ' + (car.h ? 'h' : 'v') + (c === 0 ? ' red' : '');
       el.dataset.car = c;
-      el.style.width = 'calc(var(--cell) * ' + (car.h ? car.len : 1) + ')';
-      el.style.height = 'calc(var(--cell) * ' + (car.h ? 1 : car.len) + ')';
+      // A truck spans its squares and the gaps between them.
+      var span = 'calc(var(--cell) * ' + car.len + ' + var(--gap) * ' + (car.len - 1) + ')';
+      el.style.width = car.h ? span : 'var(--cell)';
+      el.style.height = car.h ? 'var(--cell)' : span;
       el.style.setProperty('--car-color', car.color);
       el.innerHTML = '<div class="car-body">' + (c === 0 ? '<div class="eyes"><i></i><i></i></div>' : '') + '</div>';
       el.addEventListener('pointerdown', onCarDown);
@@ -871,7 +839,7 @@
       startPos: state.pos[c],
       min: range.min,
       max: range.max,
-      cellPx: els.lot.getBoundingClientRect().width / 6,
+      stepPx: stepPx(),
       offset: 0,
       moved: false
     };
@@ -881,15 +849,21 @@
     el.addEventListener('pointercancel', onCarUp);
   }
 
+  // One square plus the gap after it, in screen pixels.
+  function stepPx(){
+    var spots = els.lot.querySelectorAll('.spot');
+    return spots[1].getBoundingClientRect().left - spots[0].getBoundingClientRect().left;
+  }
+
   function onCarMove(e){
     if (!drag || e.pointerId !== drag.pointerId) return;
     var dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
     if (!drag.moved && Math.abs(dx) + Math.abs(dy) > TAP_SLOP) drag.moved = true;
     var car = state.cars[drag.c];
     var along = car.h ? dx : dy;
-    var lo = (drag.min - drag.startPos) * drag.cellPx;
-    var hi = (drag.max - drag.startPos) * drag.cellPx;
-    var give = drag.cellPx * 0.12;
+    var lo = (drag.min - drag.startPos) * drag.stepPx;
+    var hi = (drag.max - drag.startPos) * drag.stepPx;
+    var give = drag.stepPx * 0.12;
     if (along < lo) along = lo - Math.min((lo - along) * 0.2, give);
     else if (along > hi) along = hi + Math.min((along - hi) * 0.2, give);
     drag.offset = along;
@@ -902,7 +876,7 @@
     var car = state.cars[d.c];
     var target = d.startPos;
     if (d.moved) {
-      target = d.startPos + Math.round(d.offset / d.cellPx);
+      target = d.startPos + Math.round(d.offset / d.stepPx);
     } else {
       // A tap nudges the car one square toward the end that was tapped --
       // easier than a drag for small fingers, and a real tap is also what
@@ -931,7 +905,7 @@
     d.el.removeEventListener('pointercancel', onCarUp);
     try { d.el.releasePointerCapture(d.pointerId); } catch (err) {}
     var car = state.cars[d.c];
-    var rest = d.offset - (target - d.startPos) * d.cellPx;
+    var rest = d.offset - (target - d.startPos) * d.stepPx;
     state.pos[d.c] = target;
     placeCar(d.c);
     d.el.classList.remove('dragging');
@@ -969,18 +943,19 @@
   function onSolved(){
     state.busy = true;
     PLSound.play('positive');
-    document.body.style.background = 'var(--success)';
     var red = state.cars[0].el;
     // Let the snap into the last square finish, then drive out of the exit.
     winTimer = setTimeout(function(){
       red.classList.remove('snap');
       red.classList.add('driving');
-      red.style.transform = 'translate(' + (els.lot.getBoundingClientRect().width / 2) + 'px,0)';
+      // Far enough that its back end clears the right edge of the screen.
+      var away = window.innerWidth - red.getBoundingClientRect().left + 20;
+      red.style.transform = 'translate(' + away + 'px,0)';
       winTimer = setTimeout(function(){
         state.progress += 1;
         updateProgressDots();
         if (state.progress >= ROUND_SIZE) {
-          showCelebration(); // background stays green through the celebration; reset there instead
+          showCelebration();
         } else {
           buildLevel();
         }
@@ -989,13 +964,13 @@
   }
 
   // Pixel-art smiley (Figma node 198:1809) -- two round eyes and a
-  // stepped-block smile.
+  // stepped-block smile -- in the red car's red, on the page's own background.
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
-    '<circle fill="var(--bright)" cx="65" cy="65" r="65"/>' +
-    '<circle fill="var(--bright)" cx="908" cy="65" r="65"/>' +
-    '<rect fill="var(--bright)" x="161" y="171" width="130" height="130"/>' +
-    '<rect fill="var(--bright)" x="683" y="171" width="130" height="130"/>' +
-    '<rect fill="var(--bright)" x="291" y="301" width="392" height="65"/>' +
+    '<circle fill="var(--red-car)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--red-car)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--red-car)" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--red-car)" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--red-car)" x="291" y="301" width="392" height="65"/>' +
     '</svg>';
 
   function showCelebration(){
