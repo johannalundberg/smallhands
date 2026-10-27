@@ -177,14 +177,15 @@
     border-radius:var(--radius);
     background:var(--spot);
   }
-  /* The way out: a patch of page background over the outline, one square
-     tall. */
+  /* The way out: a patch of page background over the outline. It spans the
+     red car's square plus the gap on each side, so the outline stops level
+     with the edges of the squares above and below. */
   .exit{
     position:absolute;
     right:calc(-2px - var(--board-size) * 0.018843);
-    top:calc(var(--pad) + var(--step) * 2);
+    top:calc(var(--pad) + var(--step) * 2 - var(--gap));
     width:calc(var(--board-size) * 0.037685);
-    height:var(--cell);
+    height:calc(var(--cell) + var(--gap) * 2);
     background:var(--bg);
   }
 
