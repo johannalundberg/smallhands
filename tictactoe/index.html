@@ -425,6 +425,7 @@
 
   var fadeTimer = null;
   var dismissTimer = null;
+  var botTimer = null; // pending computer move; cleared when a new board starts
 
   function updateAppHeight(){
     var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -606,7 +607,9 @@
   function startComputerTurn(){
     state.busy = true;
     els.boardWrap.classList.add('busy');
-    setTimeout(function(){
+    clearTimeout(botTimer);
+    botTimer = setTimeout(function(){
+      botTimer = null;
       var move = computerMove();
       place(move, 'O');
       PLSound.play('click');
@@ -697,9 +700,14 @@
     resetBoard();
   }
 
+  // Every new board goes through here (refresh, difficulty change, draw,
+  // finishMilestone, restoreGame), so the computer's pending move is dropped
+  // here too -- otherwise it would land an O on the fresh board.
   function resetBoard(){
     clearTimeout(dismissTimer);
     clearTimeout(fadeTimer);
+    clearTimeout(botTimer);
+    botTimer = null;
     state.board = Array(9).fill(null);
     state.busy = false;
     state.over = false;
