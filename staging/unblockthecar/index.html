@@ -231,6 +231,26 @@
     height:calc(var(--cell) * 0.24768);
     border-radius:50%;
     background:#FFFFFF;
+    animation: eye-blink 4.2s ease-in-out infinite;
+  }
+  /* A lazy blink now and then, same rhythm as Memory's eyes. The eyes sit one
+     above the other (the car faces the exit), so they close sideways. */
+  @keyframes eye-blink{
+    0%, 92%, 100%{ transform:scaleX(1); }
+    96%{ transform:scaleX(0.12); }
+  }
+  /* Every new board: the red car says hello with two little skips toward the
+     exit and a double blink, so it's the first thing a player notices. */
+  .car.hello .car-body{ animation: car-skip 900ms ease-in-out 250ms both; }
+  .car.hello .eyes i{ animation: eye-blink-twice 900ms ease-in-out 250ms both; }
+  @keyframes car-skip{
+    0%, 40%, 72%, 100%{ transform:none; }
+    20%{ transform:translateX(calc(var(--cell) * 0.14)) scale(1.08); }
+    56%{ transform:translateX(calc(var(--cell) * 0.08)) scale(1.05); }
+  }
+  @keyframes eye-blink-twice{
+    0%, 66%, 82%, 100%{ transform:scaleX(1); }
+    74%, 90%{ transform:scaleX(0.12); }
   }
   .car.bump .car-body{ animation: car-bump 220ms ease; }
   @keyframes car-bump{
@@ -788,7 +808,7 @@
     for (var o = 0; o < old.length; o++) old[o].remove();
     state.cars.forEach(function(car, c){
       var el = document.createElement('div');
-      el.className = 'car ' + (car.h ? 'h' : 'v') + (c === 0 ? ' red' : '');
+      el.className = 'car ' + (car.h ? 'h' : 'v') + (c === 0 ? ' red hello' : '');
       el.dataset.car = c;
       // A truck spans its squares and the gaps between them.
       var span = 'calc(var(--cell) * ' + car.len + ' + var(--gap) * ' + (car.len - 1) + ')';
@@ -797,6 +817,12 @@
       el.style.setProperty('--car-color', car.color);
       el.innerHTML = '<div class="car-body">' + (c === 0 ? '<div class="eyes"><i></i><i></i></div>' : '') + '</div>';
       el.addEventListener('pointerdown', onCarDown);
+      if (c === 0) {
+        // Once the hello skip is over, back to the lazy blink.
+        el.addEventListener('animationend', function(e){
+          if (e.animationName === 'car-skip') el.classList.remove('hello');
+        });
+      }
       car.el = el;
       els.lot.appendChild(el);
       placeCar(c);
@@ -831,6 +857,7 @@
     if (e.pointerType === 'mouse') e.preventDefault();
     PLSound.play('click');
     var el = e.currentTarget;
+    el.classList.remove('hello'); // a grab cuts the hello skip short
     var c = Number(el.dataset.car);
     var range = slideRange(c);
     el.classList.remove('snap');
