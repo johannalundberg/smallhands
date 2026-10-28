@@ -248,7 +248,7 @@
     100%{ background:var(--cell-rest); transform:scale(1); }
   }
 
-  /* Unblock the Car: the same 3x3 grid as the Tic-Tac-Toe badge (gap and
+  /* Unblock: the same 3x3 grid as the Tic-Tac-Toe badge (gap and
      corner radius match .mini-board), drawn as one SVG so cars can span two
      squares and the gap between. Like the other badges it shows the game's
      move: the car in the red car's way slides down, the red car drives out
@@ -257,18 +257,18 @@
      the middle row, so the red car runs along the top row here. One square
      plus gap is 34.2175 units. Under Reduce Motion it freezes on the start:
      red car blocked, eyes open. */
-  .uc-badge{ position:relative; width:62.057%; height:62.057%; }
-  .uc-badge svg{ position:absolute; inset:0; width:100%; height:100%; display:block; overflow:hidden; }
-  .uc-blocker{ animation: uc-blocker 4.5s linear infinite; }
-  @keyframes uc-blocker{
+  .ub-badge{ position:relative; width:62.057%; height:62.057%; }
+  .ub-badge svg{ position:absolute; inset:0; width:100%; height:100%; display:block; overflow:hidden; }
+  .ub-blocker{ animation: ub-blocker 4.5s linear infinite; }
+  @keyframes ub-blocker{
     0%{ transform:translateY(0); }
     10%{ transform:translateY(0); animation-timing-function:ease-in-out; }
     22%{ transform:translateY(34.2175px); }
     78%{ transform:translateY(34.2175px); animation-timing-function:ease-in-out; }
     90%, 100%{ transform:translateY(0); }
   }
-  .uc-red{ animation: uc-red 4.5s linear infinite; }
-  @keyframes uc-red{
+  .ub-red{ animation: ub-red 4.5s linear infinite; }
+  @keyframes ub-red{
     0%{ transform:translateX(0); }
     26%{ transform:translateX(0); animation-timing-function:cubic-bezier(0.5, 0, 0.9, 0.5); }
     48%{ transform:translateX(102px); }
@@ -276,8 +276,8 @@
     76%, 100%{ transform:translateX(0); }
   }
   /* One blink near the end of the loop, once everything is back in place. */
-  .uc-eye{ transform-box:fill-box; transform-origin:center; animation: uc-blink 4.5s ease-in-out infinite; }
-  @keyframes uc-blink{
+  .ub-eye{ transform-box:fill-box; transform-origin:center; animation: ub-blink 4.5s ease-in-out infinite; }
+  @keyframes ub-blink{
     0%, 92%, 100%{ transform:scaleX(1); }
     96%{ transform:scaleX(0.12); }
   }
@@ -677,10 +677,10 @@
       </div>
     </a>
 
-    <!-- Unblock the Car: hidden until the game moves out of staging/.
+    <!-- Unblock: hidden until the game moves out of staging/.
          To publish, drop the hidden attribute and add it to sitemap.xml. -->
-    <a class="tile" href="unblockthecar/" aria-label="Unblock the Car" hidden>
-      <div class="uc-badge">
+    <a class="tile" href="unblock/" aria-label="Unblock" hidden>
+      <div class="ub-badge">
         <!-- Squares 31.565 wide with a 2.6525 gap, so a car two squares
              long is 65.7825; corners 2.653 (8.404% of a square). -->
         <svg viewBox="0 0 100 100">
@@ -696,13 +696,13 @@
             <rect x="68.435" y="68.435" width="31.565" height="31.565" rx="2.653"/>
           </g>
           <rect fill="#EBB133" x="0" y="68.435" width="65.7825" height="31.565" rx="2.653"/>
-          <rect class="uc-blocker" fill="#74D5CA" x="68.435" y="0" width="31.565" height="65.7825" rx="2.653"/>
+          <rect class="ub-blocker" fill="#74D5CA" x="68.435" y="0" width="31.565" height="65.7825" rx="2.653"/>
           <!-- The red car, eyes placed as in the game (size, inset and
                spacing are the same fractions of a square). -->
-          <g class="uc-red">
+          <g class="ub-red">
             <rect fill="#F2383B" x="0" y="0" width="65.7825" height="31.565" rx="2.653"/>
-            <circle class="uc-eye" fill="#FFFFFF" cx="56.37" cy="9.41" r="3.909"/>
-            <circle class="uc-eye" fill="#FFFFFF" cx="56.37" cy="22.15" r="3.909"/>
+            <circle class="ub-eye" fill="#FFFFFF" cx="56.37" cy="9.41" r="3.909"/>
+            <circle class="ub-eye" fill="#FFFFFF" cx="56.37" cy="22.15" r="3.909"/>
           </g>
         </svg>
       </div>
