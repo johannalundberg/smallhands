@@ -37,7 +37,7 @@
     --bg:#7080B5;
     --spot:#6E6143;
     --spot-given:#BEBAB2;
-    /* The four shapes, in tap order: circle, egg, oval, blob. */
+    /* The four shapes, in tap order: circle, egg, oval, squircle. */
     --shape-0:#E18E00;
     --shape-1:#8D951C;
     --shape-2:#C955FF;
@@ -414,7 +414,7 @@
   var TIERS = ['easy', 'medium', 'hard'];
   var ROUND_SIZE = 5;
   var EMPTY = -1;
-  var SHAPE_COUNT = 4; // circle, egg, oval, blob (--shape-0..3)
+  var SHAPE_COUNT = 4; // circle, egg, oval, squircle (--shape-0..3)
 
   // Wait after the solving tap before the next board: long enough for the
   // wave to reach the last square and settle.
@@ -657,15 +657,17 @@
   }
 
   // The four shapes, drawn once into every square (see .shape in the CSS):
-  // circle, egg, oval and blob -- a family of round shapes, told apart by
-  // their outline as well as colour. Sized by eye to look about the same.
-  // Blob: a circle that bulges gently in three places (one at the top),
-  // traced as a fine polygon from r = 32 + 5 * cos(3 * angle).
-  var BLOB = '';
+  // circle, egg, oval and squircle -- a family of circles, each distorted
+  // a different way, told apart by outline as well as colour. Sized by eye
+  // to look about the same.
+  // Squircle: a circle pushed gently out towards a square
+  // (|x|^3 + |y|^3 = r^3), traced as a fine polygon.
+  var SQUIRCLE = '';
   for (var a = 0; a < 120; a++) {
-    var t = a / 120 * Math.PI * 2;
-    var rr = 32 + 5 * Math.cos(3 * (t + Math.PI / 2));
-    BLOB += (a ? ' ' : '') + (50 + rr * Math.cos(t)).toFixed(2) + ',' + (52 + rr * Math.sin(t)).toFixed(2);
+    var t = a / 120 * Math.PI * 2, c = Math.cos(t), sn = Math.sin(t);
+    SQUIRCLE += (a ? ' ' : '') +
+      (50 + 31 * Math.sign(c) * Math.pow(Math.abs(c), 2 / 3)).toFixed(2) + ',' +
+      (50 + 31 * Math.sign(sn) * Math.pow(Math.abs(sn), 2 / 3)).toFixed(2);
   }
   var SHAPES_SVG = '<svg class="shape" viewBox="0 0 100 100" aria-hidden="true">' +
     // Circle: as in Figma node 400:2965.
@@ -674,7 +676,7 @@
     '<path class="s1" d="M50 14C69 14 78 42 77 58C76 75 64 86 50 86C36 86 24 75 23 58C22 42 31 14 50 14Z"/>' +
     // Oval: lying down, so it can't be mistaken for the standing egg.
     '<ellipse class="s2" cx="50" cy="50" rx="38" ry="25"/>' +
-    '<polygon class="s3" points="' + BLOB + '"/>' +
+    '<polygon class="s3" points="' + SQUIRCLE + '"/>' +
     '</svg>';
 
   // The 16 squares are built once and kept: a tap only changes their
@@ -772,7 +774,7 @@
     var i = Number(el.dataset.i);
     if (state.given[i]) return; // given squares are static: no sound, no movement
     clearTimeout(flashTimer); // a new tap restarts the full-board check
-    // empty -> circle -> egg -> oval -> blob -> circle: once a
+    // empty -> circle -> egg -> oval -> squircle -> circle: once a
     // square has a shape it never goes back to empty.
     var v = (state.cells[i] + 1) % SHAPE_COUNT;
     state.cells[i] = v;
