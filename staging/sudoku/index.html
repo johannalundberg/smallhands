@@ -32,17 +32,17 @@
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
 <style>
   :root{
-    /* Light grey for now (was a dark plum #3B2A45 / #2E2036 / #4B3858).
-       Squares a shade lighter than the page; the given squares a shade
-       darker, so they read as "already there". */
-    --bg:#CFCFCF;
-    --spot:#E4E4E4;
-    --spot-given:#BDBDBD;
+    /* Figma node 400:2965. The given squares are a shade darker than the
+       rest (the design shows a full board only), so they read as "already
+       there". */
+    --bg:#7080B5;
+    --spot:#BEBAB2;
+    --spot-given:#ACA8A0;
     /* The four shapes, in tap order: circle, square, triangle, diamond. */
-    --shape-0:#EBB133;
-    --shape-1:#74D5CA;
-    --shape-2:#E88CE5;
-    --shape-3:#9DD062;
+    --shape-0:#E18E00;
+    --shape-1:#8D951C;
+    --shape-2:#C955FF;
+    --shape-3:#7986FF;
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
@@ -197,7 +197,7 @@
 
   /* Each square holds all four shapes; data-shape picks the one that shows,
      so a tap only swaps an attribute and never rebuilds the square. */
-  .hop{ display:block; width:94%; height:94%; }
+  .hop{ display:block; width:100%; height:100%; }
   .shape{ display:block; width:100%; height:100%; overflow:visible; }
   .shape > *{ display:none; }
   .cell[data-shape="0"] .s0,
@@ -667,17 +667,14 @@
   }
 
   // The four shapes, drawn once into every square (see .shape in the CSS).
-  // Sized optically, not by measurement, so they look the same size: from a
-  // 70 square, the circle is 1.11x as wide (round shapes look smaller), the
-  // diamond's points 1.26x (well under the square's own diagonal: its
-  // points carry the eye outwards) and the triangle 1.34x (it has the least
-  // area for its width). The triangle sits
-  // a little high so its heavy base doesn't make it look low.
+  // Sizes from Figma node 400:2965, as a share of one square (100 = the
+  // square's width): optically balanced there, so they look the same size.
+  // The triangle sits a little high so its heavy base doesn't look low.
   var SHAPES_SVG = '<svg class="shape" viewBox="0 0 100 100" aria-hidden="true">' +
-    '<circle class="s0" cx="50" cy="50" r="39"/>' +
-    '<rect class="s1" x="15" y="15" width="70" height="70"/>' +
-    '<polygon class="s2" points="50,8 97,89 3,89"/>' +
-    '<polygon class="s3" points="50,6 94,50 50,94 6,50"/>' +
+    '<circle class="s0" cx="50" cy="50" r="32.1"/>' +
+    '<rect class="s1" x="19.55" y="19.55" width="60.9" height="60.9"/>' +
+    '<polygon class="s2" points="50,18.9 85,79.5 15,79.5"/>' +
+    '<polygon class="s3" points="50,13.6 86.4,50 50,86.4 13.6,50"/>' +
     '</svg>';
 
   // The 16 squares are built once and kept: a tap only changes their
