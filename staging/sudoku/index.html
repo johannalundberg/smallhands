@@ -762,16 +762,11 @@
     var i = Number(el.dataset.i);
     if (state.given[i]) return; // given squares are static: no sound, no movement
     clearTimeout(flashTimer); // a new tap restarts the full-board check
-    // empty -> circle -> square -> triangle -> diamond -> empty
-    var v = state.cells[i] + 1;
-    if (v >= SHAPE_COUNT) v = EMPTY;
+    // empty -> circle -> square -> triangle -> diamond -> circle: once a
+    // square has a shape it never goes back to empty.
+    var v = (state.cells[i] + 1) % SHAPE_COUNT;
     state.cells[i] = v;
     paintCell(i);
-    if (v === EMPTY) {
-      el.classList.remove('pop');
-      PLSound.play('click');
-      return;
-    }
     replay(el, 'pop');
     if (isSolved(state.cells)) {
       onSolved();
@@ -784,22 +779,37 @@
   // ---------- full but wrong ----------
   // Nothing is said while the board is still filling up: spotting a repeat
   // is the puzzle. Once every square holds a shape and it isn't solved, the
-  // squares flash red with the wrong sound (the page itself stays put). On
-  // easy only the repeated shapes' squares flash, to show where; on medium
-  // and hard the whole board does, leaving the finding to the player. The check waits SETTLE_MS after
-  // the last tap, so cycling the last square through the shapes doesn't
-  // flash at each wrong one on the way to the right one.
+  // squares the player got wrong flash red with the wrong sound -- only
+  // those, never a given square or the page. The check waits SETTLE_MS
+  // after the last tap, so cycling the last square through the shapes
+  // doesn't flash at each wrong one on the way to the right one.
   var SETTLE_MS = 1000;
   var FLASH_MS = 700;
   function flashIncorrect(){
     PLSound.play('negative');
     state.flashing = true;
     clearTimeout(flashTimer);
-    var showWhere = state.difficulty === 'easy';
+    var answer = solution();
     for (var i = 0; i < 16; i++) {
-      if (!showWhere || clashesWith(state.cells, i).length) cellEls[i].classList.add('repeat');
+      if (!state.given[i] && state.cells[i] !== answer[i]) cellEls[i].classList.add('repeat');
     }
     flashTimer = setTimeout(endFlash, FLASH_MS);
+  }
+  // The board's one solution, worked out from the given squares (every
+  // puzzle here has exactly one; a 4x4 board solves instantly).
+  function solution(){
+    var b = state.cells.map(function(v, i){ return state.given[i] ? v : EMPTY; });
+    (function fill(){
+      var i = b.indexOf(EMPTY);
+      if (i === -1) return true;
+      for (var v = 0; v < SHAPE_COUNT; v++) {
+        b[i] = v;
+        if (!clashesWith(b, i).length && fill()) return true;
+      }
+      b[i] = EMPTY;
+      return false;
+    })();
+    return b;
   }
   function endFlash(){
     clearTimeout(flashTimer);
