@@ -531,8 +531,8 @@
   var VEHICLE_COLORS = ['#74D5CA', '#C1C95C', '#6047F0', '#EBB133', '#516666', '#E88CE5'];
 
   // The very first visit opens on this starter board: the red car and one
-  // car in its way. The pieces first show the move by themselves (see
-  // startDemo), then the player does it. It doesn't count toward the round.
+  // car in its way, and the pieces show the move by themselves (see
+  // startDemo) before the first real level. It doesn't count toward the round.
   var STARTER = '......' +
                 '...B..' +
                 'AA.B..' +
@@ -637,7 +637,7 @@
   function snapshotGame(){
     if (els.celebration.style.display === 'flex') return null; // round already won, a fresh round is right
     if (!state.cars.length) return null;
-    if (state.starter) return null; // the starter board (and its demo) just starts over
+    if (state.starter) return null; // the starter board (and its demo) starts over
     forceEndDrag();
     var progress = state.progress;
     var pos = state.pos.slice();
@@ -868,7 +868,7 @@
   var drag = null;
 
   function onCarDown(e){
-    if (demoRunning) return; // this touch only stops the demo (see the board listener)
+    if (demoRunning) return; // this touch only skips the demo (see the board listener)
     if (state.busy || drag) return; // one car at a time; a second finger is ignored
     // Mouse only: cancelling a touch's pointerdown also stops iOS from seeing
     // it as a tap, so no click fires -- and a click is the one gesture iOS
@@ -1031,10 +1031,10 @@
   }
 
   // The pieces show the move by themselves, slowly, the way the hub badge
-  // does: the blocking car slides up out of the way, the red car drives out
-  // through the opening and off the screen, backs in again, and the blocker
-  // slides back. Then it's the player's turn on the same board. Any touch on
-  // the board stops it. Skipped under Reduce Motion.
+  // does: the blocking car slides up out of the way and the red car drives
+  // out through the opening and off the screen. Then the first real level
+  // appears, just as after a win. Any touch on the board skips straight to
+  // it. Under Reduce Motion there's no demo and the starter board is played.
   function startDemo(){
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var red = state.cars[0].el, blocker = state.cars[1].el;
@@ -1049,22 +1049,17 @@
       later(1050, function(){
         var away = window.innerWidth - red.getBoundingClientRect().left + 20;
         glide(red, 'translate(' + away + 'px,0)', 1300, 'cubic-bezier(0.45, 0, 0.85, 0.55)');
-        later(1800, function(){
-          glide(red, 'translate(0,0)', 1300, 'cubic-bezier(0.15, 0.45, 0.55, 1)');
-          later(1550, function(){
-            glide(blocker, 'translate(0,0)', 700, 'ease-in-out');
-            later(750, function(){
-              demoRunning = false;
-              [red, blocker].forEach(function(el){ el.style.transition = ''; el.style.transform = ''; });
-            });
-          });
-        });
+        later(1500, endDemo);
       });
     });
   }
-  // A touch mid-demo puts the pieces straight back so the player can start.
+  // On to the round's first real level (also what a touch mid-demo does).
+  function endDemo(){
+    leaveStarter();
+    buildLevel();
+  }
   els.boardWrap.addEventListener('pointerdown', function(){
-    if (demoRunning) buildLevel();
+    if (demoRunning) endDemo();
   });
 
   // Pixel-art smiley (Figma node 198:1809) -- two round eyes and a
