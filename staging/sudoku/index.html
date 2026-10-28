@@ -214,21 +214,6 @@
     0%{ transform:scale(0.45); }
     100%{ transform:scale(1); }
   }
-  /* Two of the same shape in a row, column or box: both give a little
-     shake of the head, once, after the pop. No red, no sound of its own. */
-  .cell.wobble .hop{ animation: shape-wobble 420ms ease-in-out 140ms; }
-  @keyframes shape-wobble{
-    0%, 100%{ transform:rotate(0); }
-    20%{ transform:rotate(-11deg); }
-    45%{ transform:rotate(9deg); }
-    70%{ transform:rotate(-5deg); }
-  }
-  /* A given square can't change: a tap just nudges it in and out. */
-  .cell.bump{ animation: cell-bump 200ms ease; }
-  @keyframes cell-bump{
-    0%, 100%{ transform:scale(1); }
-    40%{ transform:scale(0.92); }
-  }
   /* Solved: the shapes hop one after another, from the top-left corner to
      the bottom-right, like a wave. */
   .cell.wave .hop{ animation: shape-wave 480ms ease-in-out var(--wave-delay, 0ms) both; }
@@ -624,7 +609,8 @@
 
   // ---------- rules ----------
   // The squares that share a row, column or box with square i and hold the
-  // same shape as it.
+  // same shape as it. Only used to check for a win: a repeated shape gets no
+  // hint while playing, finding it is part of the puzzle.
   function clashesWith(cells, i){
     var v = cells[i];
     if (v === EMPTY) return [];
@@ -708,7 +694,7 @@
     el.classList.add(cls);
   }
 
-  var ANIM_CLASS = { 'shape-pop': 'pop', 'shape-wobble': 'wobble', 'cell-bump': 'bump', 'shape-wave': 'wave' };
+  var ANIM_CLASS = { 'shape-pop': 'pop', 'shape-wave': 'wave' };
   els.boardWrap.addEventListener('animationend', function(e){
     var cls = ANIM_CLASS[e.animationName];
     var el = e.target.closest && e.target.closest('.cell');
@@ -735,7 +721,7 @@
     els.celebration.style.display = 'none';
     els.boardWrap.style.display = '';
     cellEls.forEach(function(el, i){
-      el.classList.remove('pop', 'wobble', 'bump', 'wave');
+      el.classList.remove('pop', 'wave');
       el.classList.toggle('given', state.given[i]);
       paintCell(i);
       // Every shape on a new board pops in: a quiet "here's a new one".
@@ -768,18 +754,14 @@
     var el = e.target.closest('.cell');
     if (!el || state.busy) return;
     var i = Number(el.dataset.i);
-    if (state.given[i]) {
-      PLSound.play('click');
-      replay(el, 'bump');
-      return;
-    }
+    if (state.given[i]) return; // given squares are static: no sound, no movement
     // empty -> circle -> square -> triangle -> diamond -> empty
     var v = state.cells[i] + 1;
     if (v >= SHAPE_COUNT) v = EMPTY;
     state.cells[i] = v;
     paintCell(i);
     if (v === EMPTY) {
-      el.classList.remove('pop', 'wobble');
+      el.classList.remove('pop');
       PLSound.play('click');
       return;
     }
@@ -789,21 +771,13 @@
       return;
     }
     PLSound.play('click');
-    var clash = clashesWith(state.cells, i);
-    if (clash.length) {
-      clash.push(i);
-      clash.forEach(function(j){ replay(cellEls[j], 'wobble'); });
-    }
   });
 
   // ---------- solved ----------
   function onSolved(){
     state.busy = true;
     PLSound.play('positive');
-    cellEls.forEach(function(el){
-      el.classList.remove('wobble', 'bump');
-      replay(el, 'wave');
-    });
+    cellEls.forEach(function(el){ replay(el, 'wave'); });
     winTimer = setTimeout(function(){
       state.progress += 1;
       updateProgressDots();
