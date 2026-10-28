@@ -174,6 +174,16 @@
     box-shadow:0 0 0 2px #000;
     touch-action:manipulation;
   }
+  /* Whole-pixel squares: with fractional ones, Safari rounds each square's
+     edges on its own, so the 2px lines came out thinner and uneven. The
+     board shrinks by under 4px to fit four whole squares plus the lines. */
+  @supports (width: round(down, 10.5px, 1px)){
+    .board-wrap{
+      --cell: round(down, calc((var(--board-size) - 2 * var(--gap) - var(--box-gap)) / 4), 1px);
+      width: calc(var(--cell) * 4 + var(--gap) * 2 + var(--box-gap));
+      height: calc(var(--cell) * 4 + var(--gap) * 2 + var(--box-gap));
+    }
+  }
   .cell{
     appearance:none;
     -webkit-appearance:none;
