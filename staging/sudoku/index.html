@@ -667,11 +667,16 @@
   }
 
   // The four shapes, drawn once into every square (see .shape in the CSS).
-  // Sizes are balanced by eye so none looks bigger than the others.
+  // Sized optically, not by measurement, so they look the same size: from a
+  // 70 square, the circle is 1.11x as wide (round shapes look smaller), the
+  // diamond's points 1.26x (well under the square's own diagonal: its
+  // points carry the eye outwards) and the triangle 1.34x (it has the least
+  // area for its width). The triangle sits
+  // a little high so its heavy base doesn't make it look low.
   var SHAPES_SVG = '<svg class="shape" viewBox="0 0 100 100" aria-hidden="true">' +
-    '<circle class="s0" cx="50" cy="50" r="36"/>' +
-    '<rect class="s1" x="18" y="18" width="64" height="64"/>' +
-    '<polygon class="s2" points="50,12 94,86 6,86"/>' +
+    '<circle class="s0" cx="50" cy="50" r="39"/>' +
+    '<rect class="s1" x="15" y="15" width="70" height="70"/>' +
+    '<polygon class="s2" points="50,8 97,89 3,89"/>' +
     '<polygon class="s3" points="50,6 94,50 50,94 6,50"/>' +
     '</svg>';
 
