@@ -207,6 +207,15 @@
   .s1{ fill:var(--shape-1); }
   .s2{ fill:var(--shape-2); }
   .s3{ fill:var(--shape-3); }
+  /* Eyes (Figma node 400:3767): a white eye with a square pupil in the
+     shape's own colour, pushed to the edge the eye looks towards. The cell's
+     --lx/--ly (set in updateLooks) is that direction; up by default. */
+  .eye-white{ fill:var(--bright); }
+  .pupil{
+    transform: translate(calc(var(--lx, 0) * 4.59px), calc(var(--ly, -1) * 4.59px));
+    transition: transform 180ms ease;
+  }
+  .eye{ transform-box:fill-box; transform-origin:center; }
 
   /* A new shape pops into its square. */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -232,6 +241,12 @@
   /* Solved: the shapes hop one after another, from the top-left corner to
      the bottom-right, like a wave. */
   .cell.wave .hop{ animation: shape-wave 480ms ease-in-out var(--wave-delay, 0ms) both; }
+  /* ...and blink at the top of their hop. */
+  .cell.wave .eye{ animation: eye-blink 480ms ease-in-out var(--wave-delay, 0ms) both; }
+  @keyframes eye-blink{
+    0%, 30%, 60%, 100%{ transform:scaleY(1); }
+    45%{ transform:scaleY(0.1); }
+  }
   @keyframes shape-wave{
     0%, 100%{ transform:translateY(0) scale(1); }
     45%{ transform:translateY(-14%) scale(1.12); }
@@ -669,11 +684,43 @@
   // Sizes from Figma node 400:2965, as a share of one square (100 = the
   // square's width): optically balanced there, so they look the same size.
   // The triangle sits a little high so its heavy base doesn't look low.
+  // Each shape gets the same pair of eyes, scaled from the Figma faces to
+  // the circle's size; the triangle's sit lower, where it's wide enough.
+  var EYE_R = 6.88, EYE_DX = 11.46, PUPIL = 4.59;
+  var EYE_ROWS = { high: 47.7, low: 60 };
+  function eyes(row){
+    var y = EYE_ROWS[row], out = '';
+    [-1, 1].forEach(function(side){
+      var x = 50 + side * EYE_DX;
+      out += '<g class="eye">' +
+        '<circle class="eye-white" cx="' + x + '" cy="' + y + '" r="' + EYE_R + '"/>' +
+        '<g clip-path="url(#eye-' + row + (side < 0 ? '-l' : '-r') + ')">' +
+        '<rect class="pupil" x="' + (x - PUPIL / 2) + '" y="' + (y - PUPIL / 2) + '" width="' + PUPIL + '" height="' + PUPIL + '"/>' +
+        '</g></g>';
+    });
+    return out;
+  }
+  // The pupils are clipped to their eye, so one looking sideways near the
+  // triangle's edge can't poke out past the shape. Same viewBox in every
+  // square, so one set of clip shapes serves them all.
+  (function(){
+    var defs = '';
+    Object.keys(EYE_ROWS).forEach(function(row){
+      [-1, 1].forEach(function(side){
+        defs += '<clipPath id="eye-' + row + (side < 0 ? '-l' : '-r') + '">' +
+          '<circle cx="' + (50 + side * EYE_DX) + '" cy="' + EYE_ROWS[row] + '" r="' + EYE_R + '"/></clipPath>';
+      });
+    });
+    var holder = document.createElement('div');
+    holder.innerHTML = '<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>' + defs + '</defs></svg>';
+    document.body.appendChild(holder.firstChild);
+  })();
+
   var SHAPES_SVG = '<svg class="shape" viewBox="0 0 100 100" aria-hidden="true">' +
-    '<circle class="s0" cx="50" cy="50" r="32.1"/>' +
-    '<rect class="s1" x="19.55" y="19.55" width="60.9" height="60.9"/>' +
-    '<polygon class="s2" points="50,18.9 85,79.5 15,79.5"/>' +
-    '<polygon class="s3" points="50,13.6 86.4,50 50,86.4 13.6,50"/>' +
+    '<g class="s0"><circle cx="50" cy="50" r="32.1"/>' + eyes('high') + '</g>' +
+    '<g class="s1"><rect x="19.55" y="19.55" width="60.9" height="60.9"/>' + eyes('high') + '</g>' +
+    '<g class="s2"><polygon points="50,18.9 85,79.5 15,79.5"/>' + eyes('low') + '</g>' +
+    '<g class="s3"><polygon points="50,13.6 86.4,50 50,86.4 13.6,50"/>' + eyes('high') + '</g>' +
     '</svg>';
 
   // The 16 squares are built once and kept: a tap only changes their
@@ -699,6 +746,26 @@
     var el = cellEls[i], v = state.cells[i];
     if (v === EMPTY) el.removeAttribute('data-shape');
     else el.setAttribute('data-shape', v);
+    updateLooks();
+  }
+
+  // Two of the same shape in a row, column or box stare at each other for as
+  // long as the clash lasts; every other shape looks up.
+  function updateLooks(){
+    for (var i = 0; i < 16; i++) {
+      var clash = clashesWith(state.cells, i), dx = 0, dy = -1;
+      if (clash.length) {
+        dx = 0; dy = 0;
+        clash.forEach(function(j){
+          dx += j % 4 - i % 4;
+          dy += Math.floor(j / 4) - Math.floor(i / 4);
+        });
+        var len = Math.sqrt(dx * dx + dy * dy) || 1;
+        dx /= len; dy /= len;
+      }
+      cellEls[i].style.setProperty('--lx', dx.toFixed(3));
+      cellEls[i].style.setProperty('--ly', dy.toFixed(3));
+    }
   }
 
   // Restart a one-shot animation even if it's still running from the last tap.
