@@ -193,12 +193,6 @@
     transition: transform 120ms ease;
   }
   .cell.given{ background:var(--spot-given); cursor:default; }
-  /* Trial (see compare.html), ?look=...: "same" gives every square the
-     given squares' colour; "subtle" does too, but the shapes a child places
-     are paler than the given ones, like pencil next to print. Without the
-     parameter the squares to fill keep their own darker colour. */
-  html.look-same .cell, html.look-subtle .cell{ background:var(--spot-given); }
-  html.look-subtle .cell:not(.given) .shape{ opacity:0.55; }
 
   /* Each square holds all four shapes; data-shape picks the one that shows,
      so a tap only swaps an attribute and never rebuilds the square. */
@@ -390,22 +384,6 @@
 <script>
 (function(){
   "use strict";
-
-  // Trial options (see compare.html): ?look=same|subtle picks how the
-  // squares to fill are told apart; ?seed=N makes the random picks repeat,
-  // so pages opened with the same seed show the same boards.
-  var params = new URLSearchParams(location.search);
-  var LOOK = params.get('look');
-  if (LOOK === 'same' || LOOK === 'subtle') document.documentElement.classList.add('look-' + LOOK);
-  var SEED = parseInt(params.get('seed'), 10);
-  if (!isNaN(SEED)) {
-    Math.random = function(){ // mulberry32
-      SEED = (SEED + 0x6D2B79F5) | 0;
-      var t = Math.imul(SEED ^ (SEED >>> 15), 1 | SEED);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
 
   // iOS Safari only applies :active styles on tap if some element on the
   // page has a touch listener -- this is that listener (a no-op is enough).
