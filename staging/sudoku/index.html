@@ -40,11 +40,12 @@
   }
 
   :root{
-    /* Dark plum: no other game uses it. Squares a shade darker than the page;
-       the given squares a shade lighter, so they read as "already there". */
-    --bg:#3B2A45;
-    --spot:#2E2036;
-    --spot-given:#4B3858;
+    /* Light grey for now (was a dark plum #3B2A45 / #2E2036 / #4B3858).
+       Squares a shade lighter than the page; the given squares a shade
+       darker, so they read as "already there". */
+    --bg:#CFCFCF;
+    --spot:#E4E4E4;
+    --spot-given:#BDBDBD;
     /* The four shapes, in tap order: circle, square, triangle, diamond. */
     --shape-0:#EBB133;
     --shape-1:#74D5CA;
@@ -212,6 +213,7 @@
     text-anchor:middle;
     dominant-baseline:central;
   }
+  .shape .digit{ fill:#000; } /* digits are all black; only shapes/dots use the colours */
 
   /* A new shape pops into its square. */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
