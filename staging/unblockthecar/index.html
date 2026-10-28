@@ -288,10 +288,11 @@
     :root{
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
-      /* Bigger than the other games' 76vw: the cars are dragged by small
-         fingers, so every extra pixel of cell helps. Leaves room on the right
-         for the exit arrow. */
-      --board-size: min(86vw, calc(var(--app-height, 100vh) - var(--unit) * 4 - var(--icon-size) * 1.25), 520px);
+      /* Full width between the side margins, like Othello's board (and the
+         tray below it): the cars are dragged by small fingers, so every extra
+         pixel of square helps. The height limit leaves room for the progress
+         dots above and the tray below. */
+      --board-size: min(calc(100vw - 2 * var(--unit)), calc(var(--app-height, 100vh) - var(--unit) * 4 - var(--icon-size) * 1.25), 720px);
     }
     .controls-slider{
       display:flex;
