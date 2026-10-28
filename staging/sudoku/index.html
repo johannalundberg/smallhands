@@ -190,9 +190,11 @@
     align-items:center;
     justify-content:center;
     touch-action:manipulation;
-    transition: transform 120ms ease;
+    transition: transform 120ms ease, background 80ms ease;
   }
   .cell.given{ background:var(--spot-given); cursor:default; }
+  /* Full but wrong: squares flash red (see flashIncorrect). */
+  .cell.repeat{ background:var(--incorrect); }
 
   /* Each square holds all four shapes; data-shape picks the one that shows,
      so a tap only swaps an attribute and never rebuilds the square. */
@@ -449,7 +451,8 @@
     perm: [],       // puzzle digit -> shape shown, shuffled per board
     given: [],      // true for the squares the puzzle fills in
     cells: [],      // shape on each of the 16 squares, EMPTY if none
-    busy: false
+    busy: false,
+    flashing: false // the full-but-wrong red flash is showing
   };
 
   var els = {
@@ -464,6 +467,7 @@
   var cellEls = [];
 
   var winTimer = null;
+  var flashTimer = null;
   var celebrationTimer = null;
 
   function updateAppHeight(){
@@ -705,6 +709,7 @@
   // fresh board -- only passed when resuming after the rotate-block reload.
   function buildLevel(preset){
     clearTimeout(winTimer);
+    endFlash();
     var puzzle = LEVELS[state.difficulty][state.round[state.progress]];
     // Shuffling which shape stands for which digit makes each board look new
     // even when a puzzle comes round again.
@@ -752,9 +757,10 @@
   // the positive sound instead.
   els.boardWrap.addEventListener('click', function(e){
     var el = e.target.closest('.cell');
-    if (!el || state.busy) return;
+    if (!el || state.busy || state.flashing) return;
     var i = Number(el.dataset.i);
     if (state.given[i]) return; // given squares are static: no sound, no movement
+    clearTimeout(flashTimer); // a new tap restarts the full-board check
     // empty -> circle -> square -> triangle -> diamond -> empty
     var v = state.cells[i] + 1;
     if (v >= SHAPE_COUNT) v = EMPTY;
@@ -771,7 +777,34 @@
       return;
     }
     PLSound.play('click');
+    if (state.cells.indexOf(EMPTY) === -1) flashTimer = setTimeout(flashIncorrect, SETTLE_MS);
   });
+
+  // ---------- full but wrong ----------
+  // Nothing is said while the board is still filling up: spotting a repeat
+  // is the puzzle. Once every square holds a shape and it isn't solved, the
+  // squares flash red with the wrong sound (the page itself stays put). On
+  // easy only the repeated shapes' squares flash, to show where; on medium
+  // and hard the whole board does, leaving the finding to the player. The check waits SETTLE_MS after
+  // the last tap, so cycling the last square through the shapes doesn't
+  // flash at each wrong one on the way to the right one.
+  var SETTLE_MS = 1000;
+  var FLASH_MS = 700;
+  function flashIncorrect(){
+    PLSound.play('negative');
+    state.flashing = true;
+    clearTimeout(flashTimer);
+    var showWhere = state.difficulty === 'easy';
+    for (var i = 0; i < 16; i++) {
+      if (!showWhere || clashesWith(state.cells, i).length) cellEls[i].classList.add('repeat');
+    }
+    flashTimer = setTimeout(endFlash, FLASH_MS);
+  }
+  function endFlash(){
+    clearTimeout(flashTimer);
+    state.flashing = false;
+    cellEls.forEach(function(el){ el.classList.remove('repeat'); });
+  }
 
   // ---------- solved ----------
   function onSolved(){
