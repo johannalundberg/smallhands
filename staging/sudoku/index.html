@@ -159,15 +159,15 @@
 
   /* ---------- the board ---------- */
   /* 4x4 squares in four 2x2 boxes, outlined like Othello's board: square
-     corners, and the black board shows through as 2px lines between the
-     squares (--gap) and thicker ones between the boxes (--box-gap), plus a
-     2px outline around the edge. --cell is one square. */
+     corners, and the black board shows through as 1px lines between the
+     squares (--gap) and a 2px cross between the boxes (--box-gap), plus a
+     2px outline. --cell is one square. */
   .board-wrap{
     position:relative;
     width:var(--board-size);
     height:var(--board-size);
-    --gap: 2px;
-    --box-gap: 6px;
+    --gap: 1px;
+    --box-gap: 2px;
     --cell: calc((var(--board-size) - 2 * var(--gap) - var(--box-gap)) / 4);
     background:#000;
     box-shadow:0 0 0 2px #000;
