@@ -46,6 +46,7 @@
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
     --incorrect:#F2383B;
+    --success:#04BA50; /* same green as a right answer in Math */
     /* Figma frame: 1728x1117 */
     --board-size: min(76vmin, 76vw, 570px);
     --unit: 1.1574vw;
@@ -803,6 +804,7 @@
   function endFlash(){
     clearTimeout(flashTimer);
     state.flashing = false;
+    document.body.style.background = '';
     cellEls.forEach(function(el){ el.classList.remove('repeat'); });
   }
 
@@ -811,6 +813,9 @@
     state.busy = true;
     PLSound.play('positive');
     cellEls.forEach(function(el){ replay(el, 'wave'); });
+    // The page flashes green, the same flash as a right answer in Math.
+    document.body.style.background = 'var(--success)';
+    flashTimer = setTimeout(endFlash, FLASH_MS);
     winTimer = setTimeout(function(){
       state.progress += 1;
       updateProgressDots();
