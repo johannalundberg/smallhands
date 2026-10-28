@@ -37,7 +37,7 @@
     --bg:#7080B5;
     --spot:#6E6143;
     --spot-given:#BEBAB2;
-    /* The four shapes, in tap order: circle, square, triangle, diamond. */
+    /* The four shapes, in tap order: circle, egg, half moon, ring. */
     --shape-0:#E18E00;
     --shape-1:#8D951C;
     --shape-2:#C955FF;
@@ -414,7 +414,7 @@
   var TIERS = ['easy', 'medium', 'hard'];
   var ROUND_SIZE = 5;
   var EMPTY = -1;
-  var SHAPE_COUNT = 4; // circle, square, triangle, diamond (--shape-0..3)
+  var SHAPE_COUNT = 4; // circle, egg, half moon, ring (--shape-0..3)
 
   // Wait after the solving tap before the next board: long enough for the
   // wave to reach the last square and settle.
@@ -656,15 +656,19 @@
     return 'calc(var(--cell) * ' + k + ' + var(--gap) * ' + (k - boxes) + ' + var(--box-gap) * ' + boxes + ')';
   }
 
-  // The four shapes, drawn once into every square (see .shape in the CSS).
-  // Sizes from Figma node 400:2965, as a share of one square (100 = the
-  // square's width): optically balanced there, so they look the same size.
-  // The triangle sits a little high so its heavy base doesn't look low.
+  // The four shapes, drawn once into every square (see .shape in the CSS):
+  // circle, egg, half moon and ring, all round so they're told apart by
+  // their outline as well as colour. Sized by eye to look about the same.
   var SHAPES_SVG = '<svg class="shape" viewBox="0 0 100 100" aria-hidden="true">' +
+    // Circle: as in Figma node 400:2965.
     '<circle class="s0" cx="50" cy="50" r="32.1"/>' +
-    '<rect class="s1" x="19.55" y="19.55" width="60.9" height="60.9"/>' +
-    '<polygon class="s2" points="50,18.9 85,79.5 15,79.5"/>' +
-    '<polygon class="s3" points="50,13.6 86.4,50 50,86.4 13.6,50"/>' +
+    // Egg: wider and rounder at the bottom.
+    '<path class="s1" d="M50 14C69 14 78 42 77 58C76 75 64 86 50 86C36 86 24 75 23 58C22 42 31 14 50 14Z"/>' +
+    // Half moon: a disc with an overlapping disc cut away, opening right;
+    // moved right so its weight sits in the middle of the square.
+    '<path class="s2" transform="translate(8 0)" d="M69.92 20.01A36 36 0 1 0 69.92 79.99A30 30 0 0 1 69.92 20.01Z"/>' +
+    // Ring: a disc with a hole.
+    '<path class="s3" fill-rule="evenodd" d="M50 18a32 32 0 1 0 0.01 0ZM50 36a14 14 0 1 0 0.01 0Z"/>' +
     '</svg>';
 
   // The 16 squares are built once and kept: a tap only changes their
@@ -762,7 +766,7 @@
     var i = Number(el.dataset.i);
     if (state.given[i]) return; // given squares are static: no sound, no movement
     clearTimeout(flashTimer); // a new tap restarts the full-board check
-    // empty -> circle -> square -> triangle -> diamond -> circle: once a
+    // empty -> circle -> egg -> half moon -> ring -> circle: once a
     // square has a shape it never goes back to empty.
     var v = (state.cells[i] + 1) % SHAPE_COUNT;
     state.cells[i] = v;
