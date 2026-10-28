@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Sudoku — square looks</title>
+<style>
+  /* Trial page: the same boards (same seed) with the three ways of showing
+     which squares are the child's, side by side: darker squares to fill,
+     one colour for all, one colour with paler placed shapes. */
+  html, body{ margin:0; height:100%; background:#7080B5; }
+  .row{ display:flex; gap:8px; height:100%; padding:8px; box-sizing:border-box; }
+  iframe{ flex:1; min-width:0; height:100%; border:0; border-radius:12px; }
+  @media (max-width: 700px){
+    .row{ flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+<div class="row">
+  <iframe title="Darker squares to fill" src="./?seed=7"></iframe>
+  <iframe title="Same colour" src="./?look=same&seed=7"></iframe>
+  <iframe title="Same colour, paler placed shapes" src="./?look=subtle&seed=7"></iframe>
+</div>
+</body>
+</html>
