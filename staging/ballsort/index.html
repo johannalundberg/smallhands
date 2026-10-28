@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+<meta name="robots" content="noindex">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-45ZK78NND7');
+</script>
+
+<title>Ball Sort</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<link rel="manifest" href="../../manifest.json">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://playandlearn.kids/ballsort/">
+<meta property="og:title" content="Ball Sort — Play and Learn">
+<meta property="og:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta property="og:image" content="https://playandlearn.kids/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ball Sort — Play and Learn">
+<meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
+<style>
+  :root{
+    --bg:#1F2B3A;
+    --tube:#5E6F86;
+    --tube-hover:#8C9BB0;
+    --bright:#E4E4E4;
+    --ink:#202020;
+    /* Dark page, so the muted chips are black-based like Memory's. */
+    --ink-muted:rgba(0,0,0,0.4);
+    --incorrect:#F2383B;
+    /* The room the tubes may use; the script fits the tubes inside it. */
+    --area-w: 76vw;
+    --area-h: 76vmin;
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+
+  /* Tablet/desktop: the same room between the top and bottom icon rows as
+     Unblock's board gets, capped at its 743px. The tubes are a wide row
+     rather than a square, so they may use the full width between margins. */
+  @media (min-width: 768px){
+    :root{
+      --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+      --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
+      --area-w: min(calc(100vw - 4 * var(--unit)), 1100px);
+      --area-h: min(calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 743px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+    transition: background 80ms ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ---------- icon buttons (difficulty / back / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 120ms ease;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ transform: translateZ(0) scale(1.035); }
+  }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  .progress-dots{
+    position:absolute;
+    right:var(--unit);
+    bottom:var(--unit);
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap: calc(var(--icon-size) * 0.08);
+  }
+  .progress-dots .dot{
+    width: calc(var(--icon-size) * 0.25);
+    height: calc(var(--icon-size) * 0.25);
+    border-radius:50%;
+    background: var(--ink-muted);
+    transition: background 150ms ease;
+  }
+  .progress-dots .dot.done{ background: var(--bright); }
+
+  /* ---------- the tubes ---------- */
+  /* The script measures .board-wrap and sets the ball size and everything
+     derived from it (all in px) on .board, so tubes always fit the room:
+     --d ball, --p space between ball and tube wall, --g gap between balls,
+     --tw/--th tube width/height, --lift room above a tube for a lifted
+     ball, --lift-gap how far a lifted ball floats above the rim. */
+  .board-wrap{
+    position:relative;
+    width:var(--area-w);
+    height:var(--area-h);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+  }
+  .board{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    row-gap:var(--row-gap);
+  }
+  /* One tube's whole column is the tap target: the tube, the room above it
+     and half the gap on each side, so small fingers can't miss. */
+  .tube{
+    position:relative;
+    flex:none;
+    width:var(--cell-w);
+    height:calc(var(--lift) + var(--th));
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  /* Open at the top, round at the bottom: the bottom ball sits snugly in
+     the curve (same centre, --p of room all round). 2px line like
+     Unblock's frame. */
+  .glass{
+    position:absolute;
+    left:50%;
+    bottom:0;
+    width:var(--tw);
+    height:var(--th);
+    margin-left:calc(var(--tw) / -2);
+    border:2px solid var(--tube);
+    border-top:none;
+    border-radius:0 0 calc(var(--tw) / 2) calc(var(--tw) / 2);
+    transition: border-color 120ms ease;
+  }
+  .tube:active .glass{ border-color:var(--tube-hover); }
+  @media (hover:hover) and (pointer:fine){
+    .tube:hover .glass{ border-color:var(--tube-hover); }
+  }
+  .ball{
+    position:absolute;
+    left:50%;
+    width:var(--d);
+    height:var(--d);
+    margin-left:calc(var(--d) / -2);
+    bottom:calc(2px + var(--p) + var(--slot) * (var(--d) + var(--g)));
+    pointer-events:none; /* taps go to the tube underneath */
+    transition: transform 160ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+  .ball i{
+    display:block;
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    background:var(--ball);
+  }
+  /* Picked up: the top ball floats just above the rim of its tube. */
+  .ball.lifted{
+    transform:translateY(calc((var(--th) + var(--lift-gap) - 2px - var(--p) - var(--slot) * (var(--d) + var(--g))) * -1));
+  }
+  /* Crossing other tubes on its way: drawn over their outlines. */
+  .ball.moving{ z-index:3; }
+  /* Can't go there: a quick no-no wobble, then it waits, still lifted. */
+  .ball i.shake{ animation: ball-shake 300ms ease; }
+  @keyframes ball-shake{
+    0%, 100%{ transform:none; }
+    20%{ transform:translateX(calc(var(--d) * -0.14)); }
+    40%{ transform:translateX(calc(var(--d) * 0.14)); }
+    60%{ transform:translateX(calc(var(--d) * -0.08)); }
+    80%{ transform:translateX(calc(var(--d) * 0.04)); }
+  }
+  /* A tube just filled with one colour: a happy little hop, balls and all. */
+  .tube.bounce{ animation: tube-bounce 480ms ease-out; }
+  @keyframes tube-bounce{
+    0%, 100%{ transform:none; }
+    30%{ transform:translateY(calc(var(--d) * -0.35)); }
+    55%{ transform:none; }
+    75%{ transform:translateY(calc(var(--d) * -0.1)); }
+  }
+
+  @keyframes bounce-in{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(var(--final-scale)); opacity:1; }
+  }
+  .celebration{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:4;
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  @media (max-width: 767px), (max-height: 500px){
+    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
+       here -- darken on tap instead, so pressing any icon button is
+       actually visible. (The icons inside the tray deliberately don't grow:
+       the tray itself is the thing that grows, see .controls-slider:active.) */
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+      /* Full width between the side margins, and the same height limit as
+         Unblock's board: room for the progress dots above and the tray
+         below. */
+      --area-w: calc(100vw - 2 * var(--unit));
+      --area-h: min(calc(var(--app-height, 100vh) - var(--unit) * 4 - var(--icon-size) * 1.25), 720px);
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      background: rgba(0,0,0,0.2);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    /* Press feedback for the tray itself, like the icons and tiles: it grows
+       slightly while touched (:active also matches while any button inside it
+       is held, so tapping an icon gives both). */
+    .controls-slider{ transition: transform 120ms ease; }
+    .controls-slider:active{ transform: scale(1.03); }
+    .diff-group, .btn-row{ display:contents; }
+    .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
+    body{
+      padding-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
+      padding-bottom: calc(var(--unit) * 2 + var(--icon-size));
+    }
+  }
+
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    :root{
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+
+  /* No game here is designed to work in phone landscape — rather than a half-broken
+     cramped layout, block it outright with a plain "please rotate" screen. Matches
+     the same phone-landscape condition already used elsewhere (a landscape tablet has
+     enough height to stay excluded and keeps its normal, working layout). */
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:var(--incorrect);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    .rotate-block{ display:flex; }
+  }
+  /* No double-tap zoom anywhere. touch-action doesn't reach into a scrolling
+     element (the mobile tray scrolls sideways), so the tray needs its own:
+     two quick taps on the level buttons there zoomed the whole page in, and
+     with zoom otherwise locked there was no way back out. */
+  html, body, .controls-slider{ touch-action:manipulation; }
+</style>
+</head>
+<body>
+
+  <div class="rotate-block">
+    <!-- Pixel-art sad face (Figma node 198:1914), matching the site's other
+         lose-state faces, in place of the old curved-path frown. -->
+    <svg viewBox="0 0 973 366">
+      <circle fill="#202020" cx="65" cy="65" r="65"/>
+      <circle fill="#202020" cx="908" cy="65" r="65"/>
+      <rect fill="#202020" x="291" y="171" width="392" height="65"/>
+      <rect fill="#202020" x="161" y="236" width="130" height="130"/>
+      <rect fill="#202020" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
+
+  <div class="controls-slider" id="controlsSlider">
+    <div class="diff-group" id="diffGroup">
+      <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M114 75C114 53.4609 96.5391 36 75 36C53.4609 36 36 53.4609 36 75C36 96.5391 53.4609 114 75 114V150C33.5786 150 0 116.421 0 75C0 33.5786 33.5786 0 75 0C116.421 0 150 33.5786 150 75C150 116.421 116.421 150 75 150V114C96.5391 114 114 96.5391 114 75Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+        <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/></svg>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" aria-label="New puzzles">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M111.491 32.1671L112.864 53.5756L90.0895 53.5683"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M110.802 97.5619C106.102 105.702 98.8837 112.094 90.2343 115.774C81.5848 119.454 71.9735 120.223 62.8492 117.964C53.7249 115.705 45.5822 110.541 39.6485 103.251C33.7149 95.9607 30.312 86.9392 29.9527 77.5463C29.5935 68.1534 32.2974 58.8983 37.6569 51.1762C43.0164 43.454 50.7409 37.6834 59.666 34.7343C68.5911 31.7851 78.2331 31.8172 87.1383 34.8258C96.0436 37.8343 103.729 43.6563 109.037 51.4139"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="progress-dots" id="progressDots">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <div class="board" id="board"></div>
+  </div>
+
+  <div class="celebration" id="celebration"></div>
+
+<script src="../../sound.js?v=20261025ze"></script>
+<script>
+(function(){
+  "use strict";
+
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
+
+  // Each level is its tubes separated by '|', each tube read bottom to top:
+  // a letter is one ball (A, B, C... one per colour, four balls of each),
+  // an empty string is an empty tube. Every level starts with each colour's
+  // tube full and two empty tubes, none already sorted. The number is the
+  // fewest moves that sort it (one move = one ball), found by a BFS solver
+  // offline and checked again by a second, separate solver -- every level
+  // here is solvable.
+  var LEVELS = {
+    easy: [
+      ['ABCC|BBBC|AAAC||', 6],
+      ['AAAB|CBBA|CCCB||', 6],
+      ['AAAB|ABBC|CCCB||', 6],
+      ['AABC|AACC|BBBC||', 7],
+      ['AABB|CCCB|ACBA||', 7],
+      ['ABAB|BBAC|CCCA||', 7],
+      ['AAAB|BCCA|CCBB||', 7],
+      ['AAAB|BBCC|CABC||', 7],
+      ['ABBA|AACB|CCCB||', 7],
+      ['AAAB|CBCC|CBAB||', 8],
+      ['AABB|CACB|CCAB||', 8],
+      ['AABC|CAAB|CCBB||', 8],
+      ['ABAC|AACB|BBCC||', 8],
+      ['AABC|ACBA|CCBB||', 8],
+      ['ABBC|BCCC|AAAB||', 8],
+      ['AABC|BBAC|ACCB||', 9],
+      ['AABC|CBCC|BBAA||', 9],
+      ['AABC|BBCB|ACAC||', 9],
+      ['ABCB|BBCC|CAAA||', 9],
+      ['AABB|CACC|BBCA||', 9],
+      ['ABBA|BACB|CCCA||', 9],
+      ['AABA|BBCB|CCAC||', 10],
+      ['ABAB|ACCB|CCBA||', 10],
+      ['AABC|ACCB|BCAB||', 10],
+      ['ABBC|AACB|ABCC||', 10],
+      ['ABCC|BBAA|CABC||', 10],
+      ['ABCA|CCAB|ABCB||', 10],
+      ['ABBC|ABCA|CACB||', 11],
+      ['ABAC|CBCA|ABCB||', 11],
+      ['ABCA|CBBC|BAAC||', 11]
+    ],
+    medium: [
+      ['ABCB|DDDC|AAAB|CBCD||', 10],
+      ['ABCA|CDAC|DDDA|BBBC||', 10],
+      ['AAAB|CDDB|CCDB|CDBA||', 11],
+      ['ABCB|BBCA|CDDD|AADC||', 11],
+      ['ABCD|BBCD|DDBA|CCAA||', 11],
+      ['ABBA|CCCD|ADAB|BDDC||', 12],
+      ['AABC|BADA|CCBD|CBDD||', 12],
+      ['ABCA|BDCD|AABD|DBCC||', 13],
+      ['ABBA|CCAB|DCAC|DDBD||', 13],
+      ['AABC|CCBC|BADD|DADB||', 13],
+      ['ABAC|ADCC|BCDD|BADB||', 14],
+      ['ABCA|DCCD|BBAD|BCDA||', 14],
+      ['ABCA|CDDD|BCBC|BAAD||', 14],
+      ['ABCD|DEDB|DCAC|AABC|EEEB||', 14],
+      ['ABCC|DBEB|AAAD|CCED|BDEE||', 14],
+      ['ABCB|BACA|DCCD|ABDD||', 15],
+      ['ABAC|CBDA|CDAC|BDBD||', 15],
+      ['ABCD|EEBA|DDCB|EABC|ADCE||', 15],
+      ['AABC|DDEE|DBCE|CABA|CEBD||', 15],
+      ['ABAC|DBEB|DDEE|AACC|BCED||', 15],
+      ['ABCB|CDCE|CADA|BBED|ADEE||', 16],
+      ['ABCD|BCEC|AABD|CEDE|DBAE||', 16],
+      ['AABC|CDCD|EAEA|BDEB|BCDE||', 17],
+      ['ABCB|CDDE|ECAE|BACB|DDAE||', 17],
+      ['ABBA|CCBD|BCEA|ECDD|EDEA||', 17],
+      ['AABC|DBCD|BACE|ADEC|BDEE||', 18],
+      ['ABBC|DCAD|DECE|BDAE|BEAC||', 18],
+      ['ABCC|DABE|DABD|AECE|EDBC||', 18],
+      ['ABCD|ECDE|BEEA|BDAC|CDAB||', 19],
+      ['ABAC|DADD|BCBC|EBEE|DEAC||', 19]
+    ],
+    hard: [
+      ['AABB|CDEC|DDFF|FEBA|AEFD|BCEC||', 18],
+      ['ABCB|CACD|ABAB|EDEC|FFFD|EEDF||', 18],
+      ['ABCD|EBDB|ECDF|DAEE|FFAA|CCFB||', 19],
+      ['ABCD|EEFE|CBCB|AAAE|FDCF|BDFD||', 19],
+      ['ABCD|EDBC|FDCB|FFEA|EEAD|CABF||', 19],
+      ['AABC|DBCE|EDFA|ADCD|CEFB|FBEF||', 20],
+      ['ABCD|DEFF|FECD|BBDC|AEEA|CFBA||', 20],
+      ['ABCB|CCAD|BEFF|BEDA|FCDA|DEFE||', 21],
+      ['ABCA|ACDE|BCBE|DFCE|EFFD|BADF||', 21],
+      ['ABBC|CDBE|BDCA|EFDF|AEDF|FACE||', 21],
+      ['ABCD|ABDB|DEEC|FEEC|FAAD|FBCF||', 22],
+      ['ABCB|DCED|AAEA|FCDB|CBFF|EFDE||', 22],
+      ['ABBC|DCEA|DBBE|ADFC|EFFD|FCAE||', 22],
+      ['ABCD|EEEF|AGAC|DEBF|BFGG|ABDG|CFCD||', 22],
+      ['AABB|CDEF|GFFD|CCDA|ECBG|EABE|FGDG||', 22],
+      ['ABCD|EBEA|EDCF|ADFE|FCCF|ADBB||', 23],
+      ['ABCD|DAEF|BCAB|FECC|EDFE|DABF||', 23],
+      ['ABCA|DEEF|GGDE|CDGE|BFCB|FGBA|ADCF||', 23],
+      ['ABAC|DDEC|FFCG|GBDA|AFBE|GEED|CGFB||', 23],
+      ['ABAA|BCDE|FFCG|EAGD|BEBF|DFGD|CCEG||', 23],
+      ['ABCC|DAED|FAEA|GDEB|CBEG|FFGC|DFGB||', 24],
+      ['ABCB|DDAE|DEAB|DCFF|GFAF|CGEC|EGGB||', 24],
+      ['ABBC|DEFF|BGEF|ACDA|DDBG|GFEA|ECGC||', 25],
+      ['ABCD|EBEC|FBFD|GGDF|AADE|BCGC|GEFA||', 25],
+      ['ABCD|CDDA|EECF|CFBA|EABF|GGFD|GGEB||', 25],
+      ['ABCA|CDEB|FDCG|GEGF|EDFA|CGFE|DBBA||', 26],
+      ['ABCD|ECFB|CFGE|GFBD|GADD|AACE|GEBF||', 26],
+      ['ABBC|DCDC|ABEE|EFEF|ACGG|AFDD|GGBF||', 26],
+      ['ABBC|DEAD|DFGC|FAGC|FGFE|ACEB|BGDE||', 27],
+      ['ABCD|CEBD|FAGD|CGGE|EAFC|EFBB|AFDG||', 27]
+    ]
+  };
+
+  var TIERS = ['easy', 'medium', 'hard'];
+  var ROUND_SIZE = 5;
+  var CAPACITY = 4;
+
+  // Ball colours. A level with fewer colours uses a random few of them, so
+  // the same puzzle comes back in different colours.
+  var BALL_COLORS = ['#F2383B', '#EBB133', '#74D5CA', '#6047F0', '#E88CE5', '#9DD062', '#F37745'];
+
+  // Tube shape, as fractions of one ball's width (see .board-wrap's CSS).
+  var PAD = 0.12;       // ball to tube wall
+  var GAP = 0.08;       // ball to ball
+  var HEAD = 0.35;      // above a full tube's top ball, so it isn't flush with the rim
+  var LIFT = 1.3;       // room above a tube for a lifted ball
+  var LIFT_GAP = 0.2;   // a lifted ball floats this far above the rim
+  var COL_GAP = 0.4;    // between tubes side by side
+  var ROW_GAP = 0.35;   // between two rows of tubes
+  var MAX_BALL = 96;    // px: big screens stop growing here
+
+  var state = {
+    difficulty: 'easy',
+    round: [],      // level indices (into LEVELS[difficulty]) for this round
+    progress: 0,    // levels solved this round
+    tubes: [],      // each tube's balls as a string of letters, bottom to top
+    palette: [],    // BALL_COLORS index for each letter (A, B, C...)
+    balls: [],      // each tube's ball elements, bottom to top
+    lifted: -1,     // tube whose top ball is picked up, or -1
+    busy: false     // level solved, waiting for the next one
+  };
+
+  var els = {
+    board: document.getElementById('board'),
+    boardWrap: document.getElementById('boardWrap'),
+    diffGroup: document.getElementById('diffGroup'),
+    backBtn: document.getElementById('backBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    progressDots: document.querySelectorAll('#progressDots .dot'),
+    celebration: document.getElementById('celebration'),
+    controlsSlider: document.getElementById('controlsSlider')
+  };
+
+  var geom = null;   // current sizes in px, see layout()
+  var move = null;   // the ball travelling to another tube, if any
+  var winTimer = null;
+  var celebrationTimer = null;
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+
+  // iOS can leave --app-height stuck at a stale reading after the tab is
+  // backgrounded (app-switched away from, screen locked) and never self-
+  // correct on return, since nothing else re-fires resize/scroll -- force a
+  // fresh reading the moment the page becomes visible again.
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') updateAppHeight();
+  });
+
+  // Rotating out of the phone-landscape rotate-block and back to portrait can
+  // leave iOS's WebKit engine (Safari, Chrome, any iOS browser — Apple requires
+  // them all to use it) rendering at the previous orientation's zoom/scale, so
+  // the layout comes back oversized and spills past the screen edge. Toggling
+  // the viewport meta wasn't enough to unstick it, so instead: reload outright
+  // the moment the device leaves that blocked landscape state. A fresh load
+  // can't inherit a stuck scale — there's nothing left to get stuck.
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
+      location.reload();
+    }
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) {
+    landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  } else if (landscapeBlockMQ.addListener) {
+    landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
+  }
+
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.ballsort';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // tubes: null means "the last level was just solved, start the next one".
+  // A lifted ball isn't saved: it comes back sitting in its tube. A ball
+  // still flying counts as landed (state.tubes already has it there).
+  function snapshotGame(){
+    if (els.celebration.style.display === 'flex') return null; // round already won, a fresh round is right
+    if (!state.tubes.length) return null;
+    var progress = state.progress;
+    var tubes = state.tubes.slice();
+    if (state.busy) {
+      // Solved and waiting: that timeout won't survive the reload, so count
+      // the solve here and let restore move on to the next level.
+      progress += 1;
+      if (progress >= ROUND_SIZE) return null;
+      tubes = null;
+    }
+    return {
+      difficulty: state.difficulty,
+      round: state.round.slice(),
+      progress: progress,
+      tubes: tubes,
+      palette: state.palette.slice()
+    };
+  }
+
+  function isWholeNumber(v, min, max){
+    return typeof v === 'number' && Math.floor(v) === v && v >= min && v <= max;
+  }
+
+  // Everything is checked before touching state or the DOM, so bad data just
+  // falls back to a fresh round instead of leaving a half-built board.
+  function restoreGame(data){
+    if (!data || typeof data !== 'object') return false;
+    if (TIERS.indexOf(data.difficulty) === -1) return false;
+    var pool = LEVELS[data.difficulty];
+    if (!Array.isArray(data.round) || data.round.length !== ROUND_SIZE) return false;
+    for (var i = 0; i < data.round.length; i++) {
+      if (!isWholeNumber(data.round[i], 0, pool.length - 1)) return false;
+    }
+    if (!isWholeNumber(data.progress, 0, ROUND_SIZE - 1)) return false;
+    if (data.tubes != null) {
+      var start = parseLevel(pool[data.round[data.progress]][0]);
+      var colours = colourCount(start);
+      if (!validTubes(data.tubes, start, colours)) return false;
+      if (!validPalette(data.palette, colours)) return false;
+    }
+
+    state.difficulty = data.difficulty;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === data.difficulty);
+    });
+    state.round = data.round.slice();
+    state.progress = data.progress;
+    updateProgressDots();
+    // Same balls in the same tubes, in the same colours, as before the reload.
+    if (data.tubes != null) buildLevel(data.tubes, data.palette);
+    else buildLevel();
+    return true;
+  }
+
+  // Same number of tubes as the level, none overfull, exactly four balls of
+  // each of its colours, and not already sorted.
+  function validTubes(tubes, start, colours){
+    if (!Array.isArray(tubes) || tubes.length !== start.length) return false;
+    var count = {};
+    for (var t = 0; t < tubes.length; t++) {
+      var s = tubes[t];
+      if (typeof s !== 'string' || s.length > CAPACITY) return false;
+      for (var j = 0; j < s.length; j++) {
+        var c = s.charCodeAt(j) - 65;
+        if (c < 0 || c >= colours) return false;
+        count[c] = (count[c] || 0) + 1;
+      }
+    }
+    for (var k = 0; k < colours; k++) if (count[k] !== CAPACITY) return false;
+    return !isSolved(tubes);
+  }
+
+  function validPalette(palette, colours){
+    if (!Array.isArray(palette) || palette.length !== colours) return false;
+    var seen = {};
+    for (var i = 0; i < palette.length; i++) {
+      if (!isWholeNumber(palette[i], 0, BALL_COLORS.length - 1) || seen[palette[i]]) return false;
+      seen[palette[i]] = true;
+    }
+    return true;
+  }
+
+  // ---------- levels ----------
+  function parseLevel(str){ return str.split('|'); }
+
+  function colourCount(tubes){
+    var seen = {}, n = 0;
+    tubes.join('').split('').forEach(function(ch){
+      if (!seen[ch]) { seen[ch] = true; n++; }
+    });
+    return n;
+  }
+
+  // Full of one colour.
+  function isComplete(s){
+    if (s.length !== CAPACITY) return false;
+    for (var i = 1; i < s.length; i++) if (s.charAt(i) !== s.charAt(0)) return false;
+    return true;
+  }
+
+  function isSolved(tubes){
+    for (var i = 0; i < tubes.length; i++) {
+      if (tubes[i].length && !isComplete(tubes[i])) return false;
+    }
+    return true;
+  }
+
+  // A ball may go onto an empty tube, or onto its own colour if there's room.
+  function canMove(from, to){
+    var a = state.tubes[from], b = state.tubes[to];
+    if (!a.length || b.length >= CAPACITY) return false;
+    return !b.length || b.charAt(b.length - 1) === a.charAt(a.length - 1);
+  }
+
+  function shuffled(n){
+    var idx = [];
+    for (var i = 0; i < n; i++) idx.push(i);
+    for (var k = idx.length - 1; k > 0; k--) {
+      var j = Math.floor(Math.random() * (k + 1));
+      var t = idx[k]; idx[k] = idx[j]; idx[j] = t;
+    }
+    return idx;
+  }
+
+  function pickRound(tier){
+    // Levels are listed easiest first, so sorting the pick makes each round
+    // ramp up a little from its first level to its last.
+    return shuffled(LEVELS[tier].length).slice(0, ROUND_SIZE).sort(function(a, b){ return a - b; });
+  }
+
+  // ---------- drawing ----------
+  // presetTubes/presetPalette (optional): the saved game to show instead of
+  // the level's start -- only passed when resuming after the rotate-block
+  // reload.
+  function buildLevel(presetTubes, presetPalette){
+    endMove(false);
+    clearTimeout(winTimer);
+    var start = parseLevel(LEVELS[state.difficulty][state.round[state.progress]][0]);
+    state.tubes = presetTubes ? presetTubes.slice() : start;
+    state.palette = presetPalette ? presetPalette.slice() : shuffled(BALL_COLORS.length).slice(0, colourCount(start));
+    state.lifted = -1;
+    state.busy = false;
+    state.balls = [];
+    els.celebration.style.display = 'none';
+    els.boardWrap.style.display = '';
+    els.board.innerHTML = '';
+    state.tubes.forEach(function(s, t){
+      var tube = document.createElement('div');
+      tube.className = 'tube';
+      tube.dataset.tube = t;
+      // Plays its own click/positive in onTubeTap, never sound.js's click.
+      tube.setAttribute('data-own-sound', '');
+      tube.innerHTML = '<div class="glass"></div>';
+      tube.addEventListener('animationend', function(e){
+        if (e.animationName === 'tube-bounce') tube.classList.remove('bounce');
+      });
+      els.board.appendChild(tube);
+      state.balls.push([]);
+      for (var j = 0; j < s.length; j++) addBall(t, s.charAt(j), j);
+    });
+    layout();
+  }
+
+  function addBall(t, letter, slot){
+    var ball = document.createElement('div');
+    ball.className = 'ball';
+    ball.style.setProperty('--slot', slot);
+    ball.style.setProperty('--ball', BALL_COLORS[state.palette[letter.charCodeAt(0) - 65]]);
+    var dot = document.createElement('i');
+    dot.addEventListener('animationend', function(){ dot.classList.remove('shake'); });
+    ball.appendChild(dot);
+    els.board.children[t].appendChild(ball);
+    state.balls[t].push(ball);
+  }
+
+  // Biggest balls that fit the room. Up to five tubes always stand in one
+  // row, so the puzzle reads at a glance; more than that may wrap into two
+  // rows when that gives bigger balls (phones, portrait tablets).
+  function layout(){
+    var W = els.boardWrap.clientWidth, H = els.boardWrap.clientHeight;
+    var n = state.tubes.length;
+    if (!W || !H || !n) return; // hidden behind the celebration
+    function fit(rows){
+      var cols = Math.ceil(n / rows);
+      // Each column: ball + wall room + two 2px walls + the gap. Each row:
+      // lift room + four balls and their gaps + bottom room + 2px bottom line.
+      var byWidth = (W / cols - 4) / (1 + 2 * PAD + COL_GAP);
+      var byHeight = (H - 2 * rows) / (rows * (LIFT + 4 + 3 * GAP + PAD + HEAD) + (rows - 1) * ROW_GAP);
+      return { rows: rows, cols: cols, d: Math.min(byWidth, byHeight, MAX_BALL) };
+    }
+    var best = fit(1);
+    if (n > 5) {
+      var two = fit(2);
+      if (two.d > best.d) best = two;
+    }
+    var d = Math.floor(best.d);
+    geom = {
+      d: d,
+      p: d * PAD,
+      g: d * GAP,
+      tw: d * (1 + 2 * PAD) + 4,
+      th: d * (4 + 3 * GAP + PAD + HEAD) + 2,
+      lift: d * LIFT,
+      liftGap: d * LIFT_GAP
+    };
+    var cellW = geom.tw + d * COL_GAP;
+    var s = els.board.style;
+    s.setProperty('--d', d + 'px');
+    s.setProperty('--p', geom.p + 'px');
+    s.setProperty('--g', geom.g + 'px');
+    s.setProperty('--tw', geom.tw + 'px');
+    s.setProperty('--th', geom.th + 'px');
+    s.setProperty('--lift', geom.lift + 'px');
+    s.setProperty('--lift-gap', geom.liftGap + 'px');
+    s.setProperty('--cell-w', cellW + 'px');
+    s.setProperty('--row-gap', (d * ROW_GAP) + 'px');
+    // +1px: rounding must never push the last tube of a row onto the next.
+    s.width = (best.cols * cellW + 1) + 'px';
+  }
+  if (window.ResizeObserver) {
+    new ResizeObserver(function(){ layout(); }).observe(els.boardWrap);
+  } else {
+    window.addEventListener('resize', layout);
+  }
+
+  function updateProgressDots(){
+    els.progressDots.forEach(function(dot, i){
+      dot.classList.toggle('done', i < state.progress);
+    });
+  }
+
+  function restartRound(){
+    clearTimeout(celebrationTimer);
+    state.round = pickRound(state.difficulty);
+    state.progress = 0;
+    updateProgressDots();
+    buildLevel();
+  }
+
+  // ---------- tap to pick up, tap to put down ----------
+  // Taps, not drags: a tap is what lets an iPhone start the page's sound.
+  // Every tap on a tube makes exactly one sound: the click, or the positive
+  // instead of it when the move fills a tube with one colour.
+  els.board.addEventListener('click', function(e){
+    var tube = e.target.closest && e.target.closest('.tube');
+    if (!tube) return;
+    onTubeTap(Number(tube.dataset.tube));
+  });
+
+  function onTubeTap(t){
+    if (state.busy) return; // solved, the next level is on its way
+    // A quick second tap doesn't wait for the last ball to land: it lands now.
+    endMove(true);
+    var from = state.lifted;
+    if (from === -1) {
+      if (state.tubes[t].length) liftBall(t);
+      PLSound.play('click');
+      return;
+    }
+    if (from === t) {
+      dropBall(t);
+      PLSound.play('click');
+      return;
+    }
+    if (!canMove(from, t)) {
+      // Not there: the ball says no and stays up, so the child can try
+      // another tube (or tap its own tube to put it back).
+      shake(from);
+      PLSound.play('click');
+      return;
+    }
+    var filled = moveBall(from, t);
+    PLSound.play(filled ? 'positive' : 'click');
+    if (isSolved(state.tubes)) onSolved();
+  }
+
+  function topBall(t){ return state.balls[t][state.balls[t].length - 1]; }
+
+  function liftBall(t){
+    state.lifted = t;
+    topBall(t).classList.add('lifted');
+  }
+
+  function dropBall(t){
+    state.lifted = -1;
+    topBall(t).classList.remove('lifted');
+  }
+
+  function shake(t){
+    var dot = topBall(t).firstChild;
+    dot.classList.remove('shake');
+    void dot.offsetWidth;
+    dot.classList.add('shake');
+  }
+
+  // The lifted ball floats over to above the other tube, then drops in.
+  // The ball is moved into its new tube straight away (so the game's state
+  // and the page always agree) and drawn back where it was, then eased
+  // home. Returns whether that tube is now full of one colour.
+  function moveBall(from, to){
+    var ball = state.balls[from].pop();
+    var letter = state.tubes[from].charAt(state.tubes[from].length - 1);
+    state.tubes[from] = state.tubes[from].slice(0, -1);
+    state.tubes[to] += letter;
+    state.balls[to].push(ball);
+    state.lifted = -1;
+    var slot = state.tubes[to].length - 1;
+    var filled = isComplete(state.tubes[to]);
+
+    var was = ball.getBoundingClientRect();
+    ball.style.transition = 'none';
+    ball.classList.remove('lifted');
+    ball.firstChild.classList.remove('shake');
+    ball.style.setProperty('--slot', slot);
+    els.board.children[to].appendChild(ball);
+    var now = ball.getBoundingClientRect();
+    ball.style.transform = 'translate(' + (was.left - now.left) + 'px,' + (was.top - now.top) + 'px)';
+    void ball.offsetWidth;
+    ball.classList.add('moving');
+
+    // Same height above the rim as when it was lifted.
+    var up = geom.th + geom.liftGap - 2 - geom.p - slot * (geom.d + geom.g);
+    ball.style.transition = 'transform 170ms cubic-bezier(0.4, 0, 0.2, 1)';
+    ball.style.transform = 'translate(0,' + (-up) + 'px)';
+    move = {
+      ball: ball,
+      tube: to,
+      filled: filled,
+      timer: setTimeout(function(){
+        // Down it drops, speeding up like a falling ball.
+        ball.style.transition = 'transform 140ms cubic-bezier(0.5, 0, 1, 1)';
+        ball.style.transform = 'translate(0,0)';
+        move.timer = setTimeout(function(){ endMove(true); }, 150);
+      }, 170)
+    };
+    return filled;
+  }
+
+  // Put the travelling ball straight into its place. landed: also do what
+  // its arrival does (the full tube's hop); false when the board is about
+  // to be rebuilt anyway.
+  function endMove(landed){
+    if (!move) return;
+    var m = move;
+    move = null;
+    clearTimeout(m.timer);
+    m.ball.style.transition = 'none';
+    m.ball.style.transform = '';
+    void m.ball.offsetWidth;
+    m.ball.style.transition = '';
+    m.ball.classList.remove('moving');
+    if (landed && m.filled) bounce(m.tube);
+  }
+
+  function bounce(t){
+    var tube = els.board.children[t];
+    tube.classList.remove('bounce');
+    void tube.offsetWidth;
+    tube.classList.add('bounce');
+  }
+
+  // ---------- solved ----------
+  // The last move already played the positive (it filled a tube). Let that
+  // ball land and its tube hop, take a breath, then the next level.
+  function onSolved(){
+    state.busy = true;
+    winTimer = setTimeout(function(){
+      state.progress += 1;
+      updateProgressDots();
+      if (state.progress >= ROUND_SIZE) {
+        showCelebration();
+      } else {
+        buildLevel();
+      }
+    }, 1400);
+  }
+
+  // Pixel-art smiley (Figma node 198:1809) -- two round eyes and a
+  // stepped-block smile -- in one of the ball colours, on the page's own
+  // background.
+  function celebrationFace(color){
+    return '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+      '<circle fill="' + color + '" cx="65" cy="65" r="65"/>' +
+      '<circle fill="' + color + '" cx="908" cy="65" r="65"/>' +
+      '<rect fill="' + color + '" x="161" y="171" width="130" height="130"/>' +
+      '<rect fill="' + color + '" x="683" y="171" width="130" height="130"/>' +
+      '<rect fill="' + color + '" x="291" y="301" width="392" height="65"/>' +
+      '</svg>';
+  }
+
+  function showCelebration(){
+    updateAppHeight();
+    els.celebration.innerHTML = celebrationFace(BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)]);
+    PLSound.play('complete');
+    els.boardWrap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    celebrationTimer = setTimeout(restartRound, 3000);
+  }
+
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    var tier = btn.getAttribute('data-tier');
+    if (tier === state.difficulty) return; // already selected — keep the current puzzle
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.difficulty = tier;
+    restartRound();
+  });
+
+  els.refreshBtn.addEventListener('click', restartRound);
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../../index.html'); });
+
+  // First-visit only: gently peek-scroll the bottom slider tray so new users notice
+  // it scrolls (there are more icons than fit on a phone screen), then ease back to
+  // the correct resting view with the easy-difficulty icon as the leftmost icon.
+  // Jumps to the TRUE end (no partial-reveal cap -- a longer tray was never
+  // reaching its real end otherwise) immediately, before first paint, then eases
+  // back on the very next frame with no added hold -- both the jump and the
+  // start of the ease read as a glitchy stutter when delayed.
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'ballsort.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = maxScroll;
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  introduceTraySlider();
+
+  // Coming back from the rotate-block reload: continue the saved game.
+  // Otherwise (or if the save is unusable) start a fresh easy round.
+  var resumed = takeResume();
+  if (!(resumed && restoreGame(resumed))) {
+    els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    restartRound();
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+<meta name="robots" content="noindex">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-45ZK78NND7');
+</script>
+
+<title>Pipes</title>
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<link rel="manifest" href="../../manifest.json">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://playandlearn.kids/pipes/">
+<meta property="og:title" content="Pipes — Play and Learn">
+<meta property="og:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta property="og:image" content="https://playandlearn.kids/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pipes — Play and Learn">
+<meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
+<style>
+  :root{
+    /* First-draft colours, all here so they're easy to try out. */
+    --bg:#2A3542;
+    --spot:#212A35;
+    --frame:#000000;
+    --pipe:#8A949E;
+    --water:#74D5CA;
+    --water-glow:#E2FAF6;
+    --bright:#E4E4E4;
+    --ink:#202020;
+    --ink-muted:rgba(32,32,32,0.4);
+    --incorrect:#F2383B;
+    /* Figma frame: 1728x1117 */
+    --board-size: min(76vmin, 76vw, 570px);
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+
+  /* Tablet/desktop: size the board against the room left between the top and
+     bottom icon rows, same as Unblock, Number Puzzle and Othello. 743px is
+     the board's size in Unblock's Figma frame. */
+  @media (min-width: 768px){
+    :root{
+      --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+      --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
+      --board-size: min(76vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 743px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+    transition: background 80ms ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ---------- icon buttons (difficulty / back / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 120ms ease;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ transform: translateZ(0) scale(1.035); }
+  }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  .progress-dots{
+    position:absolute;
+    right:var(--unit);
+    bottom:var(--unit);
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap: calc(var(--icon-size) * 0.08);
+  }
+  .progress-dots .dot{
+    width: calc(var(--icon-size) * 0.25);
+    height: calc(var(--icon-size) * 0.25);
+    border-radius:50%;
+    background: var(--ink-muted);
+    transition: background 150ms ease;
+  }
+  .progress-dots .dot.done{ background: var(--bright); }
+
+  /* ---------- the board ---------- */
+  /* Same frame as Unblock: a 2px black outline with the squares inside it,
+     sized as fractions of the board so it scales to every screen. --n is the
+     grid size (4, 5 or 6 by level), --pad the space inside the outline, --gap
+     the space between squares, --cell one square. */
+  .board-wrap{
+    position:relative;
+    width:var(--board-size);
+    height:var(--board-size);
+    border:2px solid var(--frame);
+    --n: 4;
+    --start-row: 0;
+    --end-row: 0;
+    --pad: calc(var(--board-size) * 0.025536);
+    --gap: calc(var(--board-size) * 0.012649);
+    --cell: calc((var(--board-size) - 4px - 2 * var(--pad) - (var(--n) - 1) * var(--gap)) / var(--n));
+    --step: calc(var(--cell) + var(--gap));
+    --radius: calc(var(--cell) * 0.12843);
+    /* A pipe's thickness: 26 of the 100 units its drawing spans (one square
+       plus a gap). The stubs outside the board use the same width. */
+    --pipe-w: calc((var(--cell) + var(--gap)) * 0.26);
+    /* Never past the screen edge: on a phone the board nearly fills the
+       width, and a stub sticking out would let the page scroll sideways. */
+    --stub-out: min(calc(var(--cell) * 0.6), calc((100vw - var(--board-size)) / 2));
+    touch-action:manipulation;
+  }
+  .lot{
+    position:absolute;
+    left:var(--pad);
+    top:var(--pad);
+    width:calc(var(--cell) * var(--n) + var(--gap) * (var(--n) - 1));
+    height:calc(var(--cell) * var(--n) + var(--gap) * (var(--n) - 1));
+    z-index:2;
+  }
+  .spot{
+    position:absolute;
+    width:var(--cell);
+    height:var(--cell);
+    border-radius:var(--radius);
+    background:var(--spot);
+  }
+  .piece{
+    cursor:pointer;
+    touch-action:manipulation;
+    -webkit-touch-callout:none;
+    transition: transform 120ms ease;
+  }
+  .piece:active{ transform:scale(0.95); }
+  /* Mouse only: the square under the pointer grows like the site's buttons
+     and hub tiles do, so it reads as something you can tap. */
+  @media (hover:hover) and (pointer:fine){
+    .piece:hover{ transform:scale(1.035); }
+    .piece:hover:active{ transform:scale(0.95); }
+  }
+  /* The pipe drawing is half a gap bigger than its square on every side, so
+     two pipes that line up meet in the middle of the gap and read as one
+     pipe. It turns around the square's centre. */
+  .pipe{
+    position:absolute;
+    left:calc(var(--gap) / -2);
+    top:calc(var(--gap) / -2);
+    width:calc(var(--cell) + var(--gap));
+    height:calc(var(--cell) + var(--gap));
+    overflow:hidden;
+    pointer-events:none;
+    transition: transform 180ms cubic-bezier(0.25, 0.8, 0.35, 1);
+  }
+  .pipe path{
+    fill:none;
+    stroke:var(--pipe);
+    stroke-width:26;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    transition: stroke 150ms ease var(--flow-delay, 0ms);
+  }
+  .piece.wet .pipe path{ stroke:var(--water); }
+
+  /* Where the water comes in and goes out: openings in the outline, like
+     Unblock's exit, each with a short pipe through it. The left one is
+     always full of water; the right one fills when the water gets there. */
+  .opening{
+    position:absolute;
+    top:calc(var(--pad) + var(--step) * var(--row) - var(--gap));
+    width:calc(var(--board-size) * 0.037685);
+    height:calc(var(--cell) + var(--gap) * 2);
+    background:var(--bg);
+    z-index:1;
+  }
+  .opening.start{ --row: var(--start-row); left:calc(-2px - var(--board-size) * 0.018843); }
+  .opening.end{ --row: var(--end-row); right:calc(-2px - var(--board-size) * 0.018843); }
+  .stub{
+    position:absolute;
+    top:calc(var(--pad) + var(--step) * var(--row) + (var(--cell) - var(--pipe-w)) / 2);
+    width:calc(var(--stub-out) + 2px + var(--pad));
+    height:var(--pipe-w);
+    background:var(--pipe);
+    z-index:1;
+    transition: background 150ms ease var(--flow-delay, 0ms);
+  }
+  .stub.start{
+    --row: var(--start-row);
+    left:calc(-2px - var(--stub-out));
+    background:var(--water);
+    border-radius:calc(var(--pipe-w) / 2) 0 0 calc(var(--pipe-w) / 2);
+  }
+  .stub.end{
+    --row: var(--end-row);
+    right:calc(-2px - var(--stub-out));
+    border-radius:0 calc(var(--pipe-w) / 2) calc(var(--pipe-w) / 2) 0;
+  }
+  .stub.end.wet{ background:var(--water); }
+
+  /* Solved: a quick shine runs along the water from the start to the end. */
+  .piece.glow .pipe path{ animation: pipe-glow 420ms ease var(--glow-delay, 0ms) both; }
+  @keyframes pipe-glow{
+    0%, 100%{ stroke:var(--water); }
+    45%{ stroke:var(--water-glow); }
+  }
+  .stub.glow{ animation: stub-glow 420ms ease var(--glow-delay, 0ms) both; }
+  @keyframes stub-glow{
+    0%, 100%{ background:var(--water); }
+    45%{ background:var(--water-glow); }
+  }
+
+  @keyframes bounce-in{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(var(--final-scale)); opacity:1; }
+  }
+  .celebration{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:4;
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  @media (max-width: 767px), (max-height: 500px){
+    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
+       here -- darken on tap instead, so pressing any icon button is
+       actually visible. (The icons inside the tray deliberately don't grow:
+       the tray itself is the thing that grows, see .controls-slider:active.) */
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+      /* Full width between the side margins, like Unblock's board (and the
+         tray below it): small fingers tap the squares, so every extra pixel
+         of square helps. The height limit leaves room for the progress dots
+         above and the tray below. */
+      --board-size: min(calc(100vw - 2 * var(--unit)), calc(var(--app-height, 100vh) - var(--unit) * 4 - var(--icon-size) * 1.25), 720px);
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      background: rgba(32,32,32,0.4);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    /* Press feedback for the tray itself, like the icons and tiles: it grows
+       slightly while touched (:active also matches while any button inside it
+       is held, so tapping an icon gives both). */
+    .controls-slider{ transition: transform 120ms ease; }
+    .controls-slider:active{ transform: scale(1.03); }
+    .diff-group, .btn-row{ display:contents; }
+    .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
+    body{
+      padding-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
+      padding-bottom: calc(var(--unit) * 2 + var(--icon-size));
+    }
+  }
+
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    :root{
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+
+  /* No game here is designed to work in phone landscape — rather than a half-broken
+     cramped layout, block it outright with a plain "please rotate" screen. Matches
+     the same phone-landscape condition already used elsewhere (a landscape tablet has
+     enough height to stay excluded and keeps its normal, working layout). */
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:var(--incorrect);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    .rotate-block{ display:flex; }
+  }
+  /* No double-tap zoom anywhere. touch-action doesn't reach into a scrolling
+     element (the mobile tray scrolls sideways), so the tray needs its own:
+     two quick taps on the level buttons there zoomed the whole page in, and
+     with zoom otherwise locked there was no way back out. */
+  html, body, .controls-slider{ touch-action:manipulation; }
+</style>
+</head>
+<body>
+
+  <div class="rotate-block">
+    <!-- Pixel-art sad face (Figma node 198:1914), matching the site's other
+         lose-state faces, in place of the old curved-path frown. -->
+    <svg viewBox="0 0 973 366">
+      <circle fill="#202020" cx="65" cy="65" r="65"/>
+      <circle fill="#202020" cx="908" cy="65" r="65"/>
+      <rect fill="#202020" x="291" y="171" width="392" height="65"/>
+      <rect fill="#202020" x="161" y="236" width="130" height="130"/>
+      <rect fill="#202020" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
+
+  <div class="controls-slider" id="controlsSlider">
+    <div class="diff-group" id="diffGroup">
+      <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M114 75C114 53.4609 96.5391 36 75 36C53.4609 36 36 53.4609 36 75C36 96.5391 53.4609 114 75 114V150C33.5786 150 0 116.421 0 75C0 33.5786 33.5786 0 75 0C116.421 0 150 33.5786 150 75C150 116.421 116.421 150 75 150V114C96.5391 114 114 96.5391 114 75Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+        <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/></svg>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" aria-label="New puzzles">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M111.491 32.1671L112.864 53.5756L90.0895 53.5683"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M110.802 97.5619C106.102 105.702 98.8837 112.094 90.2343 115.774C81.5848 119.454 71.9735 120.223 62.8492 117.964C53.7249 115.705 45.5822 110.541 39.6485 103.251C33.7149 95.9607 30.312 86.9392 29.9527 77.5463C29.5935 68.1534 32.2974 58.8983 37.6569 51.1762C43.0164 43.454 50.7409 37.6834 59.666 34.7343C68.5911 31.7851 78.2331 31.8172 87.1383 34.8258C96.0436 37.8343 103.729 43.6563 109.037 51.4139"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="progress-dots" id="progressDots">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <div class="board-wrap" id="boardWrap">
+    <div class="opening start"></div>
+    <div class="opening end"></div>
+    <div class="stub start" id="startStub"></div>
+    <div class="stub end" id="endStub"></div>
+    <div class="lot" id="lot"></div>
+  </div>
+
+  <div class="celebration" id="celebration"></div>
+
+<script src="../../sound.js?v=20261025ze"></script>
+<script>
+(function(){
+  "use strict";
+
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
+
+  // Each level is [pieces, turns, start row, end row, fewest taps]. Pieces are
+  // read row by row on a square board (4x4 easy, 5x5 medium, 6x6 hard): 'I' a
+  // straight pipe, 'L' a corner, 'T' a three-way, '.' an empty square. Turns
+  // are the quarter turns clockwise each piece starts at, from its resting
+  // shape (I up-down, L up-right, T up-right-down). Water comes in from the
+  // left on the start row and must leave on the right on the end row.
+  // Made offline: a random path from start to end, the matching pieces laid
+  // on it, the other squares filled, then everything scrambled. The fewest
+  // taps were found by one solver and checked by a second -- every board here
+  // is solvable and not already solved.
+  var LEVELS = {
+    easy: [
+      ['.......LILLIIILL', '0000000320211133', 3, 2, 3],
+      ['....L..ILIILLIIL', '0000300022210101', 2, 2, 3],
+      ['IIL..IIL..LI....', '2110030100020000', 0, 2, 3],
+      ['.....IL.ILILILLL', '0000023001120110', 3, 3, 3],
+      ['...LLLLILIIL....', '0003221001230000', 1, 0, 3],
+      ['..LI..I.ILL.ILL.', '0011000001003330', 3, 0, 3],
+      ['LIILLILII..I..LL', '1232332000030003', 1, 3, 3],
+      ['.LLLLILILLI.L...', '0120130111103000', 3, 1, 3],
+      ['....LLI.LLLL.LLI', '0000123010210023', 2, 3, 4],
+      ['..I.LLLILLLL....', '0010131133320000', 2, 1, 4],
+      ['...L.LLILLILILL.', '0001003023021310', 3, 0, 4],
+      ['.LIIIII.LI..ILI.', '0210101000001330', 3, 0, 4],
+      ['LL..ILLILLLII.I.', '3000012133012010', 0, 2, 4],
+      ['IL..IIL..ILI.LLI', '3200001000110302', 0, 2, 4],
+      ['.......I.ILLIIIL', '0000000000021232', 3, 2, 5],
+      ['ILIIILI..I......', '0221121003000000', 1, 0, 5],
+      ['...L...II.LIIIIL', '0002000000103012', 3, 0, 5],
+      ['..LLLIILIL..L...', '0030130310001000', 3, 0, 5],
+      ['....L.ILLILLLILI', '0000302122113112', 2, 1, 5],
+      ['L...II..LLI.LLII', '0000010003201011', 0, 3, 5],
+      ['.....L.LLLLLLLLL', '0000000021010322', 2, 2, 5],
+      ['ILL.ILI..LI...LI', '3200330003000003', 1, 3, 5],
+      ['.....I..ILLILLLL', '0000000012303130', 2, 2, 6],
+      ['.LIILII.LI..IL..', '0202202021001300', 3, 0, 6],
+      ['.LILIIILIL..LI..', '0103133003000100', 2, 1, 6],
+      ['...L..IILLLLIILL', '0002002322122132', 3, 0, 6],
+      ['I...LI.IILILLLIL', '1000230212320203', 1, 3, 6],
+      ['LIL.LIIL..LL..IL', '1110112000030000', 1, 3, 6],
+      ['..L.LLLILLLLL.LL', '0020212112020002', 1, 3, 6],
+      ['....LLL.LLLLLL.L', '0000332003013002', 3, 3, 6]
+    ],
+    medium: [
+      ['LLIIILLLIIII.ILILLLLILLLI', '2131312100110312221110331', 3, 4, 6],
+      ['LLTILI.I.ILLTIILILILIILT.', '2210000300201322221221300', 4, 0, 6],
+      ['LIIILLLLLIILLTLLLI.ILL.IL', '1122002330131122020001033', 2, 2, 6],
+      ['IL.IITILI.IILIILIITITLL.I', '2000120020201220222033301', 0, 2, 6],
+      ['LLLIIILLILILIITI.LIILL.IL', '0222330112110122031031001', 4, 3, 6],
+      ['IILLLLIIILLILLLIILLIIITLI', '0032013300132201331101132', 3, 2, 6],
+      ['TILLLLILLLIILTLILT.LTLIII', '0001001330211032210303102', 2, 1, 7],
+      ['ILLLILIILIILLL.LLILLLIILL', '3210203000200100232321112', 0, 1, 7],
+      ['LIIITLLLLLIILLIIILLILILTI', '2031213103331002213220301', 1, 2, 7],
+      ['ILTILLLLILLILIT.LLTILIILI', '1002112110012010020223102', 0, 0, 7],
+      ['LLLIIILLIIILIIIIILIILIILL', '3111101300013201323333221', 4, 0, 7],
+      ['LIIILLTLLLILLLLTLIILLILII', '2200121021113310010023202', 1, 3, 7],
+      ['..IITLLILIILIILLLILL.LILL', '0012331300320031301100011', 2, 3, 8],
+      ['LIIILIIILIII.LLL.LIIILLI.', '1232011230010031033200310', 3, 2, 8],
+      ['ILLIILLLLIIIITLIIILILIIII', '2203122132020211023321113', 0, 4, 8],
+      ['IL.LILIIIITLLLLIILLILLL.L', '2000220212032110003012001', 0, 4, 8],
+      ['LLLTLIILLIILIL.LLIII.LL.L', '0221232311203000200101303', 3, 1, 8],
+      ['ILILLLILIILTLILLITIIIIIIL', '0030211231313023130331223', 4, 1, 8],
+      ['IIIILLILLL..LLLLIITLIILII', '3221133100000303232001021', 4, 2, 9],
+      ['ILLLITILLITLILLILTIILIILI', '0213202233010011131213300', 0, 4, 9],
+      ['IILTLLLLI.ITI.TLLLILILLLL', '3133123320222032313230102', 1, 4, 9],
+      ['IILLLL.IILLLL.IILIIILILIL', '3313230123012003002230132', 3, 1, 9],
+      ['IILILIILTILLLLLLLIL.LII..', '2010202200013131123001000', 1, 0, 9],
+      ['I.L.IILILLIILLLLI.LILLTLL', '0000121121311312103113003', 3, 4, 9],
+      ['IILLLLILLILLLILLILITIIITI', '1020201310313110210123013', 2, 1, 10],
+      ['TLLIIILILLIILLLLLIL.L.TLL', '1133311313120203120000133', 1, 2, 10],
+      ['LLI.ILITLILLILLLILLLILLII', '0310221111120101011332332', 1, 3, 10],
+      ['.L.LLLILLIILLITLLIII.LILL', '0300102021312211021202210', 3, 3, 10],
+      ['LL.LIIILILTLLIILLILIL.ILL', '2002331112201321313210022', 1, 0, 10],
+      ['LI.LLLLT.LLLILLLIILTLLILI', '0003202200130232032102133', 0, 1, 10]
+    ],
+    hard: [
+      ['LLLTILLLLLITLLL.ITILLTTLLI.TLLIIIILI', '322331333321300011231122120220020101', 3, 1, 10],
+      ['ITTLITIIILILIILILTLITTLLTIILILLIILLL', '023122110233032122322131030231110102', 3, 1, 10],
+      ['LLIIILLLIILLTLITILIITLLIILTLTILIL.LL', '220303110031033001230011130312233032', 5, 2, 10],
+      ['LLTTILIILTTIIITILLLIITITTTLLTLLLLLIT', '103013311010201313000122311033012120', 3, 0, 10],
+      ['TILLLLTLLLILIIILLILTTI.LLIIITIILLIIT', '320100001300102013321302010212212021', 3, 2, 10],
+      ['ILIIILLTLLTILTILIITLILILTLTLLLLLILTT', '122112032201331210111011332130233223', 4, 3, 11],
+      ['IILITILIILTTLILLIIIILILITTTLILI.LITL', '333032100201311333320232203132203221', 3, 0, 11],
+      ['LILL.LI.LITILLITTLLLILLLLLLILTILTTTI', '112001201120000132313000003223113323', 5, 2, 11],
+      ['IITIILLLI.TITLLL.LILLLLILLILLIILLIII', '103203011012002301130213102300203323', 0, 5, 11],
+      ['LIL.LTTLLIILL.LILIILILILLLTLTILIITLL', '023030301013002130110011002203031101', 3, 3, 11],
+      ['IIILTTT.LLLLITTTLLLL.LTLLILLTLTTLLTL', '131130303122321221100021011300230001', 4, 5, 12],
+      ['IILLIILILITTILTLTTLTILLT.TTIITTTITII', '121222133313131131013012003230300323', 0, 0, 12],
+      ['TLILTLILLILTLIILILIITLLIILLIITLLITTL', '331010010113302211021211122300331111', 5, 3, 12],
+      ['ITLTLLLLLLIILLIIIITTIILILLILLIIITLTL', '012111120212330211101000201000022301', 1, 0, 12],
+      ['IILLTTLTLITIILIILLLIIIILIITL.ITIILL.', '220331011033033012301133210101200230', 0, 2, 12],
+      ['LL.TTTIIIILTLLTITITTTLILLLILTLIILIL.', '310310002001012212230231010032313030', 2, 4, 13],
+      ['LLILILLILLLT.LLITILILLLIILLL.LTILTTI', '232112010320021303222330033202111133', 3, 4, 13],
+      ['ITIILTITTLITLLIILTLLLILTLILLLIIIILIL', '333333123303203023100211230233113013', 2, 1, 13],
+      ['ILIITLLI.ILILLTITII.LILLLILTLLLTLTTL', '132003210111133002003200012333230132', 0, 0, 13],
+      ['TILI.LLLIIILTITTLLLILILTTILIITLLT.LT', '001302123112201110111303123323230031', 3, 1, 13],
+      ['TTLILLTIIIITIIILIITLLIILLILLLLIIITII', '012320113023100310302102211110001130', 5, 3, 14],
+      ['LLLITLILTLLIITLITLILTTITITTLILLLTILI', '321223020022300302112312330012302003', 5, 2, 14],
+      ['IITLTLLLLLITLLLLLLT..ILIILLLLTLTLLLL', '110223100122002210100301223001201311', 0, 4, 14],
+      ['TLITIILLTILTLT.TIIILIITILITILLTLIIII', '311210232103300123212222100003211221', 1, 5, 14],
+      ['ILLLLITIIIITLILLIILLLIILLLLTILILLTTT', '213313301000111202332330110321202001', 2, 4, 14],
+      ['.LTLLLTLLLLTLILTILLLLIILTLLIILITIIIL', '032010232020220313020012001332211131', 2, 5, 15],
+      ['LIIIILLILTTILILLT.TITILLLIIILILTIIIL', '030121311031220310032131010010331220', 2, 3, 15],
+      ['LITLLLTILLLLILTTLLILLLLLILLLLILLLITL', '113011303020010203233302023321032003', 0, 0, 15],
+      ['ILLTTILLLILLILTTILTTII.LTLLILLITILIL', '333313320111111112211200111232012123', 0, 4, 16],
+      ['IIILILLLLLLIIITILILLITILLLITITIIL.TL', '303031211210112013011313122223211020', 0, 0, 16]
+    ]
+  };
+
+  var TIERS = ['easy', 'medium', 'hard'];
+  var ROUND_SIZE = 5;
+  var ROTATE_MS = 180;      // matches the .pipe transition
+  var FLOW_START_MS = 120;  // water moves on once a turn is mostly done
+  var FLOW_STEP_MS = 55;    // water reaching one more square
+
+  // ---------- pipe logic ----------
+  // A piece's openings as bits, one per side. A quarter turn clockwise moves
+  // every opening one side on: up to right, right to down, and so on.
+  var UP = 1, RIGHT = 2, DOWN = 4, LEFT = 8;
+  var SIDES = [UP, RIGHT, DOWN, LEFT];
+  var ROW_STEP = [-1, 0, 1, 0];
+  var COL_STEP = [0, 1, 0, -1];
+  var SHAPES = { I: UP | DOWN, L: UP | RIGHT, T: UP | RIGHT | DOWN };
+
+  function turnCW(m){ return ((m << 1) | (m >> 3)) & 15; }
+  function facing(side){ return turnCW(turnCW(side)); }
+
+  function openings(type, turns){
+    var m = SHAPES[type] || 0;
+    for (var i = 0; i < turns % 4; i++) m = turnCW(m);
+    return m;
+  }
+
+  function parseLevel(entry){
+    var n = Math.round(Math.sqrt(entry[0].length));
+    var turns = [];
+    for (var i = 0; i < entry[1].length; i++) turns.push(Number(entry[1].charAt(i)));
+    return { n: n, types: entry[0], turns: turns, startRow: entry[2], endRow: entry[3] };
+  }
+
+  // Water spreads from the start through every pair of openings that face
+  // each other. dist: how many squares from the start the water got to each
+  // one (-1 dry), which is also the order the water shows up in.
+  function flow(level, turns){
+    var n = level.n, dist = [], i;
+    for (i = 0; i < n * n; i++) dist.push(-1);
+    var start = level.startRow * n;
+    if (openings(level.types.charAt(start), turns[start]) & LEFT) {
+      dist[start] = 0;
+      var queue = [start];
+      while (queue.length) {
+        var cell = queue.shift();
+        var m = openings(level.types.charAt(cell), turns[cell]);
+        var r = Math.floor(cell / n), c = cell % n;
+        for (var s = 0; s < 4; s++) {
+          if (!(m & SIDES[s])) continue;
+          var nr = r + ROW_STEP[s], nc = c + COL_STEP[s];
+          if (nr < 0 || nc < 0 || nr >= n || nc >= n) continue;
+          var next = nr * n + nc;
+          if (dist[next] !== -1) continue;
+          if (!(openings(level.types.charAt(next), turns[next]) & facing(SIDES[s]))) continue;
+          dist[next] = dist[cell] + 1;
+          queue.push(next);
+        }
+      }
+    }
+    var end = level.endRow * n + n - 1;
+    var solved = dist[end] !== -1 && !!(openings(level.types.charAt(end), turns[end]) & RIGHT);
+    return { dist: dist, solved: solved };
+  }
+  // ---------- end pipe logic ----------
+
+  var state = {
+    difficulty: 'easy',
+    round: [],      // level indices (into LEVELS[difficulty]) for this round
+    progress: 0,    // levels solved this round
+    level: null,    // parseLevel() of the board in play
+    turns: [],      // each square's quarter turns, 0-3
+    spins: [],      // each square's quarter turns ever, for its drawing (see onTap)
+    pieces: [],     // each square's element, null for an empty square
+    busy: false
+  };
+
+  var els = {
+    lot: document.getElementById('lot'),
+    boardWrap: document.getElementById('boardWrap'),
+    startStub: document.getElementById('startStub'),
+    endStub: document.getElementById('endStub'),
+    diffGroup: document.getElementById('diffGroup'),
+    backBtn: document.getElementById('backBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    progressDots: document.querySelectorAll('#progressDots .dot'),
+    celebration: document.getElementById('celebration'),
+    controlsSlider: document.getElementById('controlsSlider')
+  };
+
+  var winTimer = null;
+  var celebrationTimer = null;
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+
+  // iOS can leave --app-height stuck at a stale reading after the tab is
+  // backgrounded (app-switched away from, screen locked) and never self-
+  // correct on return, since nothing else re-fires resize/scroll -- force a
+  // fresh reading the moment the page becomes visible again.
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') updateAppHeight();
+  });
+
+  // Rotating out of the phone-landscape rotate-block and back to portrait can
+  // leave iOS's WebKit engine (Safari, Chrome, any iOS browser — Apple requires
+  // them all to use it) rendering at the previous orientation's zoom/scale, so
+  // the layout comes back oversized and spills past the screen edge. Toggling
+  // the viewport meta wasn't enough to unstick it, so instead: reload outright
+  // the moment the device leaves that blocked landscape state. A fresh load
+  // can't inherit a stuck scale — there's nothing left to get stuck.
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
+      location.reload();
+    }
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) {
+    landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  } else if (landscapeBlockMQ.addListener) {
+    landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
+  }
+
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.pipes';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // turns: null means "the last level was just solved, start the next one".
+  function snapshotGame(){
+    if (els.celebration.style.display === 'flex') return null; // round already won, a fresh round is right
+    if (!state.level) return null;
+    var progress = state.progress;
+    var turns = state.turns.slice();
+    if (state.busy) {
+      // Mid water-flow: its timeout won't survive the reload, so count the
+      // solve here and let restore move on to the next level.
+      progress += 1;
+      if (progress >= ROUND_SIZE) return null;
+      turns = null;
+    }
+    return {
+      difficulty: state.difficulty,
+      round: state.round.slice(),
+      progress: progress,
+      turns: turns
+    };
+  }
+
+  function isWholeNumber(v, min, max){
+    return typeof v === 'number' && Math.floor(v) === v && v >= min && v <= max;
+  }
+
+  // Everything is checked before touching state or the DOM, so bad data just
+  // falls back to a fresh round instead of leaving a half-built board.
+  function restoreGame(data){
+    if (!data || typeof data !== 'object') return false;
+    if (TIERS.indexOf(data.difficulty) === -1) return false;
+    var pool = LEVELS[data.difficulty];
+    if (!Array.isArray(data.round) || data.round.length !== ROUND_SIZE) return false;
+    for (var i = 0; i < data.round.length; i++) {
+      if (!isWholeNumber(data.round[i], 0, pool.length - 1)) return false;
+    }
+    if (!isWholeNumber(data.progress, 0, ROUND_SIZE - 1)) return false;
+    if (data.turns != null) {
+      var level = parseLevel(pool[data.round[data.progress]]);
+      if (!Array.isArray(data.turns) || data.turns.length !== level.n * level.n) return false;
+      for (var t = 0; t < data.turns.length; t++) {
+        if (!isWholeNumber(data.turns[t], 0, 3)) return false;
+      }
+      if (flow(level, data.turns).solved) return false;
+    }
+
+    state.difficulty = data.difficulty;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === data.difficulty);
+    });
+    state.round = data.round.slice();
+    state.progress = data.progress;
+    updateProgressDots();
+    buildLevel(data.turns); // same pieces turned the same way as before the reload
+    return true;
+  }
+
+  function pickRound(tier){
+    var idx = [];
+    for (var i = 0; i < LEVELS[tier].length; i++) idx.push(i);
+    for (var k = idx.length - 1; k > 0; k--) {
+      var j = Math.floor(Math.random() * (k + 1));
+      var t = idx[k]; idx[k] = idx[j]; idx[j] = t;
+    }
+    // Levels are listed easiest first, so sorting the pick makes each round
+    // ramp up a little from its first level to its last.
+    return idx.slice(0, ROUND_SIZE).sort(function(a, b){ return a - b; });
+  }
+
+  // ---------- drawing ----------
+  // Each piece in its resting shape on a 100x100 square; the round joins
+  // soften the corner's bend. Ends run to the edge and are cut flat there, so
+  // pipes that line up across the gap meet as one.
+  var PIPE_PATHS = {
+    I: 'M50 0V100',
+    L: 'M50 0V50H100',
+    T: 'M50 0V100M50 50H100'
+  };
+
+  function spinTransform(spins){ return 'rotate(' + (spins * 90) + 'deg)'; }
+
+  // presetTurns (optional): saved turns to use instead of the level's start --
+  // only passed when resuming after the rotate-block reload.
+  function buildLevel(presetTurns){
+    clearTimeout(winTimer);
+    var level = parseLevel(LEVELS[state.difficulty][state.round[state.progress]]);
+    state.level = level;
+    state.turns = presetTurns ? presetTurns.slice() : level.turns.slice();
+    state.spins = state.turns.slice();
+    state.pieces = [];
+    state.busy = false;
+    els.celebration.style.display = 'none';
+    els.boardWrap.style.display = '';
+    els.boardWrap.style.setProperty('--n', level.n);
+    els.boardWrap.style.setProperty('--start-row', level.startRow);
+    els.boardWrap.style.setProperty('--end-row', level.endRow);
+    [els.startStub, els.endStub].forEach(function(stub){
+      stub.classList.remove('wet', 'glow');
+      stub.style.removeProperty('--flow-delay');
+    });
+
+    // A new board is built once here; taps only change a piece's transform
+    // and classes after this, never its contents (rebuilt contents can swallow
+    // a tap that's still in progress).
+    els.lot.innerHTML = '';
+    for (var i = 0; i < level.n * level.n; i++) {
+      var type = level.types.charAt(i);
+      var s = document.createElement('div');
+      s.className = 'spot';
+      s.style.left = 'calc(var(--step) * ' + (i % level.n) + ')';
+      s.style.top = 'calc(var(--step) * ' + Math.floor(i / level.n) + ')';
+      if (PIPE_PATHS[type]) {
+        s.className = 'spot piece';
+        s.setAttribute('data-cell', i);
+        s.setAttribute('data-own-sound', ''); // see the tap handler
+        s.innerHTML = '<svg class="pipe" viewBox="0 0 100 100" style="transform:' +
+          spinTransform(state.spins[i]) + '"><path d="' + PIPE_PATHS[type] + '"/></svg>';
+        state.pieces.push(s);
+      } else {
+        state.pieces.push(null);
+      }
+      els.lot.appendChild(s);
+    }
+    paintWater(false);
+  }
+
+  // Colour every piece the water reaches. animate: newly reached pieces fill
+  // one after another, outward from the start, once the turn that opened the
+  // way is mostly done; pieces cut off go dry at once. Returns the flow and
+  // when each newly reached piece fills (ms from now).
+  function paintWater(animate){
+    var f = flow(state.level, state.turns);
+    var delays = [];
+    var firstNew = Infinity, lastNew = 0;
+    state.pieces.forEach(function(el, i){
+      if (!el || f.dist[i] === -1 || el.classList.contains('wet')) return;
+      firstNew = Math.min(firstNew, f.dist[i]);
+      lastNew = Math.max(lastNew, f.dist[i]);
+    });
+    // A long run of newly reached pieces fills faster per piece, so the
+    // water never takes more than about a second to get through.
+    var step = Math.min(FLOW_STEP_MS, 800 / Math.max(1, lastNew - firstNew));
+    state.pieces.forEach(function(el, i){
+      delays.push(null);
+      if (!el) return;
+      var wet = f.dist[i] !== -1;
+      if (wet === el.classList.contains('wet')) return;
+      var delay = wet && animate ? Math.round(FLOW_START_MS + (f.dist[i] - firstNew) * step) : 0;
+      if (wet) delays[i] = delay;
+      el.style.setProperty('--flow-delay', delay + 'ms');
+      el.classList.toggle('wet', wet);
+    });
+    return { flow: f, delays: delays };
+  }
+
+  function updateProgressDots(){
+    els.progressDots.forEach(function(dot, i){
+      dot.classList.toggle('done', i < state.progress);
+    });
+  }
+
+  function restartRound(){
+    clearTimeout(celebrationTimer);
+    state.round = pickRound(state.difficulty);
+    state.progress = 0;
+    updateProgressDots();
+    buildLevel();
+  }
+
+  // ---------- tap to turn ----------
+  // A tap turns the piece a quarter clockwise. The drawing keeps a running
+  // count of quarter turns (never wrapped back to 0), so it always turns
+  // forward, and a quick run of taps just moves its target on: the drawing
+  // can lag a tap behind for a moment but always lands where the piece is.
+  // One sound per tap, played here: sound.js only clicks for the classes it
+  // knows (.piece isn't one, and data-own-sound would stop it if it ever
+  // were), so this is the tap's only sound -- the click, or the happy sound
+  // instead on the tap that brings the water through. Taps while the water
+  // runs out are ignored, sound and all.
+  els.lot.addEventListener('click', function(e){
+    var el = e.target.closest && e.target.closest('.piece');
+    if (!el || state.busy) return;
+    var i = Number(el.getAttribute('data-cell'));
+    state.turns[i] = (state.turns[i] + 1) % 4;
+    state.spins[i] += 1;
+    el.firstChild.style.transform = spinTransform(state.spins[i]);
+    if (flow(state.level, state.turns).solved) {
+      onSolved();
+    } else {
+      PLSound.play('click');
+      paintWater(true);
+    }
+  });
+
+  // ---------- solved ----------
+  function onSolved(){
+    state.busy = true;
+    PLSound.play('positive');
+    var painted = paintWater(true);
+    var dist = painted.flow.dist;
+    var n = state.level.n, end = state.level.endRow * n + n - 1;
+    // The water runs on out through the end pipe right after the last square.
+    var outAt = (painted.delays[end] != null ? painted.delays[end] : FLOW_START_MS) + FLOW_STEP_MS;
+    els.endStub.style.setProperty('--flow-delay', outAt + 'ms');
+    els.endStub.classList.add('wet');
+    // Then a quick shine along all the water, from the start pipe to the end
+    // pipe, quicker per square on long paths so it never drags on.
+    var far = 0;
+    dist.forEach(function(d){ if (d > far) far = d; });
+    var step = Math.min(FLOW_STEP_MS, 700 / (far + 2));
+    winTimer = setTimeout(function(){
+      els.startStub.style.setProperty('--glow-delay', '0ms');
+      els.startStub.classList.add('glow');
+      state.pieces.forEach(function(el, i){
+        if (!el || dist[i] === -1) return;
+        el.style.setProperty('--glow-delay', Math.round((dist[i] + 1) * step) + 'ms');
+        el.classList.add('glow');
+      });
+      els.endStub.style.setProperty('--glow-delay', Math.round((dist[end] + 2) * step) + 'ms');
+      els.endStub.classList.add('glow');
+      winTimer = setTimeout(function(){
+        state.progress += 1;
+        updateProgressDots();
+        if (state.progress >= ROUND_SIZE) {
+          showCelebration();
+        } else {
+          buildLevel();
+        }
+      }, (far + 2) * step + 420 + 250);
+    }, outAt + 150);
+  }
+
+  // Pixel-art smiley (Figma node 198:1809) -- two round eyes and a
+  // stepped-block smile -- in the water's colour, on the page's own background.
+  var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="var(--water)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--water)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--water)" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--water)" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--water)" x="291" y="301" width="392" height="65"/>' +
+    '</svg>';
+
+  function showCelebration(){
+    updateAppHeight();
+    els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
+    els.boardWrap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    celebrationTimer = setTimeout(restartRound, 3000);
+  }
+
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    var tier = btn.getAttribute('data-tier');
+    if (tier === state.difficulty) return; // already selected — keep the current puzzle
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.difficulty = tier;
+    restartRound();
+  });
+
+  els.refreshBtn.addEventListener('click', restartRound);
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../../index.html'); });
+
+  // First-visit only: gently peek-scroll the bottom slider tray so new users notice
+  // it scrolls (there are more icons than fit on a phone screen), then ease back to
+  // the correct resting view with the easy-difficulty icon as the leftmost icon.
+  // Jumps to the TRUE end (no partial-reveal cap -- a longer tray was never
+  // reaching its real end otherwise) immediately, before first paint, then eases
+  // back on the very next frame with no added hold -- both the jump and the
+  // start of the ease read as a glitchy stutter when delayed.
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'pipes.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = maxScroll;
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  introduceTraySlider();
+
+  // Coming back from the rotate-block reload: continue the saved game.
+  // Otherwise (or if the save is unusable) start a fresh easy round.
+  var resumed = takeResume();
+  if (!(resumed && restoreGame(resumed))) {
+    els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    restartRound();
+  }
+})();
+</script>
+
+</body>
+</html>
