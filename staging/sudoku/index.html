@@ -1025,8 +1025,8 @@
   }
 
   // Pixel-art smiley (Figma node 198:1809) -- two round eyes and a
-  // stepped-block smile -- in one of the four shape colours, picked at random,
-  // on the page's own background.
+  // stepped-block smile -- in the player's bright orange (--disc), on the
+  // page's own background.
   function celebrationFace(color){
     return '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
       '<circle fill="' + color + '" cx="65" cy="65" r="65"/>' +
@@ -1040,7 +1040,7 @@
   function showCelebration(){
     endFlash(); // the last board's green flash ends here
     updateAppHeight();
-    els.celebration.innerHTML = celebrationFace('var(--shape-' + Math.floor(Math.random() * 4) + ')');
+    els.celebration.innerHTML = celebrationFace('var(--disc)');
     PLSound.play('complete');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
