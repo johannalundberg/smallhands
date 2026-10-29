@@ -157,8 +157,11 @@
 
   /* ---------- the board ---------- */
   /* Figma node 412:5049: --n squares a side (4, 5 or 6 by level), each a
-     tile with its own 2px pink outline, set edge to edge -- so 4px lines
-     between tiles and 2px round the outside. --cell is one square in whole
+     tile with a 1px pink outline, set edge to edge, plus a 1px border round
+     the board -- so every line is 2px, between tiles and round the outside
+     alike, like Othello's (the sketch's own 2px-per-tile outlines doubled
+     up to 4px inside). snapBoard keeps the board on whole pixels, or Safari
+     rounds each edge its own way and lines come out 1px here, 2px there. --cell is one square in whole
      pixels (fractional ones made Safari draw the lines unevenly). The start
      and goal pipes stick out --stub squares on either side. --stub-room is
      how much of that the board leaves room for: all of it on tablets and
@@ -172,8 +175,9 @@
     --stub: 0.3558;
     --stub-room: var(--stub);
     --cell: min(calc(var(--board-size) / var(--n)), calc(var(--board-w) / (var(--n) + 2 * var(--stub-room))));
-    width:calc(var(--cell) * var(--n));
-    height:calc(var(--cell) * var(--n));
+    width:calc(var(--cell) * var(--n) + 2px);
+    height:calc(var(--cell) * var(--n) + 2px);
+    border:1px solid var(--line);
     /* A pipe is 32 of the tile's 185.49 in the design. */
     --pipe-w: calc(var(--cell) * 0.17252);
     touch-action:manipulation;
@@ -193,7 +197,7 @@
     width:var(--cell);
     height:var(--cell);
     background:var(--tile);
-    border:2px solid var(--line);
+    border:1px solid var(--line);
   }
   .piece{
     cursor:pointer;
@@ -214,12 +218,12 @@
      from tile to tile. */
   .pipe{
     position:absolute;
-    left:-2px;
-    top:-2px;
+    left:-1px;
+    top:-1px;
     width:var(--cell);
     height:var(--cell);
     pointer-events:none;
-    clip-path:inset(2px);
+    clip-path:inset(1px);
     transition: transform 180ms cubic-bezier(0.25, 0.8, 0.35, 1);
   }
   .piece.wet .pipe{ clip-path:none; }
@@ -623,6 +627,19 @@
   function updateAppHeight(){
     var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     document.documentElement.style.setProperty('--app-height', h + 'px');
+    snapBoard();
+  }
+
+  // Centring can leave the board at a fraction of a pixel (173.73px down),
+  // and Safari then draws its 2px lines 1px on some edges. Nudge it onto
+  // whole pixels after every layout change.
+  function snapBoard(){
+    var wrap = document.getElementById('boardWrap');
+    if (!wrap) return;
+    wrap.style.translate = '';
+    var r = wrap.getBoundingClientRect();
+    var dx = Math.round(r.left) - r.left, dy = Math.round(r.top) - r.top;
+    if (dx || dy) wrap.style.translate = dx + 'px ' + dy + 'px';
   }
   updateAppHeight();
   if (window.visualViewport) {
@@ -791,6 +808,7 @@
     // and classes after this, never its contents (rebuilt contents can swallow
     // a tap that's still in progress).
     els.lot.innerHTML = '';
+    requestAnimationFrame(snapBoard); // --n may have changed the board's size
     for (var i = 0; i < level.n * level.n; i++) {
       var type = level.types.charAt(i);
       var s = document.createElement('div');
