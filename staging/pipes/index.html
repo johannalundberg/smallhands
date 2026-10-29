@@ -249,9 +249,9 @@
   }
   .piece.wet .pipe path{ stroke:var(--water); }
   .board-wrap[data-n="5"]{ --pipe-k: 0.195; }
-  .board-wrap[data-n="5"] .pipe path{ stroke-width:19.5; }
+  .board-wrap[data-n="5"] .pipe path, .board-wrap[data-n="5"] .flow path{ stroke-width:19.5; }
   .board-wrap[data-n="6"]{ --pipe-k: 0.22; }
-  .board-wrap[data-n="6"] .pipe path{ stroke-width:22; }
+  .board-wrap[data-n="6"] .pipe path, .board-wrap[data-n="6"] .flow path{ stroke-width:22; }
 
   /* Where the water comes in and goes out (Figma 417:5251 and 417:5253):
      short pink pipes sticking out of the board on the start and end rows,
@@ -268,13 +268,42 @@
   .stub.start{ --row: var(--start-row); right:100%; }
   .stub.end{ --row: var(--end-row); left:100%; }
 
-  /* Solved: the water turns green (Sudoku's solved green) along the route,
-     square by square from the start pipe to the goal, and holds there until
-     the next board. The pipes themselves stay pink everywhere else. */
-  .piece.glow .pipe path{ animation: pipe-green 260ms ease var(--glow-delay, 0ms) both; }
-  .stub.glow{ animation: stub-green 260ms ease var(--glow-delay, 0ms) both; }
-  @keyframes pipe-green{ to{ stroke:var(--success); } }
-  @keyframes stub-green{ to{ background:var(--success); } }
+  /* Solved: green water (Sudoku's solved green) flows along the route from
+     the start pipe to the goal at an even speed and stays until the next
+     board. Each wet tile gets a green copy of its pipe, drawn the way the
+     water runs through it (.flow, built in onSolved, not turned with the
+     tile), revealed from where the water comes in over --flow-ms, starting
+     the moment the tile before it is full -- so the green runs on smoothly
+     instead of filling a tile at a time. */
+  .flow{
+    position:absolute;
+    left:-2px;
+    top:-2px;
+    width:calc(var(--cell) + 2px);
+    height:calc(var(--cell) + 2px);
+    pointer-events:none;
+  }
+  .flow path{
+    fill:none;
+    stroke:var(--success);
+    stroke-width:17.252;
+    stroke-linecap:butt;
+    stroke-linejoin:miter;
+    stroke-dasharray:100 101;
+    stroke-dashoffset:100;
+    animation: flow-in var(--flow-ms, 100ms) linear var(--glow-delay, 0ms) forwards;
+  }
+  @keyframes flow-in{ to{ stroke-dashoffset:0; } }
+  .stub::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:var(--success);
+    transform:scaleX(0);
+    transform-origin:left;
+  }
+  .stub.glow::after{ animation: stub-fill var(--flow-ms, 100ms) linear var(--glow-delay, 0ms) forwards; }
+  @keyframes stub-fill{ to{ transform:scaleX(1); } }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -928,20 +957,26 @@
     var outAt = (painted.delays[end] != null ? painted.delays[end] : FLOW_START_MS) + FLOW_STEP_MS;
     els.endStub.style.setProperty('--flow-delay', outAt + 'ms');
     els.endStub.classList.add('wet');
-    // Then the water turns green along the route, from the start pipe to the
-    // end pipe, quicker per square on long paths so it never drags on.
+    // Then green water flows along the route, from the start pipe to the end
+    // pipe, one square every `step` ms -- quicker per square on long paths
+    // so it never drags on.
     var far = 0;
     dist.forEach(function(d){ if (d > far) far = d; });
-    var step = Math.min(FLOW_STEP_MS, 700 / (far + 2));
+    var step = Math.round(Math.min(110, 1100 / (far + 2)));
     winTimer = setTimeout(function(){
+      els.boardWrap.style.setProperty('--flow-ms', step + 'ms');
       els.startStub.style.setProperty('--glow-delay', '0ms');
       els.startStub.classList.add('glow');
       state.pieces.forEach(function(el, i){
         if (!el || dist[i] === -1) return;
-        el.style.setProperty('--glow-delay', Math.round((dist[i] + 1) * step) + 'ms');
-        el.classList.add('glow');
+        var flow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        flow.setAttribute('class', 'flow');
+        flow.setAttribute('viewBox', '0 0 100 100');
+        flow.innerHTML = flowPaths(i, dist);
+        flow.style.setProperty('--glow-delay', (dist[i] + 1) * step + 'ms');
+        el.appendChild(flow);
       });
-      els.endStub.style.setProperty('--glow-delay', Math.round((dist[end] + 2) * step) + 'ms');
+      els.endStub.style.setProperty('--glow-delay', (dist[end] + 2) * step + 'ms');
       els.endStub.classList.add('glow');
       winTimer = setTimeout(function(){
         state.progress += 1;
@@ -951,8 +986,47 @@
         } else {
           buildLevel();
         }
-      }, (far + 2) * step + 260 + 950); // the green holds a moment before the next board
+      }, (far + 3) * step + 950); // the green holds a moment before the next board
     }, outAt + 150);
+  }
+
+  // The green water's way through square i, in the board's own directions
+  // (not turned with the piece): from the side the water comes in -- the
+  // neighbour one step nearer the start, or the left edge for the first
+  // square -- to every other opening. Straight across, round the corner
+  // for a bend (the same quarter circle the pipe is drawn with), or in to
+  // the middle and out for a three-way. pathLength 100 lets every path be
+  // revealed with the same dash numbers.
+  var SIDE_MID = {}; SIDE_MID[UP] = [50, 0]; SIDE_MID[RIGHT] = [100, 50]; SIDE_MID[DOWN] = [50, 100]; SIDE_MID[LEFT] = [0, 50];
+  function flowPaths(i, dist){
+    var level = state.level, n = level.n;
+    var type = level.types.charAt(i), m = openings(type, state.turns[i]);
+    var r = Math.floor(i / n), c = i % n, entry = 0, s;
+    if (dist[i] === 0) entry = LEFT;
+    for (s = 0; s < 4 && !entry; s++) {
+      if (!(m & SIDES[s])) continue;
+      var nr = r + ROW_STEP[s], nc = c + COL_STEP[s];
+      if (nr < 0 || nc < 0 || nr >= n || nc >= n) continue;
+      var j = nr * n + nc;
+      if (dist[j] === dist[i] - 1 && (openings(level.types.charAt(j), state.turns[j]) & facing(SIDES[s]))) entry = SIDES[s];
+    }
+    var a = SIDE_MID[entry], out = '';
+    for (s = 0; s < 4; s++) {
+      var side = SIDES[s];
+      if (side === entry || !(m & side)) continue;
+      var b = SIDE_MID[side], d;
+      if (side === facing(entry)) {
+        d = 'M' + a + 'L' + b;
+      } else if (type === 'L') {
+        var cx = (entry | side) & RIGHT ? 100 : 0, cy = (entry | side) & DOWN ? 100 : 0;
+        var sweep = (a[0] - cx) * (b[1] - cy) - (a[1] - cy) * (b[0] - cx) > 0 ? 1 : 0;
+        d = 'M' + a + 'A50 50 0 0 ' + sweep + ' ' + b;
+      } else {
+        d = 'M' + a + 'L50 50L' + b;
+      }
+      out += '<path pathLength="100" d="' + d + '"/>';
+    }
+    return out;
   }
 
   // Pixel-art smiley (Figma node 198:1809) -- two round eyes and a
