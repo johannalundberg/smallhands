@@ -16,7 +16,7 @@
 </script>
 
 <title>Play and Learn — Kid-Friendly Math & Logic Games</title>
-<meta name="description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta name="description" content="Free math and logic games for kids, with no ads or pop-ups: sudoku, memory, mazes, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
@@ -31,6 +31,13 @@
 <meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
 <style>
+  /* The game's numerals, for the Sudoku badge (same file the games use). */
+  @font-face{
+    font-family:'Spline Sans Mono';
+    src: url('fonts/SplineSansMono.woff2') format('woff2');
+    font-weight:400;
+    font-style:normal;
+  }
   @font-face{
     font-family:'ABC Areal';
     src: url('fonts/ABCAreal-Regular.woff2') format('woff2');
@@ -281,6 +288,84 @@
     0%, 92%, 100%{ transform:scaleX(1); }
     96%{ transform:scaleX(0.12); }
   }
+
+  /* Sudoku: a 2x2 board in the game's colours and geometry (slate page,
+     deep-orange given numbers, black cross) -- the full 4x4 was too busy at
+     tile size. Like the other badges it shows the game's move: the two empty
+     circles are tapped round to the right numbers (1-4 once each), then the
+     solved board's green wave runs across from the top-left corner, holds,
+     and the board resets. Under Reduce Motion it freezes on the start: two
+     given numbers and two empty circles. */
+  .sdk-badge{ position:relative; width:62.057%; height:62.057%; }
+  .sdk-badge svg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .sdk-bg{ fill:#555F7B; }
+  .sdk-line{ fill:#000; }
+  .sdk-cell{ transform-box:fill-box; transform-origin:center; }
+  .sdk-disc{ fill:#B36400; }
+  .sdk-digit{
+    fill:#000;
+    font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
+    font-size:26.45px;
+    text-anchor:middle;
+    dominant-baseline:central;
+  }
+  /* Given circles: the wave reaches the top-left one first and the
+     bottom-right one last, but every circle turns back at the same moment
+     (86-90%), so the timings are written out per circle, not as a delay. */
+  .sdk-d0{ animation: sdk-wave-pop-d0 4.5s ease-in-out infinite; }
+  .sdk-d2{ animation: sdk-wave-pop-d2 4.5s ease-in-out infinite; }
+  .sdk-d0 .sdk-disc{ animation: sdk-wave-fill-d0 4.5s ease-in-out infinite; }
+  .sdk-d2 .sdk-disc{ animation: sdk-wave-fill-d2 4.5s ease-in-out infinite; }
+  @keyframes sdk-wave-fill-d0{
+    0%, 60%{ fill:#B36400; } 62%, 86%{ fill:#71B143; } 90%, 100%{ fill:#B36400; }
+  }
+  @keyframes sdk-wave-fill-d2{
+    0%, 66.7%{ fill:#B36400; } 68.7%, 86%{ fill:#71B143; } 90%, 100%{ fill:#B36400; }
+  }
+  @keyframes sdk-wave-pop-d0{
+    0%, 60%{ transform:scale(1); } 62%{ transform:scale(1.06); } 65%, 100%{ transform:scale(1); }
+  }
+  @keyframes sdk-wave-pop-d2{
+    0%, 66.7%{ transform:scale(1); } 68.7%{ transform:scale(1.06); } 71.7%, 100%{ transform:scale(1); }
+  }
+  /* The two circles the player fills (both on the middle diagonal): empty
+     (the game's grey), the player's light orange once tapped, then green. */
+  .sdk-a .sdk-disc, .sdk-b .sdk-disc{ fill:#404657; }
+  .sdk-a .sdk-disc{ animation: sdk-fill-a 4.5s linear infinite; }
+  .sdk-b .sdk-disc{ animation: sdk-fill-b 4.5s linear infinite; }
+  @keyframes sdk-fill-a{
+    0%, 11.9%{ fill:#404657; } 12%, 63.3%{ fill:#FFA226; } 65.3%, 86%{ fill:#71B143; } 90%, 100%{ fill:#404657; }
+  }
+  @keyframes sdk-fill-b{
+    0%, 31.9%{ fill:#404657; } 32%, 63.3%{ fill:#FFA226; } 65.3%, 86%{ fill:#71B143; } 90%, 100%{ fill:#404657; }
+  }
+  /* Each tap: a small dip to 88% and back -- gentler than the game's 75%,
+     which looked too busy at tile size -- with the taps well apart; then
+     the wave's small grow. */
+  .sdk-a{ animation: sdk-pop-a 4.5s ease-out infinite; }
+  .sdk-b{ animation: sdk-pop-b 4.5s ease-out infinite; }
+  @keyframes sdk-pop-a{
+    0%, 11.9%{ transform:scale(1); } 12%{ transform:scale(0.88); } 17%{ transform:scale(1); }
+    21.9%{ transform:scale(1); } 22%{ transform:scale(0.88); } 27%, 63.3%{ transform:scale(1); }
+    65.3%{ transform:scale(1.06); } 68.3%, 100%{ transform:scale(1); }
+  }
+  @keyframes sdk-pop-b{
+    0%, 31.9%{ transform:scale(1); } 32%{ transform:scale(0.88); } 37%{ transform:scale(1); }
+    40.9%{ transform:scale(1); } 41%{ transform:scale(0.88); } 46%{ transform:scale(1); }
+    49.9%{ transform:scale(1); } 50%{ transform:scale(0.88); } 55%, 63.3%{ transform:scale(1); }
+    65.3%{ transform:scale(1.06); } 68.3%, 100%{ transform:scale(1); }
+  }
+  .sdk-a1, .sdk-a2, .sdk-b1, .sdk-b2, .sdk-b3{ opacity:0; }
+  .sdk-a1{ animation: sdk-a1 4.5s linear infinite; }
+  .sdk-a2{ animation: sdk-a2 4.5s linear infinite; }
+  .sdk-b1{ animation: sdk-b1 4.5s linear infinite; }
+  .sdk-b2{ animation: sdk-b2 4.5s linear infinite; }
+  .sdk-b3{ animation: sdk-b3 4.5s linear infinite; }
+  @keyframes sdk-a1{ 0%, 11.9%{ opacity:0; } 12%, 21.9%{ opacity:1; } 22%, 100%{ opacity:0; } }
+  @keyframes sdk-a2{ 0%, 21.9%{ opacity:0; } 22%, 86%{ opacity:1; } 90%, 100%{ opacity:0; } }
+  @keyframes sdk-b1{ 0%, 31.9%{ opacity:0; } 32%, 40.9%{ opacity:1; } 41%, 100%{ opacity:0; } }
+  @keyframes sdk-b2{ 0%, 40.9%{ opacity:0; } 41%, 49.9%{ opacity:1; } 50%, 100%{ opacity:0; } }
+  @keyframes sdk-b3{ 0%, 49.9%{ opacity:0; } 50%, 86%{ opacity:1; } 90%, 100%{ opacity:0; } }
 
   @keyframes fade4{
     0%{ opacity:1; }
@@ -668,6 +753,20 @@
       </div>
     </a>
 
+    <a class="tile" href="tictactoe/" aria-label="Tic-Tac-Toe">
+      <div class="mini-board">
+        <div class="mini-cell mc-diag-bg"><svg viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
+        <div class="mini-cell"><svg viewBox="0 0 63.13 63.13"><circle cx="31.5652" cy="31.5648" r="18.5676" fill="none" stroke="var(--glyph)" stroke-width="5.30504"/></svg></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell"><svg class="mc-o3-appear" viewBox="0 0 63.13 63.13"><circle cx="31.5652" cy="31.5648" r="18.5676" fill="none" stroke="var(--glyph)" stroke-width="5.30504"/></svg></div>
+        <div class="mini-cell mc-diag-bg"><svg viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell"></div>
+        <div class="mini-cell mc-diag-bg"><svg class="mc-x8-appear" viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
+      </div>
+    </a>
+
     <a class="tile" href="math/" aria-label="Math">
       <div class="badge math-badge">
         <svg viewBox="0 0 154 154"><path fill="var(--glyph)" d="M37 80.5417V72.625H72.625V37H80.5417V72.625H116.167V80.5417H80.5417V116.167H72.625V80.5417H37Z"/></svg>
@@ -708,17 +807,17 @@
       </div>
     </a>
 
-    <a class="tile" href="tictactoe/" aria-label="Tic-Tac-Toe">
-      <div class="mini-board">
-        <div class="mini-cell mc-diag-bg"><svg viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
-        <div class="mini-cell"><svg viewBox="0 0 63.13 63.13"><circle cx="31.5652" cy="31.5648" r="18.5676" fill="none" stroke="var(--glyph)" stroke-width="5.30504"/></svg></div>
-        <div class="mini-cell"></div>
-        <div class="mini-cell"><svg class="mc-o3-appear" viewBox="0 0 63.13 63.13"><circle cx="31.5652" cy="31.5648" r="18.5676" fill="none" stroke="var(--glyph)" stroke-width="5.30504"/></svg></div>
-        <div class="mini-cell mc-diag-bg"><svg viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
-        <div class="mini-cell"></div>
-        <div class="mini-cell"></div>
-        <div class="mini-cell"></div>
-        <div class="mini-cell mc-diag-bg"><svg class="mc-x8-appear" viewBox="0 0 63.13 63.13"><path fill="var(--glyph)" d="M11.7441 15.3563L15.3559 11.7444L31.6092 27.9977L47.8625 11.7444L51.4744 15.3563L35.2211 31.6096L51.4744 47.8629L47.8625 51.4747L31.6092 35.2214L15.3559 51.4747L11.7441 47.8629L27.9974 31.6096L11.7441 15.3563Z"/></svg></div>
+    <a class="tile" href="sudoku/" aria-label="Sudoku">
+      <div class="sdk-badge">
+        <svg viewBox="0 0 100 100">
+          <rect class="sdk-bg" width="100" height="100"/>
+          <rect class="sdk-line" x="49.250" y="1.824" width="1.5" height="96.352"/>
+          <rect class="sdk-line" x="1.824" y="49.250" width="96.352" height="1.5"/>
+          <g class="sdk-cell sdk-given sdk-d0"><circle class="sdk-disc" cx="24.625" cy="24.625" r="20.977"/><text class="sdk-digit" x="24.625" y="25.425">1</text></g>
+          <g class="sdk-cell sdk-a"><circle class="sdk-disc" cx="75.375" cy="24.625" r="20.977"/><text class="sdk-digit sdk-a1" x="75.375" y="25.425">1</text><text class="sdk-digit sdk-a2" x="75.375" y="25.425">2</text></g>
+          <g class="sdk-cell sdk-b"><circle class="sdk-disc" cx="24.625" cy="75.375" r="20.977"/><text class="sdk-digit sdk-b1" x="24.625" y="76.175">1</text><text class="sdk-digit sdk-b2" x="24.625" y="76.175">2</text><text class="sdk-digit sdk-b3" x="24.625" y="76.175">3</text></g>
+          <g class="sdk-cell sdk-given sdk-d2"><circle class="sdk-disc" cx="75.375" cy="75.375" r="20.977"/><text class="sdk-digit" x="75.375" y="76.175">4</text></g>
+        </svg>
       </div>
     </a>
 

@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#F2383B">
-<meta name="robots" content="noindex">
 
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
@@ -17,9 +16,10 @@
 </script>
 
 <title>Sudoku</title>
-<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
-<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
-<link rel="manifest" href="../../manifest.json">
+<meta name="description" content="Sudoku for kids on 4x4 and 6x6 boards: every row, column and box has each number once. Free, no ads or pop-ups. Designed by a mom and her 6-year-old.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://playandlearn.kids/sudoku/">
@@ -34,7 +34,7 @@
   /* The digits: Math's typeface. */
   @font-face{
     font-family:'Spline Sans Mono';
-    src: url('../../fonts/SplineSansMono.woff2') format('woff2');
+    src: url('../fonts/SplineSansMono.woff2') format('woff2');
     font-weight:400;
     font-style:normal;
   }
@@ -260,10 +260,9 @@
     text-anchor:middle;
     dominant-baseline:central;
   }
-  /* html.style-circles, the default look (?style=plain turns it off, see
-     compare.html): each number sits on its own disc, like the reference -- orange discs (Figma's circle colour) for
-     the given numbers, light discs for the player's; black numbers on both,
-     since a light number on orange is hard to read. */
+  /* html.style-circles, the game's look: each number sits on its own disc
+     -- deep orange for the given numbers, bright orange for the player's,
+     black numbers on both. */
   .disc{ display:none; }
   html.style-circles .disc{ display:inline; fill:var(--disc); }
   html.style-circles .cell.given .disc{ fill:var(--disc-given); }
@@ -427,14 +426,11 @@
   html, body, .controls-slider{ touch-action:manipulation; }
 </style>
 <script>
-  // Each number sits on its own disc (html.style-circles); ?style=plain shows
-  // bare numbers on coloured squares instead.
+  // Each number sits on its own disc (html.style-circles; the base styles
+  // without it were the earlier plain-number trial).
   // Set here, before the page is drawn: the plain look's board is black, and
   // set any later it flashed as a black square while sound.js loaded.
-  (function(){
-    var params = new URLSearchParams(location.search);
-    if (params.get('style') !== 'plain') document.documentElement.classList.add('style-circles');
-  })();
+  document.documentElement.classList.add('style-circles');
 </script>
 </head>
 <body>
@@ -483,23 +479,10 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../../sound.js?v=20261025ze"></script>
+<script src="../sound.js?v=20261025ze"></script>
 <script>
 (function(){
   "use strict";
-
-  // ?seed=N makes the random picks repeat, so pages opened with the same
-  // seed show the same boards (see compare.html).
-  var params = new URLSearchParams(location.search);
-  var SEED = parseInt(params.get('seed'), 10);
-  if (!isNaN(SEED)) {
-    Math.random = function(){ // mulberry32
-      SEED = (SEED + 0x6D2B79F5) | 0;
-      var t = Math.imul(SEED ^ (SEED >>> 15), 1 | SEED);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
 
   // iOS Safari only applies :active styles on tap if some element on the
   // page has a touch listener -- this is that listener (a no-op is enough).
@@ -1059,7 +1042,7 @@
   });
 
   els.refreshBtn.addEventListener('click', restartRound);
-  els.backBtn.addEventListener('click', function(){ PLSound.go('../../index.html'); });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls (there are more icons than fit on a phone screen), then ease back to
