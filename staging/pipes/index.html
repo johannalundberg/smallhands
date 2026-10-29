@@ -585,6 +585,8 @@
   var ROTATE_MS = 180;      // matches the .pipe transition
   var FLOW_START_MS = 120;  // water moves on once a turn is mostly done
   var FLOW_STEP_MS = 55;    // water reaching one more square
+  var FLOW_MS_PER_SQUARE = 90; // the solved flow through one straight square
+  var FLOW_MAX_MS = 1000;      // ...and never longer than this for the whole route
 
   // ---------- pipe logic ----------
   // A piece's openings as bits, one per side. A quarter turn clockwise moves
@@ -963,26 +965,32 @@
     var outAt = (painted.delays[end] != null ? painted.delays[end] : FLOW_START_MS) + FLOW_STEP_MS;
     els.endStub.style.setProperty('--flow-delay', outAt + 'ms');
     els.endStub.classList.add('wet');
-    // Then green water flows along the route, from the start pipe to the end
-    // pipe, one square every `step` ms -- quicker per square on long paths
-    // so it never drags on.
-    var far = 0;
-    dist.forEach(function(d){ if (d > far) far = d; });
-    var step = Math.round(Math.min(70, 700 / (far + 2))); // ~0.7s for the whole route at most
+    // Then the solved water flows along the route from the start pipe to the
+    // end pipe at one even speed: each stretch of pipe takes time in
+    // proportion to its length (a bend is shorter than a straight), and
+    // starts the moment the stretch before it ends. FLOW_MS_PER_SQUARE for
+    // a straight square, sped up on long routes so the whole run stays
+    // within FLOW_MAX_MS.
+    var plan = flowPlan(dist);
+    var speed = Math.max(100 / FLOW_MS_PER_SQUARE, plan.total / FLOW_MAX_MS); // units per ms
+    function ms(units){ return Math.round(units / speed); }
     winTimer = setTimeout(function(){
-      els.boardWrap.style.setProperty('--flow-ms', step + 'ms');
       els.startStub.style.setProperty('--glow-delay', '0ms');
+      els.startStub.style.setProperty('--flow-ms', ms(plan.stub) + 'ms');
       els.startStub.classList.add('glow');
       state.pieces.forEach(function(el, i){
-        if (!el || dist[i] === -1) return;
+        if (!el || !plan.paths[i]) return;
         var flow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         flow.setAttribute('class', 'flow');
         flow.setAttribute('viewBox', '0 0 100 100');
-        flow.innerHTML = flowPaths(i, dist);
-        flow.style.setProperty('--glow-delay', (dist[i] + 1) * step + 'ms');
+        flow.innerHTML = plan.paths[i].map(function(seg){
+          return '<path pathLength="100" d="' + seg.d + '" style="animation-delay:' + ms(seg.at) +
+            'ms;animation-duration:' + ms(seg.len) + 'ms"/>';
+        }).join('');
         el.appendChild(flow);
       });
-      els.endStub.style.setProperty('--glow-delay', (dist[end] + 2) * step + 'ms');
+      els.endStub.style.setProperty('--glow-delay', ms(plan.endAt) + 'ms');
+      els.endStub.style.setProperty('--flow-ms', ms(plan.stub) + 'ms');
       els.endStub.classList.add('glow');
       winTimer = setTimeout(function(){
         state.progress += 1;
@@ -992,48 +1000,70 @@
         } else {
           buildLevel();
         }
-      }, (far + 3) * step + 950); // the green holds a moment before the next board
+      }, ms(plan.total) + 950); // the flow holds a moment before the next board
     }, outAt + 150);
   }
 
-  // The green water's way through square i, in the board's own directions
-  // (not turned with the piece): from the side the water comes in -- the
-  // neighbour one step nearer the start, or the left edge for the first
-  // square -- to every other opening. Straight across, round the corner
-  // for a bend (the same quarter circle the pipe is drawn with), or in to
-  // the middle and out for a three-way. pathLength 100 lets every path be
-  // revealed with the same dash numbers.
+  // The solved water's way through every wet square, in the board's own
+  // directions (not turned with the piece), with when each stretch starts.
+  // A square's water comes in from the neighbour one step nearer the start
+  // (or the left edge for the first square) and runs to every other
+  // opening: straight across (100 units, a square's width), round the
+  // corner for a bend (the pipe's own quarter circle, 78.5), or in to the
+  // middle and out for a three-way (100). Times are in units of length;
+  // onSolved turns them into ms at one speed. pathLength 100 lets every
+  // stretch be revealed with the same dash numbers.
   var SIDE_MID = {}; SIDE_MID[UP] = [50, 0]; SIDE_MID[RIGHT] = [100, 50]; SIDE_MID[DOWN] = [50, 100]; SIDE_MID[LEFT] = [0, 50];
-  function flowPaths(i, dist){
-    var level = state.level, n = level.n;
-    var type = level.types.charAt(i), m = openings(type, state.turns[i]);
-    var r = Math.floor(i / n), c = i % n, entry = 0, s;
-    if (dist[i] === 0) entry = LEFT;
-    for (s = 0; s < 4 && !entry; s++) {
-      if (!(m & SIDES[s])) continue;
-      var nr = r + ROW_STEP[s], nc = c + COL_STEP[s];
-      if (nr < 0 || nc < 0 || nr >= n || nc >= n) continue;
-      var j = nr * n + nc;
-      if (dist[j] === dist[i] - 1 && (openings(level.types.charAt(j), state.turns[j]) & facing(SIDES[s]))) entry = SIDES[s];
-    }
-    var a = SIDE_MID[entry], out = '';
-    for (s = 0; s < 4; s++) {
-      var side = SIDES[s];
-      if (side === entry || !(m & side)) continue;
-      var b = SIDE_MID[side], d;
-      if (side === facing(entry)) {
-        d = 'M' + a + 'L' + b;
-      } else if (type === 'L') {
-        var cx = (entry | side) & RIGHT ? 100 : 0, cy = (entry | side) & DOWN ? 100 : 0;
-        var sweep = (a[0] - cx) * (b[1] - cy) - (a[1] - cy) * (b[0] - cx) > 0 ? 1 : 0;
-        d = 'M' + a + 'A50 50 0 0 ' + sweep + ' ' + b;
-      } else {
-        d = 'M' + a + 'L50 50L' + b;
+  var ARC_LEN = Math.PI * 25; // a quarter circle of radius 50
+  function flowPlan(dist){
+    var level = state.level, n = level.n, at = {}, paths = {};
+    var stub = parseFloat(getComputedStyle(els.startStub).width) / parseFloat(getComputedStyle(els.lot.children[0]).width) * 100;
+    var start = level.startRow * n, end = level.endRow * n + n - 1, endAt = 0, total = 0;
+    at[start] = stub;
+    var order = [];
+    dist.forEach(function(d, i){ if (d !== -1) order.push(i); });
+    order.sort(function(x, y){ return dist[x] - dist[y]; });
+    order.forEach(function(i){
+      if (at[i] == null) return;
+      var type = level.types.charAt(i), m = openings(type, state.turns[i]);
+      var r = Math.floor(i / n), c = i % n, entry = 0, s;
+      if (i === start) entry = LEFT;
+      for (s = 0; s < 4 && !entry; s++) {
+        if (!(m & SIDES[s])) continue;
+        var pr = r + ROW_STEP[s], pc = c + COL_STEP[s];
+        if (pr < 0 || pc < 0 || pr >= n || pc >= n) continue;
+        var pj = pr * n + pc;
+        if (dist[pj] === dist[i] - 1 && (openings(level.types.charAt(pj), state.turns[pj]) & facing(SIDES[s]))) entry = SIDES[s];
       }
-      out += '<path pathLength="100" d="' + d + '"/>';
-    }
-    return out;
+      var a = SIDE_MID[entry];
+      paths[i] = [];
+      for (s = 0; s < 4; s++) {
+        var side = SIDES[s];
+        if (side === entry || !(m & side)) continue;
+        var b = SIDE_MID[side], d, len;
+        if (side === facing(entry)) {
+          d = 'M' + a + 'L' + b; len = 100;
+        } else if (type === 'L') {
+          var cx = (entry | side) & RIGHT ? 100 : 0, cy = (entry | side) & DOWN ? 100 : 0;
+          var sweep = (a[0] - cx) * (b[1] - cy) - (a[1] - cy) * (b[0] - cx) > 0 ? 1 : 0;
+          d = 'M' + a + 'A50 50 0 0 ' + sweep + ' ' + b; len = ARC_LEN;
+        } else {
+          d = 'M' + a + 'L50 50L' + b; len = 100;
+        }
+        paths[i].push({ d: d, at: at[i], len: len });
+        var done = at[i] + len;
+        total = Math.max(total, done);
+        if (i === end && side === RIGHT) endAt = done;
+        var nr = r + ROW_STEP[s], nc = c + COL_STEP[s];
+        if (nr < 0 || nc < 0 || nr >= n || nc >= n) continue;
+        var j = nr * n + nc;
+        if (dist[j] === dist[i] + 1 && (at[j] == null || done < at[j])) at[j] = done;
+      }
+    });
+    total = Math.max(total, endAt + stub);
+    return { paths: paths, stub: stub, endAt: endAt, total: total };
   }
+
 
   // Pixel-art smiley (Figma node 198:1809) -- two round eyes and a
   // stepped-block smile -- in the water's colour, on the page's own background.
