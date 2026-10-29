@@ -302,10 +302,11 @@
   .box-line{ display:none; position:absolute; background:var(--line-color); pointer-events:none; }
   html.style-circles .box-line{ display:block; }
 
-  /* A new shape pops into its square. */
+  /* A new number pops into its circle: a small dip to 75% and back (from
+     45% felt too much, especially on 6x6). */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
   @keyframes shape-pop{
-    0%{ transform:scale(0.45); }
+    0%{ transform:scale(0.75); }
     100%{ transform:scale(1); }
   }
 
