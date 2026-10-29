@@ -178,8 +178,9 @@
     width:calc(var(--cell) * var(--n) + 2px);
     height:calc(var(--cell) * var(--n) + 2px);
     border:1px solid var(--line);
-    /* A pipe is 32 of the tile's 185.49 in the design. */
-    --pipe-w: calc(var(--cell) * 0.17252);
+    /* A pipe is 32 of the tile's 185.49 in the design (of the pipe
+       drawing, which is 2px bigger than the tile -- see .pipe). */
+    --pipe-w: calc((var(--cell) + 2px) * 0.17252);
     touch-action:manipulation;
   }
   @supports (width: round(down, 10.5px, 1px)){
@@ -212,18 +213,20 @@
     .piece:hover{ transform:scale(1.035); z-index:1; }
     .piece:hover:active{ transform:scale(0.95); }
   }
-  /* The pipe drawing covers the whole tile, outline included, and turns
-     around its centre. A dry pipe stops at the tile's pink outline (the
-     clip); a wet one runs over it, so the water reads as one pink pipe
-     from tile to tile. */
+  /* The pipe drawing covers the whole tile, outline included, plus 1px
+     more on every side, and turns around the tile's centre. A dry pipe
+     stops at the tile's pink outline (the clip); a wet one runs over it and
+     1px on, onto the neighbour's outline, so two wet pipes overlap there
+     instead of just touching -- touching, their softened edges left a dark
+     hairline at every joint. That extra 1px only ever covers pink outline. */
   .pipe{
     position:absolute;
-    left:-1px;
-    top:-1px;
-    width:var(--cell);
-    height:var(--cell);
+    left:-2px;
+    top:-2px;
+    width:calc(var(--cell) + 2px);
+    height:calc(var(--cell) + 2px);
     pointer-events:none;
-    clip-path:inset(1px);
+    clip-path:inset(2px);
     transition: transform 180ms cubic-bezier(0.25, 0.8, 0.35, 1);
   }
   .piece.wet .pipe{ clip-path:none; }
