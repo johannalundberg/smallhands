@@ -219,10 +219,11 @@
     transition: transform 120ms ease, background 80ms ease;
   }
   .cell.given{ background:var(--spot-given); cursor:default; }
-  /* The site's hover (mouse only): the squares you can tap grow slightly,
-     like the icon buttons and Tic Tac Toe's squares. Given ones stay still. */
+  /* Hover (mouse only): the squares you can tap grow slightly. Gentler than
+     the site's 3.5% (icon buttons, Tic Tac Toe), which felt too much on
+     these big circles. Given ones stay still. */
   @media (hover:hover) and (pointer:fine){
-    .cell:not(.given):hover{ transform:scale(1.035); }
+    .cell:not(.given):hover{ transform:scale(1.02); }
   }
   /* Full but wrong: the wrong numbers shake their heads (see flashIncorrect). */
   .cell.wrong .hop{ animation: digit-shake 520ms ease-in-out; }
