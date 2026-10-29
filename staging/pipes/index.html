@@ -41,7 +41,7 @@
     --line:#EE65EA;
     --pipe:#423825;
     --water:#EE65EA;
-    --water-glow:#FFC2FD;
+    --success:#71B143; /* Sudoku's solved green */
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
@@ -268,49 +268,13 @@
   .stub.start{ --row: var(--start-row); right:100%; }
   .stub.end{ --row: var(--end-row); left:100%; }
 
-  /* Solved: a quick shine runs along the water from the start to the end. */
-  .piece.glow .pipe path{ animation: pipe-glow 420ms ease var(--glow-delay, 0ms) both; }
-  @keyframes pipe-glow{
-    0%, 100%{ stroke:var(--water); }
-    45%{ stroke:var(--water-glow); }
-  }
-  .stub.glow{ animation: stub-glow 420ms ease var(--glow-delay, 0ms) both; }
-  @keyframes stub-glow{
-    0%, 100%{ background:var(--water); }
-    45%{ background:var(--water-glow); }
-  }
-
-  /* Trial solved looks, picked with ?win= (wins.html shows them all side
-     by side); without it the shine above plays. --flash is the solved
-     colour, Sudoku's green or ?flash=blue for light blue; the water itself
-     stays pink. won: set on the board once the water is through. */
-  :root{ --flash:#71B143; }
-  html[data-flash="blue"]{ --flash:#8ED1F2; }
-  html[data-win] .piece.glow .pipe path, html[data-win] .stub.glow{ animation:none; }
-  /* green: the water turns green, square by square from the start. */
-  html[data-win="green"] .piece.glow .pipe path,
-  html[data-win="both"] .piece.glow .pipe path{ animation: pipe-green 260ms ease var(--glow-delay, 0ms) both; }
-  html[data-win="green"] .stub.glow,
-  html[data-win="both"] .stub.glow{ animation: stub-green 260ms ease var(--glow-delay, 0ms) both; }
-  @keyframes pipe-green{ to{ stroke:var(--flash); } }
-  @keyframes stub-green{ to{ background:var(--flash); } }
-  /* fade: everything but the water fades away. */
-  html[data-win="fade"] .board-wrap, html[data-win="both"] .board-wrap{ transition: border-color 400ms ease; }
-  html[data-win="fade"] .board-wrap.won, html[data-win="both"] .board-wrap.won{ border-color:transparent; }
-  html[data-win="fade"] .board-wrap.won .spot, html[data-win="both"] .board-wrap.won .spot{
-    background-color:transparent; border-color:transparent;
-    transition: background-color 400ms ease, border-color 400ms ease;
-  }
-  html[data-win="fade"] .board-wrap.won .piece:not(.wet) .pipe,
-  html[data-win="both"] .board-wrap.won .piece:not(.wet) .pipe{ opacity:0; transition: opacity 400ms ease; }
-  /* tiles: the squares the water runs through light up, one after another. */
-  html[data-win="tiles"] .piece.glow{ animation: tile-lit 260ms ease var(--glow-delay, 0ms) both; }
-  @keyframes tile-lit{ to{ background-color:var(--flash); } }
-  /* wave: like Sudoku's solved board -- every tile turns the flash colour,
-     one diagonal after another from the top-left corner (--wave-delay, set
-     in buildLevel). The water stays pink so the route still shows. */
-  html[data-win="wave"] .board-wrap.won .spot{ animation: tile-green 250ms ease var(--wave-delay, 0ms) both; }
-  @keyframes tile-green{ to{ background-color:var(--flash); } }
+  /* Solved: the water turns green (Sudoku's solved green) along the route,
+     square by square from the start pipe to the goal, and holds there until
+     the next board. The pipes themselves stay pink everywhere else. */
+  .piece.glow .pipe path{ animation: pipe-green 260ms ease var(--glow-delay, 0ms) both; }
+  .stub.glow{ animation: stub-green 260ms ease var(--glow-delay, 0ms) both; }
+  @keyframes pipe-green{ to{ stroke:var(--success); } }
+  @keyframes stub-green{ to{ background:var(--success); } }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -468,14 +432,6 @@
 (function(){
   "use strict";
 
-
-  // Trials (see wins.html): ?win= picks a solved look, ?flash=blue a
-  // light-blue solved colour instead of green, ?demo=1 solves each board by
-  // itself so the solved moment can be watched on a loop.
-  var params = new URLSearchParams(location.search);
-  var WIN = params.get('win'), DEMO = params.get('demo') === '1';
-  if (WIN) document.documentElement.setAttribute('data-win', WIN);
-  if (params.get('flash') === 'blue') document.documentElement.setAttribute('data-flash', 'blue');
 
   // iOS Safari only applies :active styles on tap if some element on the
   // page has a touch listener -- this is that listener (a no-op is enough).
@@ -856,8 +812,6 @@
     els.boardWrap.setAttribute('data-n', level.n);
     els.boardWrap.style.setProperty('--start-row', level.startRow);
     els.boardWrap.style.setProperty('--end-row', level.endRow);
-    els.startStub.style.setProperty('--wave-delay', level.startRow * 70 + 'ms');
-    els.endStub.style.setProperty('--wave-delay', (level.endRow + level.n - 1) * 70 + 'ms');
     [els.startStub, els.endStub].forEach(function(stub){
       stub.classList.remove('wet', 'glow');
       stub.style.removeProperty('--flow-delay');
@@ -866,7 +820,6 @@
     // A new board is built once here; taps only change a piece's transform
     // and classes after this, never its contents (rebuilt contents can swallow
     // a tap that's still in progress).
-    els.boardWrap.classList.remove('won');
     els.lot.innerHTML = '';
     requestAnimationFrame(snapBoard); // --n may have changed the board's size
     for (var i = 0; i < level.n * level.n; i++) {
@@ -875,7 +828,6 @@
       s.className = 'spot';
       s.style.left = 'calc(var(--cell) * ' + (i % level.n) + ')';
       s.style.top = 'calc(var(--cell) * ' + Math.floor(i / level.n) + ')';
-      s.style.setProperty('--wave-delay', (Math.floor(i / level.n) + i % level.n) * 70 + 'ms');
       if (PIPE_PATHS[type]) {
         s.className = 'spot piece';
         s.setAttribute('data-cell', i);
@@ -889,61 +841,6 @@
       els.lot.appendChild(s);
     }
     paintWater(false);
-    if (DEMO) winTimer = setTimeout(demoSolve, 900);
-  }
-
-  // ---------- demo (wins.html) ----------
-  // A route from the start to the end: each square on it turned to take the
-  // water in from where it arrives and pass it on.
-  function solveTurns(level){
-    var n = level.n, turns = level.turns.slice(), used = {}, path = [];
-    var end = level.endRow * n + n - 1;
-    function go(cell, enterSide){
-      var type = level.types.charAt(cell);
-      if (used[cell] || !SHAPES[type]) return false;
-      used[cell] = true;
-      path.push(cell);
-      for (var t = 0; t < 4; t++) {
-        var m = openings(type, t);
-        if (!(m & enterSide)) continue;
-        turns[cell] = t;
-        if (cell === end && (m & RIGHT)) return true;
-        var r = Math.floor(cell / n), c = cell % n;
-        for (var s = 0; s < 4; s++) {
-          if (SIDES[s] === enterSide || !(m & SIDES[s])) continue;
-          var nr = r + ROW_STEP[s], nc = c + COL_STEP[s];
-          if (nr < 0 || nc < 0 || nr >= n || nc >= n) continue;
-          if (go(nr * n + nc, facing(SIDES[s]))) return true;
-        }
-      }
-      used[cell] = false;
-      path.pop();
-      return false;
-    }
-    return go(level.startRow * n, LEFT) ? { turns: turns, path: path } : null;
-  }
-  // Turn the route into place, then tap its last wrong square so the normal
-  // solved moment plays.
-  function demoSolve(){
-    var sol = solveTurns(state.level);
-    if (!sol) return;
-    var wrong = sol.path.filter(function(i){ return state.turns[i] !== sol.turns[i]; });
-    if (!wrong.length) return;
-    var last = wrong.pop();
-    wrong.forEach(function(i){
-      state.spins[i] += (sol.turns[i] - state.turns[i] + 4) % 4;
-      state.turns[i] = sol.turns[i];
-      state.pieces[i].firstChild.style.transform = spinTransform(state.spins[i]);
-    });
-    var lastBefore = (sol.turns[last] + 3) % 4;
-    state.spins[last] += (lastBefore - state.turns[last] + 4) % 4;
-    state.turns[last] = lastBefore;
-    state.pieces[last].firstChild.style.transform = spinTransform(state.spins[last]);
-    paintWater(true);
-    winTimer = setTimeout(function(){
-      if (flow(state.level, state.turns).solved) onSolved();
-      else state.pieces[last].click();
-    }, 700);
   }
 
   // Colour every piece the water reaches. animate: newly reached pieces fill
@@ -1031,13 +928,12 @@
     var outAt = (painted.delays[end] != null ? painted.delays[end] : FLOW_START_MS) + FLOW_STEP_MS;
     els.endStub.style.setProperty('--flow-delay', outAt + 'ms');
     els.endStub.classList.add('wet');
-    // Then a quick shine along all the water, from the start pipe to the end
-    // pipe, quicker per square on long paths so it never drags on.
+    // Then the water turns green along the route, from the start pipe to the
+    // end pipe, quicker per square on long paths so it never drags on.
     var far = 0;
     dist.forEach(function(d){ if (d > far) far = d; });
     var step = Math.min(FLOW_STEP_MS, 700 / (far + 2));
     winTimer = setTimeout(function(){
-      els.boardWrap.classList.add('won');
       els.startStub.style.setProperty('--glow-delay', '0ms');
       els.startStub.classList.add('glow');
       state.pieces.forEach(function(el, i){
@@ -1055,7 +951,7 @@
         } else {
           buildLevel();
         }
-      }, (far + 2) * step + 420 + 250 + (WIN ? 700 : 0)); // the trial looks hold a little longer
+      }, (far + 2) * step + 260 + 950); // the green holds a moment before the next board
     }, outAt + 150);
   }
 
