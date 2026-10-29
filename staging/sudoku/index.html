@@ -253,15 +253,16 @@
      so it's clear where to tap. */
   .empty-ring{ display:none; fill:var(--ink-muted); }
   html.style-circles .cell:not([data-shape]) .empty-ring{ display:inline; }
-  /* ...with no square colours, and only lines between the boxes drawn, as
-     heavy as Labyrinth's walls (--line: 3.5px, 2.5px on phones)
+  /* ...with no square colours, and only lines between the boxes drawn,
+     about as heavy as Labyrinth's walls but in whole pixels (--line: 3px,
+     2px on phones) so Safari draws every line the same width
      (.box-line, built in buildCells): no outline and no lines between the
      squares inside a box. Each disc leaves 4% of its square free on every
      side, so neighbours are 8% apart; --pad adds another 4% each side of a
      box line, so a disc is 8% from the line too. */
   html.style-circles .board-wrap{
     --gap:0px;
-    --line: 3.5px;
+    --line: 3px;
     --cell: calc((var(--board-size) - var(--row-box-gaps) * var(--line)) / (var(--n) + var(--row-box-gaps) * 0.08));
     --pad: calc(var(--cell) * 0.04);
     --box-gap: calc(var(--pad) * 2 + var(--line));
@@ -305,8 +306,8 @@
 
   /* ---------- phone: single scrollable slider-menu bar ---------- */
   @media (max-width: 767px), (max-height: 500px){
-    /* Labyrinth's phone wall weight. */
-    html.style-circles .board-wrap{ --line: 2.5px; }
+    /* Close to Labyrinth's phone wall weight, in whole pixels. */
+    html.style-circles .board-wrap{ --line: 2px; }
     /* Touch has no hover, so desktop's grow-on-hover feedback never fires
        here -- darken on tap instead, so pressing any icon button is
        actually visible. (The icons inside the tray deliberately don't grow:
