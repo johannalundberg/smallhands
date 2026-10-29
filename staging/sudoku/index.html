@@ -55,7 +55,7 @@
     --ink-muted:rgba(32,32,32,0.4);
     --incorrect:#F2383B;
     --success:#04BA50; /* same green as a right answer in Math */
-    /* The disc look's colours; ?theme= swaps them (see colours.html). */
+    /* The disc look's colours. */
     --disc-given: var(--shape-0);
     --digit-given: #000;
     --disc: var(--bright);
@@ -295,17 +295,6 @@
   .box-line{ display:none; position:absolute; background:var(--line-color); pointer-events:none; }
   html.style-circles .box-line{ display:block; }
 
-  /* Colour trials, picked with ?theme= (colours.html shows them all).
-     Round 4: black numbers on every disc (her preference), so both disc
-     colours are light or bright enough for black. */
-  html[data-theme="k1"]{ --bg:#7080B5; --disc-given:#FF8A5B; --disc:#FFFFFF; }
-  html[data-theme="k2"]{ --bg:#6B4FA0; --disc-given:#FFC94A; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
-  html[data-theme="k3"]{ --bg:#6B4FA0; --disc-given:#E88CE5; --disc:#9EE6D8; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
-  html[data-theme="k4"]{ --bg:#5FA8D3; --disc-given:#F6F1E7; --disc:#FFD34E; --empty:rgba(20,30,70,0.28); --line-color:#1F2A5C; }
-  html[data-theme="k5"]{ --bg:#33408F; --disc-given:#9AA8EC; --disc:#FFB38A; --empty:rgba(255,255,255,0.14); --line-color:#E4E4E4; }
-  html[data-theme="k6"]{ --bg:#2F7E86; --disc-given:#FFC94A; --disc:#F3F3F3; --empty:rgba(0,0,0,0.28); --line-color:#E4E4E4; }
-  html[data-theme="k7"]{ --bg:#D9653B; --disc-given:#FBE9D6; --disc:#9AA8EC; --empty:rgba(32,32,32,0.28); }
-
   /* A new shape pops into its square. */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
   @keyframes shape-pop{
@@ -419,13 +408,12 @@
 </style>
 <script>
   // Each number sits on its own disc (html.style-circles); ?style=plain shows
-  // bare numbers on coloured squares instead, ?theme= picks a colour trial.
+  // bare numbers on coloured squares instead.
   // Set here, before the page is drawn: the plain look's board is black, and
   // set any later it flashed as a black square while sound.js loaded.
   (function(){
     var params = new URLSearchParams(location.search);
     if (params.get('style') !== 'plain') document.documentElement.classList.add('style-circles');
-    if (params.get('theme')) document.documentElement.setAttribute('data-theme', params.get('theme'));
   })();
 </script>
 </head>
@@ -481,7 +469,7 @@
   "use strict";
 
   // ?seed=N makes the random picks repeat, so pages opened with the same
-  // seed show the same boards (see compare.html and colours.html).
+  // seed show the same boards (see compare.html).
   var params = new URLSearchParams(location.search);
   var SEED = parseInt(params.get('seed'), 10);
   if (!isNaN(SEED)) {
