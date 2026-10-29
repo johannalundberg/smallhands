@@ -243,6 +243,9 @@
   html.style-circles .cell.given .disc{ fill:#2B2B2B; }
   html.style-circles .shape .digit{ font-size:46px; }
   html.style-circles .cell.given .digit{ fill:var(--bright); }
+  /* ...and only the cross between the four boxes is drawn: no outline and
+     no lines between the squares inside a box. */
+  html.style-circles .board-wrap{ --gap:0px; box-shadow:none; }
 
   /* A new shape pops into its square. */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
