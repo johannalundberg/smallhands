@@ -41,7 +41,7 @@
     --line:#DC51D8;
     --pipe:#8E4424;
     --water:#DC51D8;
-    --success:#71B143; /* Sudoku's solved green */
+    --success:#0B94A0; /* the solved water (teal, her pick) */
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
@@ -268,13 +268,14 @@
   .stub.start{ --row: var(--start-row); right:100%; }
   .stub.end{ --row: var(--end-row); left:100%; }
 
-  /* Solved: green water (Sudoku's solved green) flows along the route from
+  /* Solved: teal water (--success) flows along the route from
      the start pipe to the goal at an even speed and stays until the next
      board. Each wet tile gets a green copy of its pipe, drawn the way the
      water runs through it (.flow, built in onSolved, not turned with the
      tile), revealed from where the water comes in over --flow-ms, starting
      the moment the tile before it is full -- so the green runs on smoothly
-     instead of filling a tile at a time. */
+     instead of filling a tile at a time. (The comments below still say
+     "green" for this solved water.) */
   .flow{
     position:absolute;
     left:-2px;
