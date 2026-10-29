@@ -963,7 +963,7 @@
     // so it never drags on.
     var far = 0;
     dist.forEach(function(d){ if (d > far) far = d; });
-    var step = Math.round(Math.min(110, 1100 / (far + 2)));
+    var step = Math.round(Math.min(70, 700 / (far + 2))); // ~0.7s for the whole route at most
     winTimer = setTimeout(function(){
       els.boardWrap.style.setProperty('--flow-ms', step + 'ms');
       els.startStub.style.setProperty('--glow-delay', '0ms');
