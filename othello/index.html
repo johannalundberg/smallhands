@@ -48,11 +48,11 @@
   }
 
   :root{
-    --bg:#324236;
+    --bg:#1F3636;
     --cell:#0DC754;
     --bright:#E4E4E4;
     --ink:#202020;
-    --ink-muted:rgba(32,32,32,0.4);
+    --ink-muted:rgba(0,0,0,0.45); /* darker button circles: more contrast on the dark page (her call) */
     --success:#0DC754;
     --incorrect:#F2383B;
     --unit: 1.1574vw;
@@ -287,7 +287,7 @@
          own background -- stacked on top of it, they all but disappear.
          Darken just the --ink-muted inherited inside the tray so every
          button reads as its own distinct shape against the tray behind it. */
-      --ink-muted: rgba(32,32,32,0.7);
+      --ink-muted: rgba(0,0,0,0.62);
     }
     .controls-slider::-webkit-scrollbar{ display:none; }
     /* Press feedback for the tray itself, like the icons and tiles: it grows
