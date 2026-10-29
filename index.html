@@ -219,26 +219,43 @@
     100%{ opacity:1; }
   }
 
-  /* Same 3-frame cross-fade as puzzle-badge (reuses pz-fade3) -- 3 small
-     maze layouts previewing that the game generates a fresh one each time.
-     No background of its own (unlike every other badge) -- just the pink
-     lines directly on the tile's own dark background. */
-  .lab-badge .lab-frame{ position:absolute; inset:0; width:100%; height:100%; display:block; opacity:0; animation: pz-fade3 4.5s ease-in-out infinite; }
-  .lab-badge .lab-frame:nth-child(1){ animation-delay:0s; }
-  .lab-badge .lab-frame:nth-child(2){ animation-delay:-1.5s; }
-  .lab-badge .lab-frame:nth-child(3){ animation-delay:-3s; }
+  /* One small maze: the player (the game's pink face with eyes) walks from
+     the top-left corner to the exit (the game's orange bullseye) at the
+     bottom-right, waits there, and starts again from the corner (no fade). No background of
+     its own -- just the pink lines on the tile's own dark background. Under
+     Reduce Motion it freezes with the player at the start. */
+  .lab-badge .lab-frame{ position:absolute; inset:0; width:100%; height:100%; display:block; opacity:1; }
+  .lab-token{ animation: lab-walk 4.5s linear infinite; }
+  @keyframes lab-walk{
+    0%, 6%{ transform:translate(0px, 0px); }
+    10.57%{ transform:translate(1px, 0px); }
+    15.14%{ transform:translate(1px, 1px); }
+    19.71%{ transform:translate(2px, 1px); }
+    33.43%{ transform:translate(2px, 4px); }
+    42.57%{ transform:translate(0px, 4px); }
+    47.14%{ transform:translate(0px, 5px); }
+    70.00%{ transform:translate(5px, 5px); }
+    99.9%{ transform:translate(5px, 5px); }
+    100%{ transform:translate(0px, 0px); }
+  }
   .lab-wall{ stroke:#E88CE5; stroke-width:2px; stroke-linecap:square; vector-effect:non-scaling-stroke; }
 
-  /* Same 3-frame cross-fade as puzzle-badge/lab-badge (reuses pz-fade3) --
-     3 small shape clusters previewing that the game generates a fresh
-     composition each round. No background of its own (unlike every other
-     badge except lab-badge) -- just the purple lines directly on the
-     tile's own dark background. */
+  /* Same 3-frame cross-fade as puzzle-badge (reuses pz-fade3) -- 3 small
+     shape clusters previewing that the game generates a fresh composition
+     each round. The middle one turns green partway through, as a right
+     answer does in the game. No background of its own -- just lines in the
+     game's page blue on the tile's own dark background. */
   .odd-badge .odd-frame{ position:absolute; inset:0; width:100%; height:100%; display:block; opacity:0; animation: pz-fade3 4.5s ease-in-out infinite; }
   .odd-badge .odd-frame:nth-child(1){ animation-delay:0s; }
   .odd-badge .odd-frame:nth-child(2){ animation-delay:-1.5s; }
   .odd-badge .odd-frame:nth-child(3){ animation-delay:-3s; }
-  .odd-shape{ fill:none; stroke:#EE643E; stroke-width:2px; vector-effect:non-scaling-stroke; }
+  .odd-shape{ fill:none; stroke:#3632F6; stroke-width:2px; vector-effect:non-scaling-stroke; }
+  .odd-badge .odd-frame:nth-child(2) .odd-shape{ animation: odd-green 4.5s linear -1.5s infinite; }
+  @keyframes odd-green{
+    0%, 10%{ stroke:#3632F6; }
+    12%, 33%{ stroke:#12C9A4; }
+    34%, 100%{ stroke:#3632F6; }
+  }
 
   /* Previews the sequence-repeat mechanic: same 2x2 grid/gap/corner-radius as
      memory-badge, but each cell is one of the real game's 4 solid pad colors
@@ -326,10 +343,10 @@
   .sdk-d0 .sdk-disc{ animation: sdk-wave-fill-d0 4.5s ease-in-out infinite; }
   .sdk-d2 .sdk-disc{ animation: sdk-wave-fill-d2 4.5s ease-in-out infinite; }
   @keyframes sdk-wave-fill-d0{
-    0%, 60%{ fill:#B36400; } 62%, 86%{ fill:#71B143; } 90%, 100%{ fill:#B36400; }
+    0%, 60%{ fill:#B36400; } 62%, 86%{ fill:#0DC754; } 90%, 100%{ fill:#B36400; }
   }
   @keyframes sdk-wave-fill-d2{
-    0%, 66.7%{ fill:#B36400; } 68.7%, 86%{ fill:#71B143; } 90%, 100%{ fill:#B36400; }
+    0%, 66.7%{ fill:#B36400; } 68.7%, 86%{ fill:#0DC754; } 90%, 100%{ fill:#B36400; }
   }
   @keyframes sdk-wave-pop-d0{
     0%, 60%{ transform:scale(1); } 62%{ transform:scale(1.06); } 65%, 100%{ transform:scale(1); }
@@ -343,10 +360,10 @@
   .sdk-a .sdk-disc{ animation: sdk-fill-a 4.5s linear infinite; }
   .sdk-b .sdk-disc{ animation: sdk-fill-b 4.5s linear infinite; }
   @keyframes sdk-fill-a{
-    0%, 11.9%{ fill:#404657; } 12%, 63.3%{ fill:#FFA226; } 65.3%, 86%{ fill:#71B143; } 90%, 100%{ fill:#404657; }
+    0%, 11.9%{ fill:#404657; } 12%, 63.3%{ fill:#FFA226; } 65.3%, 86%{ fill:#0DC754; } 90%, 100%{ fill:#404657; }
   }
   @keyframes sdk-fill-b{
-    0%, 31.9%{ fill:#404657; } 32%, 63.3%{ fill:#FFA226; } 65.3%, 86%{ fill:#71B143; } 90%, 100%{ fill:#404657; }
+    0%, 31.9%{ fill:#404657; } 32%, 63.3%{ fill:#FFA226; } 65.3%, 86%{ fill:#0DC754; } 90%, 100%{ fill:#404657; }
   }
   /* Each tap: a small dip to 88% and back -- gentler than the game's 75%,
      which looked too busy at tile size -- with the taps well apart; then
@@ -375,6 +392,30 @@
   @keyframes sdk-b1{ 0%, 31.9%{ opacity:0; } 32%, 40.9%{ opacity:1; } 41%, 100%{ opacity:0; } }
   @keyframes sdk-b2{ 0%, 40.9%{ opacity:0; } 41%, 49.9%{ opacity:1; } 50%, 100%{ opacity:0; } }
   @keyframes sdk-b3{ 0%, 49.9%{ opacity:0; } 50%, 86%{ opacity:1; } 90%, 100%{ opacity:0; } }
+
+  /* Connect the Pipes: a 3x3 board in the game's colours (brown squares, orange lines
+     and water, near-black dry pipes), drawn like the Unblock badge. It shows
+     the move: the middle square turns a quarter, the orange water runs on to
+     the goal, holds, then it all resets. Under Reduce Motion it freezes on the
+     start: the middle pipe turned the wrong way, water up to it. */
+  .pp-badge{ position:relative; width:62.057%; height:62.057%; }
+  .pp-badge svg{ position:absolute; inset:0; width:100%; height:100%; display:block; overflow:visible; }
+  .pp-board{ fill:#695336; }
+  .pp-line{ fill:#FA5F1C; }
+  .pp-frame{ fill:none; stroke:#FA5F1C; stroke-width:0.81; } /* same line weight as Number Puzzle's badge */
+  .pp-dry{ fill:none; stroke:#101010; stroke-width:7; stroke-linecap:butt; }
+  .pp-water{ fill:#FA5F1C; }
+  .pp-spin{ transform-box:view-box; transform-origin:50px 50px; animation: pp-spin 4.5s ease-in-out infinite; }
+  @keyframes pp-spin{
+    0%, 16%{ transform:rotate(0deg); }
+    24%, 90%{ transform:rotate(90deg); }
+    97%, 100%{ transform:rotate(0deg); }
+  }
+  .pp-wet-b, .pp-wet-c{ opacity:0; }
+  .pp-wet-b{ animation: pp-wet-b 4.5s linear infinite; }
+  .pp-wet-c{ animation: pp-wet-c 4.5s linear infinite; }
+  @keyframes pp-wet-b{ 0%, 25.9%{ opacity:0; } 26%, 87%{ opacity:1; } 89%, 100%{ opacity:0; } }
+  @keyframes pp-wet-c{ 0%, 29.9%{ opacity:0; } 30%, 87%{ opacity:1; } 89%, 100%{ opacity:0; } }
 
   @keyframes fade4{
     0%{ opacity:1; }
@@ -440,15 +481,21 @@
   .mem-inner{
     position:absolute; inset:0;
     transform-style:preserve-3d;
-    animation-duration: 4.5s;
-    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Two tries, each card turning in about 0.7s like the original
+       one-try tile, with an even ease (the springy overshoot made the
+       flips feel too sharp). */
+    animation-duration: 7.2s;
+    animation-timing-function: cubic-bezier(0.45, 0.05, 0.55, 0.95);
     animation-iteration-count: infinite;
   }
-  /* Flip one tile up, then the other shortly after — like actually picking two
-     tiles in the game, not both at once — hold both revealed together (so the
-     mismatch reads clearly), then flip both back down together. */
+  /* Two tries, like a real turn: first the top-right and bottom-left cards
+     flip up one after the other, don't match, and flip back down; then the
+     top-right card and the top-left one flip up, match (a small bounce, like
+     the game's found-a-pair pop), stay open a moment, and turn back for the
+     next loop. */
   .mem-flip-a .mem-inner{ animation-name: mem-flip-a; }
   .mem-flip-b .mem-inner{ animation-name: mem-flip-b; }
+  .mem-flip-c .mem-inner{ animation-name: mem-flip-c; }
   .mem-face{
     position:absolute; inset:0;
     border-radius:14%;
@@ -461,7 +508,7 @@
   .mem-face.front{ transform:rotateY(180deg); }
   /* Each revealed face uses that finished icon's own tile background from
      the real game, not a shared placeholder color. */
-  .mem-flip-a .mem-face.front{ background:#E4E4E4; }
+  .mem-flip-a .mem-face.front, .mem-flip-c .mem-face.front{ background:#E4E4E4; }
   .mem-flip-b .mem-face.front{ background:#E88CE5; }
   /* Overrides every property the generic .badge svg rule sets (position/inset/
      margin/opacity, meant for the math-badge's fade sequence) — it cascades onto
@@ -471,13 +518,24 @@
 
   @keyframes mem-flip-a{
     0%, 4%{ transform:rotateY(0deg); }
-    20%, 68%{ transform:rotateY(180deg); }
-    86%, 100%{ transform:rotateY(0deg); }
+    14%, 36%{ transform:rotateY(180deg); }
+    44%, 50%{ transform:rotateY(0deg); }
+    58%, 72%{ transform:rotateY(180deg) scale(1); }
+    77%{ transform:rotateY(180deg) scale(1.05); }
+    82%, 90%{ transform:rotateY(180deg) scale(1); }
+    98%, 100%{ transform:rotateY(0deg); }
   }
   @keyframes mem-flip-b{
-    0%, 22%{ transform:rotateY(0deg); }
-    38%, 68%{ transform:rotateY(180deg); }
-    86%, 100%{ transform:rotateY(0deg); }
+    0%, 16%{ transform:rotateY(0deg); }
+    26%, 36%{ transform:rotateY(180deg); }
+    44%, 100%{ transform:rotateY(0deg); }
+  }
+  @keyframes mem-flip-c{
+    0%, 62%{ transform:rotateY(0deg); }
+    72%{ transform:rotateY(180deg) scale(1); }
+    77%{ transform:rotateY(180deg) scale(1.05); }
+    82%, 90%{ transform:rotateY(180deg) scale(1); }
+    98%, 100%{ transform:rotateY(0deg); }
   }
 
   /* Othello: the green cells and black gap-lines (matching the exported badge
@@ -644,7 +702,23 @@
   <div class="tiles">
     <a class="tile" href="memory/" aria-label="Memory">
       <div class="badge memory-badge">
-        <div class="mem-cell"></div>
+        <div class="mem-cell mem-flip mem-flip-c">
+          <div class="mem-inner">
+            <div class="mem-face back"></div>
+            <div class="mem-face front"><svg viewBox="0 0 20 20">
+              <circle fill="#181818" cx="13.5" cy="10.5" r="5.5"/>
+              <circle fill="#E4E4E4" cx="13.5" cy="10.5" r="1.5"/>
+              <rect fill="#181818" x="2" y="15" width="17" height="4" rx="1"/>
+              <rect fill="#181818" x="5" y="14" width="1" height="1.2"/>
+              <circle fill="#FFFFFF" cx="4" cy="16.5" r="0.5"/>
+              <rect fill="#181818" x="3" y="14" width="1" height="1.2"/>
+              <rect fill="#181818" x="5" y="13" width="1" height="1.1"/>
+              <rect fill="#181818" x="5" y="12" width="1" height="1.1"/>
+              <rect fill="#181818" x="2" y="13" width="1" height="1"/>
+              <rect fill="#181818" x="1" y="12" width="1" height="1"/>
+            </svg></div>
+          </div>
+        </div>
         <div class="mem-cell mem-flip mem-flip-a">
           <div class="mem-inner">
             <div class="mem-face back"></div>
@@ -716,68 +790,8 @@
           <line class="lab-wall" x1="3" y1="5" x2="4" y2="5"/>
           <line class="lab-wall" x1="4" y1="4" x2="4" y2="5"/>
           <line class="lab-wall" x1="4" y1="5" x2="5" y2="5"/>
-        </svg>
-        <svg class="lab-frame" viewBox="0 0 6 6" overflow="visible">
-          <line class="lab-wall" x1="0" y1="0" x2="6" y2="0"/>
-          <line class="lab-wall" x1="0" y1="6" x2="6" y2="6"/>
-          <line class="lab-wall" x1="0" y1="0" x2="0" y2="6"/>
-          <line class="lab-wall" x1="6" y1="0" x2="6" y2="6"/>
-          <line class="lab-wall" x1="0" y1="1" x2="1" y2="1"/>
-          <line class="lab-wall" x1="1" y1="1" x2="2" y2="1"/>
-          <line class="lab-wall" x1="2" y1="1" x2="3" y2="1"/>
-          <line class="lab-wall" x1="3" y1="1" x2="4" y2="1"/>
-          <line class="lab-wall" x1="5" y1="0" x2="5" y2="1"/>
-          <line class="lab-wall" x1="1" y1="2" x2="2" y2="2"/>
-          <line class="lab-wall" x1="3" y1="2" x2="4" y2="2"/>
-          <line class="lab-wall" x1="4" y1="1" x2="4" y2="2"/>
-          <line class="lab-wall" x1="5" y1="1" x2="5" y2="2"/>
-          <line class="lab-wall" x1="0" y1="3" x2="1" y2="3"/>
-          <line class="lab-wall" x1="2" y1="2" x2="2" y2="3"/>
-          <line class="lab-wall" x1="2" y1="3" x2="3" y2="3"/>
-          <line class="lab-wall" x1="4" y1="2" x2="4" y2="3"/>
-          <line class="lab-wall" x1="4" y1="3" x2="5" y2="3"/>
-          <line class="lab-wall" x1="1" y1="3" x2="1" y2="4"/>
-          <line class="lab-wall" x1="2" y1="3" x2="2" y2="4"/>
-          <line class="lab-wall" x1="3" y1="4" x2="4" y2="4"/>
-          <line class="lab-wall" x1="4" y1="3" x2="4" y2="4"/>
-          <line class="lab-wall" x1="5" y1="4" x2="6" y2="4"/>
-          <line class="lab-wall" x1="1" y1="4" x2="1" y2="5"/>
-          <line class="lab-wall" x1="2" y1="4" x2="2" y2="5"/>
-          <line class="lab-wall" x1="2" y1="5" x2="3" y2="5"/>
-          <line class="lab-wall" x1="3" y1="5" x2="4" y2="5"/>
-          <line class="lab-wall" x1="4" y1="5" x2="5" y2="5"/>
-          <line class="lab-wall" x1="5" y1="4" x2="5" y2="5"/>
-        </svg>
-        <svg class="lab-frame" viewBox="0 0 6 6" overflow="visible">
-          <line class="lab-wall" x1="0" y1="0" x2="6" y2="0"/>
-          <line class="lab-wall" x1="0" y1="6" x2="6" y2="6"/>
-          <line class="lab-wall" x1="0" y1="0" x2="0" y2="6"/>
-          <line class="lab-wall" x1="6" y1="0" x2="6" y2="6"/>
-          <line class="lab-wall" x1="0" y1="1" x2="1" y2="1"/>
-          <line class="lab-wall" x1="1" y1="1" x2="2" y2="1"/>
-          <line class="lab-wall" x1="3" y1="0" x2="3" y2="1"/>
-          <line class="lab-wall" x1="5" y1="0" x2="5" y2="1"/>
-          <line class="lab-wall" x1="1" y1="2" x2="2" y2="2"/>
-          <line class="lab-wall" x1="2" y1="1" x2="2" y2="2"/>
-          <line class="lab-wall" x1="2" y1="2" x2="3" y2="2"/>
-          <line class="lab-wall" x1="3" y1="2" x2="4" y2="2"/>
-          <line class="lab-wall" x1="4" y1="1" x2="4" y2="2"/>
-          <line class="lab-wall" x1="4" y1="2" x2="5" y2="2"/>
-          <line class="lab-wall" x1="1" y1="3" x2="2" y2="3"/>
-          <line class="lab-wall" x1="2" y1="3" x2="3" y2="3"/>
-          <line class="lab-wall" x1="4" y1="2" x2="4" y2="3"/>
-          <line class="lab-wall" x1="5" y1="3" x2="6" y2="3"/>
-          <line class="lab-wall" x1="0" y1="4" x2="1" y2="4"/>
-          <line class="lab-wall" x1="2" y1="3" x2="2" y2="4"/>
-          <line class="lab-wall" x1="3" y1="4" x2="4" y2="4"/>
-          <line class="lab-wall" x1="4" y1="3" x2="4" y2="4"/>
-          <line class="lab-wall" x1="4" y1="4" x2="5" y2="4"/>
-          <line class="lab-wall" x1="1" y1="4" x2="1" y2="5"/>
-          <line class="lab-wall" x1="2" y1="4" x2="2" y2="5"/>
-          <line class="lab-wall" x1="2" y1="5" x2="3" y2="5"/>
-          <line class="lab-wall" x1="4" y1="4" x2="4" y2="5"/>
-          <line class="lab-wall" x1="5" y1="5" x2="6" y2="5"/>
-          <line class="lab-wall" x1="3" y1="5" x2="3" y2="6"/>
+                  <g transform="translate(5.18 5.18) scale(0.014545)" fill="none" stroke="#E98B47" stroke-width="4"><circle cx="22" cy="22" r="20"/><circle cx="22" cy="22" r="11"/><circle fill="#E98B47" cx="22" cy="22" r="3.5"/></g>
+          <g class="lab-token"><g transform="translate(0.18 0.18) scale(0.0076190)"><circle fill="#E88CE5" cx="42" cy="42" r="42"/><circle fill="#E4E4E4" cx="27" cy="39" r="9"/><circle fill="#E4E4E4" cx="57" cy="39" r="9"/><ellipse fill="#111111" cx="31" cy="38.5" rx="5" ry="5.5"/><ellipse fill="#111111" cx="61" cy="38.5" rx="5" ry="5.5"/></g></g>
         </svg>
       </div>
     </a>
@@ -850,6 +864,23 @@
       </div>
     </a>
 
+    <a class="tile" href="numberpuzzle/" aria-label="Number Puzzle">
+      <div class="badge puzzle-badge">
+        <img class="pz-frame" src="numberpuzzle/assets/badge-frame-1.svg" alt="">
+        <img class="pz-frame" src="numberpuzzle/assets/badge-frame-2.svg" alt="">
+        <img class="pz-frame" src="numberpuzzle/assets/badge-frame-3.svg" alt="">
+      </div>
+    </a>
+
+    <a class="tile" href="copythepattern/" aria-label="Copy the Pattern">
+      <div class="badge cp-badge">
+        <div class="cp-cell"></div>
+        <div class="cp-cell"></div>
+        <div class="cp-cell"></div>
+        <div class="cp-cell"></div>
+      </div>
+    </a>
+
     <a class="tile" href="oddoneout/" aria-label="Odd One Out">
       <div class="badge odd-badge">
         <svg class="odd-frame" viewBox="0 0 100 100" overflow="visible">
@@ -867,14 +898,6 @@
           <rect class="odd-shape" x="24" y="50" width="38" height="38"/>
           <rect class="odd-shape" x="45" y="49" width="38" height="38" transform="rotate(45 64 68)"/>
         </svg>
-      </div>
-    </a>
-
-    <a class="tile" href="numberpuzzle/" aria-label="Number Puzzle">
-      <div class="badge puzzle-badge">
-        <img class="pz-frame" src="numberpuzzle/assets/badge-frame-1.svg" alt="">
-        <img class="pz-frame" src="numberpuzzle/assets/badge-frame-2.svg" alt="">
-        <img class="pz-frame" src="numberpuzzle/assets/badge-frame-3.svg" alt="">
       </div>
     </a>
 
@@ -901,12 +924,24 @@
       </div>
     </a>
 
-    <a class="tile" href="copythepattern/" aria-label="Copy the Pattern">
-      <div class="badge cp-badge">
-        <div class="cp-cell"></div>
-        <div class="cp-cell"></div>
-        <div class="cp-cell"></div>
-        <div class="cp-cell"></div>
+    <!-- Connect the Pipes: hidden until the game moves out of staging/.
+         To publish, drop the hidden attribute, point href at the live game,
+         and add it to sitemap.xml. -->
+    <a class="tile" href="staging/pipes/" aria-label="Connect the Pipes" hidden>
+      <div class="pp-badge">
+        <!-- 3x3 board in the game's colours: squares 33.33 units, 0.81 lines (Number Puzzle's weight),
+             pipes 7 wide, nothing sticking out past the board. The middle
+             square turns, the orange water reaches the far side, and it
+             resets. -->
+        <svg viewBox="0 0 100 100" overflow="visible">
+          <rect class="pp-board" width="100" height="100"/>
+          <path class="pp-dry" d="M33.33 16.67A16.67 16.67 0 0 0 16.67 33.33M33.33 16.67H66.67M66.67 16.67A16.67 16.67 0 0 1 83.33 33.33M0.00 50.00H33.33M66.67 50.00H100.00M16.67 66.67A16.67 16.67 0 0 0 33.33 83.33M33.33 83.33H66.67M66.67 83.33A16.67 16.67 0 0 0 83.33 66.67"/>
+          <path class="pp-dry pp-spin" d="M50.00 33.33V66.67"/>
+          <rect class="pp-line" x="32.925" y="0" width="0.81" height="100"/><rect class="pp-line" x="66.265" y="0" width="0.81" height="100"/><rect class="pp-line" x="0" y="32.925" width="100" height="0.81"/><rect class="pp-line" x="0" y="66.265" width="100" height="0.81"/><rect class="pp-frame" x="0.405" y="0.405" width="99.19" height="99.19"/>
+          <rect class="pp-water" x="0" y="46.5" width="33.33" height="7"/>
+          <rect class="pp-water pp-wet-b" x="33.33" y="46.5" width="33.34" height="7"/>
+          <rect class="pp-water pp-wet-c" x="66.67" y="46.5" width="33.33" height="7"/>
+        </svg>
       </div>
     </a>
 
