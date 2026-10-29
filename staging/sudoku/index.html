@@ -296,16 +296,15 @@
   html.style-circles .box-line{ display:block; }
 
   /* Colour trials, picked with ?theme= (colours.html shows them all).
-     Round 3: round 2 (her two favourites' recipe -- blue-violet page,
-     coloured given discs, light player discs) didn't land, so these try
-     other pages and, in some, put the colour on the player's discs. */
-  html[data-theme="mix"]{ --bg:#6B4FA0; --disc-given:#202020; --digit-given:#fff; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
-  html[data-theme="r1"]{ --bg:#7080B5; --disc-given:#E4E4E4; --disc:#E18E00; }
-  html[data-theme="r2"]{ --bg:#6B4FA0; --disc-given:#FFC94A; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
-  html[data-theme="r3"]{ --bg:#33408F; --disc-given:#9AA8EC; --disc:#FF8A5B; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
-  html[data-theme="r4"]{ --bg:#D9653B; --disc-given:#3B2470; --digit-given:#fff; --disc:#FBE9D6; --empty:rgba(32,32,32,0.28); }
-  html[data-theme="r5"]{ --bg:#5FA8D3; --disc-given:#1F2A5C; --digit-given:#fff; --disc:#FFD34E; --empty:rgba(20,30,70,0.28); --line-color:#1F2A5C; }
-  html[data-theme="r6"]{ --bg:#B79BE0; --disc-given:#0E6A6E; --digit-given:#fff; --disc:#FFFFFF; --empty:rgba(40,20,80,0.22); --line-color:#2A1B52; }
+     Round 4: black numbers on every disc (her preference), so both disc
+     colours are light or bright enough for black. */
+  html[data-theme="k1"]{ --bg:#7080B5; --disc-given:#FF8A5B; --disc:#FFFFFF; }
+  html[data-theme="k2"]{ --bg:#6B4FA0; --disc-given:#FFC94A; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
+  html[data-theme="k3"]{ --bg:#6B4FA0; --disc-given:#E88CE5; --disc:#9EE6D8; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
+  html[data-theme="k4"]{ --bg:#5FA8D3; --disc-given:#F6F1E7; --disc:#FFD34E; --empty:rgba(20,30,70,0.28); --line-color:#1F2A5C; }
+  html[data-theme="k5"]{ --bg:#33408F; --disc-given:#9AA8EC; --disc:#FFB38A; --empty:rgba(255,255,255,0.14); --line-color:#E4E4E4; }
+  html[data-theme="k6"]{ --bg:#2F7E86; --disc-given:#FFC94A; --disc:#F3F3F3; --empty:rgba(0,0,0,0.28); --line-color:#E4E4E4; }
+  html[data-theme="k7"]{ --bg:#D9653B; --disc-given:#FBE9D6; --disc:#9AA8EC; --empty:rgba(32,32,32,0.28); }
 
   /* A new shape pops into its square. */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
