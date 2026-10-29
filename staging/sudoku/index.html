@@ -295,17 +295,17 @@
   .box-line{ display:none; position:absolute; background:var(--line-color); pointer-events:none; }
   html.style-circles .box-line{ display:block; }
 
-  /* Colour trials, picked with ?theme= (colours.html shows them all). Round
-     2, from her two favourites (the current periwinkle + orange, and mix:
-     violet with dark given discs) -- coloured given discs instead of black,
-     light discs for the player's numbers. */
+  /* Colour trials, picked with ?theme= (colours.html shows them all).
+     Round 3: round 2 (her two favourites' recipe -- blue-violet page,
+     coloured given discs, light player discs) didn't land, so these try
+     other pages and, in some, put the colour on the player's discs. */
   html[data-theme="mix"]{ --bg:#6B4FA0; --disc-given:#202020; --digit-given:#fff; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
-  html[data-theme="v1"]{ --bg:#6B4FA0; --disc-given:#E88CE5; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
-  html[data-theme="v2"]{ --bg:#6B4FA0; --disc-given:#EE643E; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
-  html[data-theme="v3"]{ --bg:#7080B5; --disc-given:#0E6A6E; --digit-given:#fff; --disc:#E4E4E4; }
-  html[data-theme="v4"]{ --bg:#7080B5; --disc-given:#8104C9; --digit-given:#fff; --disc:#E4E4E4; }
-  html[data-theme="v5"]{ --bg:#8E7CC3; --disc-given:#3B2470; --digit-given:#fff; --disc:#F3ECFF; --empty:rgba(32,20,70,0.3); --line-color:#2A1B52; }
-  html[data-theme="v6"]{ --bg:#5A5FA8; --disc-given:#F2B33D; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
+  html[data-theme="r1"]{ --bg:#7080B5; --disc-given:#E4E4E4; --disc:#E18E00; }
+  html[data-theme="r2"]{ --bg:#6B4FA0; --disc-given:#FFC94A; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
+  html[data-theme="r3"]{ --bg:#33408F; --disc-given:#9AA8EC; --disc:#FF8A5B; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
+  html[data-theme="r4"]{ --bg:#D9653B; --disc-given:#3B2470; --digit-given:#fff; --disc:#FBE9D6; --empty:rgba(32,32,32,0.28); }
+  html[data-theme="r5"]{ --bg:#5FA8D3; --disc-given:#1F2A5C; --digit-given:#fff; --disc:#FFD34E; --empty:rgba(20,30,70,0.28); --line-color:#1F2A5C; }
+  html[data-theme="r6"]{ --bg:#B79BE0; --disc-given:#0E6A6E; --digit-given:#fff; --disc:#FFFFFF; --empty:rgba(40,20,80,0.22); --line-color:#2A1B52; }
 
   /* A new shape pops into its square. */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
