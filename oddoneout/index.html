@@ -375,7 +375,7 @@
   </div>
 
   <div class="progress-dots" id="progressDots">
-    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
   </div>
 
   <div class="board-wrap" id="boardWrap">
@@ -453,7 +453,9 @@
     circle: 'oval', oval: 'circle',
     rect: 'oval', triangle: 'diamond'
   };
-  var ROUND_SIZE = 10;
+  // Sets per round: 7 -- with two tries per set and a miss sending the
+  // dots back to zero, 10 in a row was a lot for a young child.
+  var ROUND_SIZE = 7;
   // Two tries per set of cards. A second wrong tap sends the progress dots
   // back to zero and starts the round over with new cards, so tapping all
   // three to find the right one doesn't pay off.

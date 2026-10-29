@@ -430,7 +430,7 @@
   </div>
 
   <div class="progress-dots" id="progressDots">
-    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
   </div>
 
   <div class="board-wrap" id="boardWrap">
@@ -451,7 +451,9 @@
   // page has a touch listener -- this is that listener (a no-op is enough).
   document.addEventListener('touchstart', function(){}, { passive: true });
   var TIER_N = { easy: 2, medium: 3, hard: 4 };
-  var ROUND_SIZE = 10;
+  // Puzzles per round: 5, like the other whole-puzzle games (Unblock,
+  // Sudoku, Connect the Pipes) -- 10 full puzzles was a very long round.
+  var ROUND_SIZE = 5;
   var DIGIT_SRC = [];
   for (var d = 0; d <= 9; d++) DIGIT_SRC.push('assets/digit-' + d + '.svg');
 
@@ -1095,8 +1097,9 @@
       document.body.style.background = '';
       state.progress = 0;
       updateProgressDots();
-      state.digitOrder = shuffleDigits();
-      state.digitCursor = 0;
+      // No reshuffle here: with 5 puzzles a round, the next round goes on
+      // with the digits not seen yet; nextPuzzle reshuffles once all ten
+      // have been done.
       nextPuzzle();
     }, 3000);
   }
