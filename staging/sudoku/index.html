@@ -247,9 +247,25 @@
      so it's clear where to tap. */
   .empty-ring{ display:none; fill:var(--ink-muted); }
   html.style-circles .cell:not([data-shape]) .empty-ring{ display:inline; }
-  /* ...with no square colours, and only the cross between the four boxes
-     drawn: no outline and no lines between the squares inside a box. */
-  html.style-circles .board-wrap{ --gap:0px; --box-gap:2px; box-shadow:none; background:none; }
+  /* ...with no square colours, and only a 2px cross between the four boxes
+     drawn: no outline and no lines between the squares inside a box. Each
+     disc leaves 4% of its square free on every side, so neighbours are 8%
+     apart; --pad adds another 4% each side of the cross, so a disc is 8%
+     from the cross too. */
+  html.style-circles .board-wrap{
+    --gap:0px;
+    --cell: calc((var(--board-size) - 2px) / 4.08);
+    --pad: calc(var(--cell) * 0.04);
+    --box-gap: calc(var(--pad) * 2 + 2px);
+    box-shadow:none;
+    background:none;
+  }
+  @supports (width: round(down, 10.5px, 1px)){
+    html.style-circles .board-wrap{
+      --cell: round(down, calc((var(--board-size) - 2px) / 4.08), 1px);
+      --pad: round(calc(var(--cell) * 0.04), 1px);
+    }
+  }
   html.style-circles .cell, html.style-circles .cell.given{ background:none; }
   html.style-circles .board-wrap::before,
   html.style-circles .board-wrap::after{
@@ -258,8 +274,8 @@
     background:#000;
     pointer-events:none;
   }
-  html.style-circles .board-wrap::before{ left:calc(var(--cell) * 2); top:0; bottom:0; width:var(--box-gap); }
-  html.style-circles .board-wrap::after{ top:calc(var(--cell) * 2); left:0; right:0; height:var(--box-gap); }
+  html.style-circles .board-wrap::before{ left:calc(var(--cell) * 2 + var(--pad)); top:0; bottom:0; width:2px; }
+  html.style-circles .board-wrap::after{ top:calc(var(--cell) * 2 + var(--pad)); left:0; right:0; height:2px; }
 
   /* A new shape pops into its square. */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
