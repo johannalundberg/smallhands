@@ -419,6 +419,17 @@
      with zoom otherwise locked there was no way back out. */
   html, body, .controls-slider{ touch-action:manipulation; }
 </style>
+<script>
+  // Each number sits on its own disc (html.style-circles); ?style=plain shows
+  // bare numbers on coloured squares instead, ?theme= picks a colour trial.
+  // Set here, before the page is drawn: the plain look's board is black, and
+  // set any later it flashed as a black square while sound.js loaded.
+  (function(){
+    var params = new URLSearchParams(location.search);
+    if (params.get('style') !== 'plain') document.documentElement.classList.add('style-circles');
+    if (params.get('theme')) document.documentElement.setAttribute('data-theme', params.get('theme'));
+  })();
+</script>
 </head>
 <body>
 
@@ -471,13 +482,9 @@
 (function(){
   "use strict";
 
-  // Each number sits on its own disc (html.style-circles). Trial options
-  // (see compare.html): ?style=plain shows bare numbers on coloured squares
-  // instead; ?seed=N makes the random picks repeat, so pages opened with the
-  // same seed show the same boards; ?theme= picks a colour trial.
+  // ?seed=N makes the random picks repeat, so pages opened with the same
+  // seed show the same boards (see compare.html and colours.html).
   var params = new URLSearchParams(location.search);
-  if (params.get('style') !== 'plain') document.documentElement.classList.add('style-circles');
-  if (params.get('theme')) document.documentElement.setAttribute('data-theme', params.get('theme'));
   var SEED = parseInt(params.get('seed'), 10);
   if (!isNaN(SEED)) {
     Math.random = function(){ // mulberry32
