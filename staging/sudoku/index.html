@@ -242,13 +242,6 @@
     0%{ transform:scale(0.45); }
     100%{ transform:scale(1); }
   }
-  /* Solved: the shapes hop one after another, from the top-left corner to
-     the bottom-right, like a wave. */
-  .cell.wave .hop{ animation: shape-wave 480ms ease-in-out var(--wave-delay, 0ms) both; }
-  @keyframes shape-wave{
-    0%, 100%{ transform:translateY(0) scale(1); }
-    45%{ transform:translateY(-14%) scale(1.12); }
-  }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -441,11 +434,9 @@
   var EMPTY = -1;
   var SHAPE_COUNT = 4; // the digits 1-4 (stored as 0-3)
 
-  // Wait after the solving tap before the next board: long enough for the
-  // wave to reach the last square and settle.
-  var NEXT_LEVEL_MS = 1400;
-  var WAVE_START_MS = 120; // let the last shape's pop land first
-  var WAVE_STEP_MS = 70;
+  // The solved board's green flash, after which the next board appears --
+  // the same 0.7s as a right answer in Math.
+  var NEXT_LEVEL_MS = 700;
 
   // The 12 lines a shape may appear in only once: 4 rows, 4 columns, 4 boxes.
   var UNITS = [];
@@ -570,7 +561,7 @@
     var cells = state.cells.slice();
     var perm = state.perm.slice();
     if (state.busy) {
-      // Mid wave: its timeout won't survive the reload, so count the solve
+      // Mid green flash: its timeout won't survive the reload, so count the solve
       // here and let restore move on to the next level.
       progress += 1;
       if (progress >= ROUND_SIZE) return null;
@@ -702,7 +693,6 @@
       el.dataset.i = i;
       el.style.left = offset(i % 4);
       el.style.top = offset(Math.floor(i / 4));
-      el.style.setProperty('--wave-delay', (WAVE_START_MS + WAVE_STEP_MS * (i % 4 + Math.floor(i / 4))) + 'ms');
       el.innerHTML = '<span class="hop">' + SHAPES_SVG + '</span>';
       cellEls.push(el);
       els.boardWrap.appendChild(el);
@@ -722,7 +712,7 @@
     el.classList.add(cls);
   }
 
-  var ANIM_CLASS = { 'shape-pop': 'pop', 'shape-wave': 'wave', 'digit-shake': 'wrong' };
+  var ANIM_CLASS = { 'shape-pop': 'pop', 'digit-shake': 'wrong' };
   els.boardWrap.addEventListener('animationend', function(e){
     var cls = ANIM_CLASS[e.animationName];
     var el = e.target.closest && e.target.closest('.cell');
@@ -750,7 +740,7 @@
     els.celebration.style.display = 'none';
     els.boardWrap.style.display = '';
     cellEls.forEach(function(el, i){
-      el.classList.remove('pop', 'wave');
+      el.classList.remove('pop');
       el.classList.toggle('given', state.given[i]);
       paintCell(i);
       // Every shape on a new board pops in: a quiet "here's a new one".
@@ -845,10 +835,9 @@
   function onSolved(){
     state.busy = true;
     PLSound.play('positive');
-    cellEls.forEach(function(el){ replay(el, 'wave'); });
-    // The page flashes green, the same flash as a right answer in Math.
+    // The numbers stay still and the page flashes green, the same flash as
+    // a right answer in Math; buildLevel (via endFlash) turns it back.
     document.body.style.background = 'var(--success)';
-    flashTimer = setTimeout(endFlash, FLASH_MS);
     winTimer = setTimeout(function(){
       state.progress += 1;
       updateProgressDots();
@@ -874,6 +863,7 @@
   }
 
   function showCelebration(){
+    endFlash(); // the last board's green flash ends here
     updateAppHeight();
     els.celebration.innerHTML = celebrationFace('var(--shape-' + Math.floor(Math.random() * SHAPE_COUNT) + ')');
     PLSound.play('complete');
