@@ -215,6 +215,10 @@
   /* Pressed (touch or mouse), and under a mouse pointer: the tile turns
      slightly darker. No grow or shrink -- she found size changes too much. */
   .piece:active{ background:var(--tile-hover); }
+  /* A tap is over too quickly for :active to show, so each tap also starts
+     the tile dark and fades it back (onTap adds .tap). */
+  .piece.tap{ animation: tile-tap 320ms ease-out; }
+  @keyframes tile-tap{ from{ background-color:var(--tile-hover); } }
   @media (hover:hover) and (pointer:fine){
     .piece:hover{ background:var(--tile-hover); }
   }
@@ -275,6 +279,38 @@
     0%, 100%{ background:var(--water); }
     45%{ background:var(--water-glow); }
   }
+
+  /* Trial solved looks, picked with ?win= (wins.html shows them all side
+     by side); without it the shine above plays. ?water=blue tries light-blue
+     water. won: set on the board once the water is through. */
+  html[data-water="blue"]{ --water:#8ED1F2; --water-glow:#DDF4FF; }
+  html[data-win] .piece.glow .pipe path, html[data-win] .stub.glow{ animation:none; }
+  /* green: the water turns green, square by square from the start. */
+  html[data-win="green"] .piece.glow .pipe path,
+  html[data-win="both"] .piece.glow .pipe path{ animation: pipe-green 260ms ease var(--glow-delay, 0ms) both; }
+  html[data-win="green"] .stub.glow,
+  html[data-win="both"] .stub.glow{ animation: stub-green 260ms ease var(--glow-delay, 0ms) both; }
+  @keyframes pipe-green{ to{ stroke:#71B143; } }
+  @keyframes stub-green{ to{ background:#71B143; } }
+  /* fade: everything but the water fades away. */
+  html[data-win="fade"] .board-wrap, html[data-win="both"] .board-wrap{ transition: border-color 400ms ease; }
+  html[data-win="fade"] .board-wrap.won, html[data-win="both"] .board-wrap.won{ border-color:transparent; }
+  html[data-win="fade"] .board-wrap.won .spot, html[data-win="both"] .board-wrap.won .spot{
+    background-color:transparent; border-color:transparent;
+    transition: background-color 400ms ease, border-color 400ms ease;
+  }
+  html[data-win="fade"] .board-wrap.won .piece:not(.wet) .pipe,
+  html[data-win="both"] .board-wrap.won .piece:not(.wet) .pipe{ opacity:0; transition: opacity 400ms ease; }
+  /* tiles: the squares the water runs through light up, one after another. */
+  html[data-win="tiles"] .piece.glow{ animation: tile-lit 260ms ease var(--glow-delay, 0ms) both; }
+  @keyframes tile-lit{ to{ background-color:#A08C63; } }
+  /* wave: like Sudoku's solved board -- every tile turns green, one
+     diagonal after another from the top-left corner (--wave-delay, set in
+     buildLevel), and the water with it; dry pipes stay dark. */
+  html[data-win="wave"] .board-wrap.won .spot{ animation: tile-green 250ms ease var(--wave-delay, 0ms) both; }
+  html[data-win="wave"] .board-wrap.won .piece.wet .pipe path{ animation: pipe-green 250ms ease var(--wave-delay, 0ms) both; }
+  html[data-win="wave"] .board-wrap.won .stub{ animation: stub-green 250ms ease var(--wave-delay, 0ms) both; }
+  @keyframes tile-green{ to{ background-color:#71B143; } }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -432,6 +468,14 @@
 (function(){
   "use strict";
 
+
+  // Trials (see wins.html): ?win= picks a solved look, ?water=blue tries
+  // light-blue water, ?demo=1 solves each board by itself so the solved
+  // moment can be watched on a loop.
+  var params = new URLSearchParams(location.search);
+  var WIN = params.get('win'), DEMO = params.get('demo') === '1';
+  if (WIN) document.documentElement.setAttribute('data-win', WIN);
+  if (params.get('water') === 'blue') document.documentElement.setAttribute('data-water', 'blue');
 
   // iOS Safari only applies :active styles on tap if some element on the
   // page has a touch listener -- this is that listener (a no-op is enough).
@@ -812,6 +856,8 @@
     els.boardWrap.setAttribute('data-n', level.n);
     els.boardWrap.style.setProperty('--start-row', level.startRow);
     els.boardWrap.style.setProperty('--end-row', level.endRow);
+    els.startStub.style.setProperty('--wave-delay', level.startRow * 70 + 'ms');
+    els.endStub.style.setProperty('--wave-delay', (level.endRow + level.n - 1) * 70 + 'ms');
     [els.startStub, els.endStub].forEach(function(stub){
       stub.classList.remove('wet', 'glow');
       stub.style.removeProperty('--flow-delay');
@@ -820,6 +866,7 @@
     // A new board is built once here; taps only change a piece's transform
     // and classes after this, never its contents (rebuilt contents can swallow
     // a tap that's still in progress).
+    els.boardWrap.classList.remove('won');
     els.lot.innerHTML = '';
     requestAnimationFrame(snapBoard); // --n may have changed the board's size
     for (var i = 0; i < level.n * level.n; i++) {
@@ -828,6 +875,7 @@
       s.className = 'spot';
       s.style.left = 'calc(var(--cell) * ' + (i % level.n) + ')';
       s.style.top = 'calc(var(--cell) * ' + Math.floor(i / level.n) + ')';
+      s.style.setProperty('--wave-delay', (Math.floor(i / level.n) + i % level.n) * 70 + 'ms');
       if (PIPE_PATHS[type]) {
         s.className = 'spot piece';
         s.setAttribute('data-cell', i);
@@ -841,6 +889,61 @@
       els.lot.appendChild(s);
     }
     paintWater(false);
+    if (DEMO) winTimer = setTimeout(demoSolve, 900);
+  }
+
+  // ---------- demo (wins.html) ----------
+  // A route from the start to the end: each square on it turned to take the
+  // water in from where it arrives and pass it on.
+  function solveTurns(level){
+    var n = level.n, turns = level.turns.slice(), used = {}, path = [];
+    var end = level.endRow * n + n - 1;
+    function go(cell, enterSide){
+      var type = level.types.charAt(cell);
+      if (used[cell] || !SHAPES[type]) return false;
+      used[cell] = true;
+      path.push(cell);
+      for (var t = 0; t < 4; t++) {
+        var m = openings(type, t);
+        if (!(m & enterSide)) continue;
+        turns[cell] = t;
+        if (cell === end && (m & RIGHT)) return true;
+        var r = Math.floor(cell / n), c = cell % n;
+        for (var s = 0; s < 4; s++) {
+          if (SIDES[s] === enterSide || !(m & SIDES[s])) continue;
+          var nr = r + ROW_STEP[s], nc = c + COL_STEP[s];
+          if (nr < 0 || nc < 0 || nr >= n || nc >= n) continue;
+          if (go(nr * n + nc, facing(SIDES[s]))) return true;
+        }
+      }
+      used[cell] = false;
+      path.pop();
+      return false;
+    }
+    return go(level.startRow * n, LEFT) ? { turns: turns, path: path } : null;
+  }
+  // Turn the route into place, then tap its last wrong square so the normal
+  // solved moment plays.
+  function demoSolve(){
+    var sol = solveTurns(state.level);
+    if (!sol) return;
+    var wrong = sol.path.filter(function(i){ return state.turns[i] !== sol.turns[i]; });
+    if (!wrong.length) return;
+    var last = wrong.pop();
+    wrong.forEach(function(i){
+      state.spins[i] += (sol.turns[i] - state.turns[i] + 4) % 4;
+      state.turns[i] = sol.turns[i];
+      state.pieces[i].firstChild.style.transform = spinTransform(state.spins[i]);
+    });
+    var lastBefore = (sol.turns[last] + 3) % 4;
+    state.spins[last] += (lastBefore - state.turns[last] + 4) % 4;
+    state.turns[last] = lastBefore;
+    state.pieces[last].firstChild.style.transform = spinTransform(state.spins[last]);
+    paintWater(true);
+    winTimer = setTimeout(function(){
+      if (flow(state.level, state.turns).solved) onSolved();
+      else state.pieces[last].click();
+    }, 700);
   }
 
   // Colour every piece the water reaches. animate: newly reached pieces fill
@@ -896,6 +999,9 @@
   // were), so this is the tap's only sound -- the click, or the happy sound
   // instead on the tap that brings the water through. Taps while the water
   // runs out are ignored, sound and all.
+  els.lot.addEventListener('animationend', function(e){
+    if (e.animationName === 'tile-tap') e.target.classList.remove('tap');
+  });
   els.lot.addEventListener('click', function(e){
     var el = e.target.closest && e.target.closest('.piece');
     if (!el || state.busy) return;
@@ -903,6 +1009,9 @@
     state.turns[i] = (state.turns[i] + 1) % 4;
     state.spins[i] += 1;
     el.firstChild.style.transform = spinTransform(state.spins[i]);
+    el.classList.remove('tap');
+    void el.offsetWidth; // restart the darken on quick repeat taps
+    el.classList.add('tap');
     if (flow(state.level, state.turns).solved) {
       onSolved();
     } else {
@@ -928,6 +1037,7 @@
     dist.forEach(function(d){ if (d > far) far = d; });
     var step = Math.min(FLOW_STEP_MS, 700 / (far + 2));
     winTimer = setTimeout(function(){
+      els.boardWrap.classList.add('won');
       els.startStub.style.setProperty('--glow-delay', '0ms');
       els.startStub.classList.add('glow');
       state.pieces.forEach(function(el, i){
@@ -945,7 +1055,7 @@
         } else {
           buildLevel();
         }
-      }, (far + 2) * step + 420 + 250);
+      }, (far + 2) * step + 420 + 250 + (WIN ? 700 : 0)); // the trial looks hold a little longer
     }, outAt + 150);
   }
 
