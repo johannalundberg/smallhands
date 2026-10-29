@@ -38,7 +38,6 @@
     --bg:#8E4424;
     --tile:#573114;
     --tile-hover:#4B2A11; /* hover/press: a step darker than --tile */
-    --tile-hint:#3F220D; /* the first-visit blink: between the hover brown and #331A08 (too dark) */
     --line:#DC51D8;
     --pipe:#8E4424;
     --water:#DC51D8;
@@ -221,13 +220,8 @@
   .piece.tap{ animation: tile-tap 320ms ease-out; }
   @keyframes tile-tap{ from{ background-color:var(--tile-hover); } }
   /* First visit only (showFirstHint): the tiles the water can go into next
-     blink darker twice, to show they're the ones to turn. */
-  .piece.hint{ animation: tile-hint 1600ms ease-in-out; }
-  @keyframes tile-hint{
-    0%, 40%, 100%{ background-color:var(--tile); }
-    20%, 60%{ background-color:var(--tile-hint); }
-    80%{ background-color:var(--tile); }
-  }
+     sit in the darker brown, no blinking, until the first tap. */
+  .piece.hint{ background:var(--tile-hover); }
   @media (hover:hover) and (pointer:fine){
     .piece:hover{ background:var(--tile-hover); }
   }
@@ -937,7 +931,6 @@
   // runs out are ignored, sound and all.
   els.lot.addEventListener('animationend', function(e){
     if (e.animationName === 'tile-tap') e.target.classList.remove('tap');
-    if (e.animationName === 'tile-hint') e.target.classList.remove('hint');
   });
   els.lot.addEventListener('click', function(e){
     var el = e.target.closest && e.target.closest('.piece');
@@ -1114,8 +1107,9 @@
   // Otherwise (or if the save is unusable) start a fresh easy round.
   // First visit only: once the first board is up, the tiles the water can
   // flow into next -- the one beside the start pipe, or the next ones on
-  // if that's already connected -- blink darker twice, as a wordless "turn
-  // these". Remembered per device, so it never plays again.
+  // if that's already connected -- turn the darker brown and stay so until
+  // the first tap, as a wordless "turn these". Remembered per device, so it
+  // never shows again.
   var HINT_KEY = 'pipes.firstHintShown';
   function showFirstHint(){
     try { if (localStorage.getItem(HINT_KEY)) return; } catch (e) { return; }
