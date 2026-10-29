@@ -159,29 +159,33 @@
   .progress-dots .dot.done{ background: var(--bright); }
 
   /* ---------- the board ---------- */
-  /* 4x4 squares in four 2x2 boxes, outlined like Othello's board: square
-     corners, and the black board shows through as 2px lines between the
-     squares (--gap) and a thicker 4px cross between the boxes (--box-gap),
-     plus a 2px outline. --cell is one square. */
+  /* 4x4 squares in four 2x2 boxes (easy, medium) or 6x6 in six 2x3 boxes
+     (hard), outlined like Othello's board: square corners, and the black
+     board shows through as 2px lines between the squares (--gap) and thicker
+     4px ones between the boxes (--box-gap), plus a 2px outline. --cell is one
+     square. buildCells sets --n (squares per side) and how many small and
+     box gaps run across (--col-*) and down (--row-*); the squares are sized
+     to fit down, which has as many or more box gaps. */
   .board-wrap{
     position:relative;
-    width:var(--board-size);
-    height:var(--board-size);
+    --n: 4;
+    --col-gaps: 2; --col-box-gaps: 1;
+    --row-gaps: 2; --row-box-gaps: 1;
     --gap: 2px;
     --box-gap: 4px;
-    --cell: calc((var(--board-size) - 2 * var(--gap) - var(--box-gap)) / 4);
+    --cell: calc((var(--board-size) - var(--row-gaps) * var(--gap) - var(--row-box-gaps) * var(--box-gap)) / var(--n));
+    width: calc(var(--cell) * var(--n) + var(--col-gaps) * var(--gap) + var(--col-box-gaps) * var(--box-gap));
+    height: calc(var(--cell) * var(--n) + var(--row-gaps) * var(--gap) + var(--row-box-gaps) * var(--box-gap));
     background:#000;
     box-shadow:0 0 0 2px #000;
     touch-action:manipulation;
   }
   /* Whole-pixel squares: with fractional ones, Safari rounds each square's
      edges on its own, so the 2px lines came out thinner and uneven. The
-     board shrinks by under 4px to fit four whole squares plus the lines. */
+     board shrinks by a few px to fit whole squares plus the lines. */
   @supports (width: round(down, 10.5px, 1px)){
     .board-wrap{
-      --cell: round(down, calc((var(--board-size) - 2 * var(--gap) - var(--box-gap)) / 4), 1px);
-      width: calc(var(--cell) * 4 + var(--gap) * 2 + var(--box-gap));
-      height: calc(var(--cell) * 4 + var(--gap) * 2 + var(--box-gap));
+      --cell: round(down, calc((var(--board-size) - var(--row-gaps) * var(--gap) - var(--row-box-gaps) * var(--box-gap)) / var(--n)), 1px);
     }
   }
   .cell{
@@ -220,12 +224,14 @@
   .cell[data-shape="0"] .s0,
   .cell[data-shape="1"] .s1,
   .cell[data-shape="2"] .s2,
-  .cell[data-shape="3"] .s3{ display:inline; }
+  .cell[data-shape="3"] .s3,
+  .cell[data-shape="4"] .s4,
+  .cell[data-shape="5"] .s5{ display:inline; }
   .s0{ fill:var(--shape-0); }
   .s1{ fill:var(--shape-1); }
   .s2{ fill:var(--shape-2); }
   .s3{ fill:var(--shape-3); }
-  /* Digits 1-4 in black, set like Math's numbers. */
+  /* Digits 1-4 (1-6 on hard) in black, set like Math's numbers. */
   .shape .digit{
     fill:#000;
     font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
@@ -235,8 +241,8 @@
     text-anchor:middle;
     dominant-baseline:central;
   }
-  /* Trial, ?style=circles (see compare.html): each number sits on its own
-     disc, like the reference -- orange discs (Figma's circle colour) for
+  /* html.style-circles, the default look (?style=plain turns it off, see
+     compare.html): each number sits on its own disc, like the reference -- orange discs (Figma's circle colour) for
      the given numbers, light discs for the player's; black numbers on both,
      since a light number on orange is hard to read. */
   .disc{ display:none; }
@@ -247,14 +253,14 @@
      so it's clear where to tap. */
   .empty-ring{ display:none; fill:var(--ink-muted); }
   html.style-circles .cell:not([data-shape]) .empty-ring{ display:inline; }
-  /* ...with no square colours, and only a 2px cross between the four boxes
-     drawn: no outline and no lines between the squares inside a box. Each
-     disc leaves 4% of its square free on every side, so neighbours are 8%
-     apart; --pad adds another 4% each side of the cross, so a disc is 8%
-     from the cross too. */
+  /* ...with no square colours, and only 2px lines between the boxes drawn
+     (.box-line, built in buildCells): no outline and no lines between the
+     squares inside a box. Each disc leaves 4% of its square free on every
+     side, so neighbours are 8% apart; --pad adds another 4% each side of a
+     box line, so a disc is 8% from the line too. */
   html.style-circles .board-wrap{
     --gap:0px;
-    --cell: calc((var(--board-size) - 2px) / 4.08);
+    --cell: calc((var(--board-size) - var(--row-box-gaps) * 2px) / (var(--n) + var(--row-box-gaps) * 0.08));
     --pad: calc(var(--cell) * 0.04);
     --box-gap: calc(var(--pad) * 2 + 2px);
     box-shadow:none;
@@ -262,20 +268,13 @@
   }
   @supports (width: round(down, 10.5px, 1px)){
     html.style-circles .board-wrap{
-      --cell: round(down, calc((var(--board-size) - 2px) / 4.08), 1px);
+      --cell: round(down, calc((var(--board-size) - var(--row-box-gaps) * 2px) / (var(--n) + var(--row-box-gaps) * 0.08)), 1px);
       --pad: round(calc(var(--cell) * 0.04), 1px);
     }
   }
   html.style-circles .cell, html.style-circles .cell.given{ background:none; }
-  html.style-circles .board-wrap::before,
-  html.style-circles .board-wrap::after{
-    content:'';
-    position:absolute;
-    background:#000;
-    pointer-events:none;
-  }
-  html.style-circles .board-wrap::before{ left:calc(var(--cell) * 2 + var(--pad)); top:0; bottom:0; width:2px; }
-  html.style-circles .board-wrap::after{ top:calc(var(--cell) * 2 + var(--pad)); left:0; right:0; height:2px; }
+  .box-line{ display:none; position:absolute; background:#000; pointer-events:none; }
+  html.style-circles .box-line{ display:block; }
 
   /* A new shape pops into its square. */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -432,11 +431,12 @@
 (function(){
   "use strict";
 
-  // Trial options (see compare.html): ?style=circles puts each number on a
-  // disc; ?seed=N makes the random picks repeat, so pages opened with the
+  // Each number sits on its own disc (html.style-circles). Trial options
+  // (see compare.html): ?style=plain shows bare numbers on coloured squares
+  // instead; ?seed=N makes the random picks repeat, so pages opened with the
   // same seed show the same boards.
   var params = new URLSearchParams(location.search);
-  if (params.get('style') === 'circles') document.documentElement.classList.add('style-circles');
+  if (params.get('style') !== 'plain') document.documentElement.classList.add('style-circles');
   var SEED = parseInt(params.get('seed'), 10);
   if (!isNaN(SEED)) {
     Math.random = function(){ // mulberry32
@@ -451,13 +451,14 @@
   // page has a touch listener -- this is that listener (a no-op is enough).
   document.addEventListener('touchstart', function(){}, { passive: true });
 
-  // Each level is a 4x4 board read row by row: '.' is an empty square, a
-  // digit 0-3 is a shape the puzzle gives (which shape is shuffled per board,
-  // see buildLevel). Made offline: every board has exactly one solution
+  // Each level is a board read row by row: '.' is an empty square, a digit
+  // is a number the puzzle gives (which number is shuffled per board, see
+  // buildLevel). Easy and medium are 4x4 (digits 0-3), hard is 6x6 with 2x3
+  // boxes (digits 0-5). Made offline: every board has exactly one solution
   // (checked by a second, separate solver) and can be finished one forced
-  // square at a time, no guessing. Listed easiest first: most given shapes
-  // first, then fewest steps. Easy gives 11 or 10 shapes, medium 8 or 7,
-  // hard 6 or 5.
+  // square at a time, no guessing. Listed easiest first: most given numbers
+  // first, then fewest steps. Easy gives 11 or 10, medium 8 down to 5 (half
+  // 8-7, half 6-5), hard 18 down to 15 of its 36.
   var LEVELS = {
     easy: [
       '103232...321..03', '.0311320.2.33.0.', '01.3..0123.010.2', '.31212..2.313.20', '.1.20213.03.13.0',
@@ -468,54 +469,72 @@
       '1.3.301.032...03', '12.03.21.31.2..3', '0.1..120103..30.', '01.32.103.0.10..', '.231..20201..10.'
     ],
     medium: [
-      '1.3.320...10.1..', '...010....212.03', '103.32.....32..1', '32..10..23.0...2', '3..110.20...23..',
-      '....012.1.3.32.1', '..32.....123.301', '0.3.2...1203...1', '..3..3121....201', '....031.12.0.02.',
-      '...3.312.2..302.', '120...2..3100...', '..3223.1.....023', '.32002.3...2...1', '0...3...132..031',
-      '..0..3.2..2..130', '3..1.103...21...', '.2.11...0..22.3.', '..30...13.0.2.1.', '.03..2..231...2.',
-      '...1.32.3.020...', '0..13..21..0..1.', '0..1..0321....1.', '..2..01..3...231', '1.232..1....0..2',
-      '.3.....3.132..10', '2031.32....3....', '.3010.3.3....0..', '10.23....32....3', '....203..2.3.32.'
+      '1.3.320...10.1..', '103.32.....32..1', '3..110.20...23..', '..32.....123.301', '..3..3121....201',
+      '...3.312.2..302.', '..3223.1.....023', '0...3...132..031', '3..1.103...21...', '..30...13.0.2.1.',
+      '...1.32.3.020...', '0..1..0321....1.', '1.232..1....0..2', '2031.32....3....', '10.23....32....3',
+      '103........3.21.', '..1....23..110..', '..20.013.3......', '...1120..0..2...', '....3.0.103...1.',
+      '.0..3.0.....012.', '...3.1.21.2.2...', '..2.0....3.2...1', '.02..1....1....3', '..3....10.1..2..',
+      '.1......2..3..02', '......31....32.0', '.30.2.1.0.......', '.......032..1..2', '.....02....2..13'
     ],
     hard: [
-      '3..1...21..0.0..', '103........3.21.', '0..11.2..0.3....', '..1....23..110..', '...1123.2....3..',
-      '..20.013.3......', '.0.1..2.3..2.2..', '...1120..0..2...', '2..1...0.102....', '....3.0.103...1.',
-      '1.02.2...01.....', '.0..3.0.....012.', '0......23.20..3.', '...3.1.21.2.2...', '1.0...12....0..1',
-      '..2.0....3.2...1', '1.3..0....1.2...', '.02..1....1....3', '.....10.1..32...', '..3....10.1..2..',
-      '..3.2.0.0....2..', '.1......2..3..02', '...0..2.....2.31', '......31....32.0', '.13...2..0..1...',
-      '.30.2.1.0.......', '3..1...31......0', '.......032..1..2', '.2.....2..3.0..1', '.....02....2..13'
+      '31.50..05.2.1..0...54...24.3.0.3.41.', '....2..124.3.3.5.4451.02...0455....1', '.2.31.51....35.1....2.5.241.3.0.524.',
+      '.21.3545...213.5..5.4123....5....2.0', '..1532.2..........5.021..1340.05412.', '.2.3.0350.2..45..32..54.51.0..0....5',
+      '51420.20..5..4.5.0..512....3.2.2..4.', '104.3...50..0.34..41..0..3...4.4..50', '...53.435.1...10.3..0.4..5.402....51',
+      '4.2..1.....0243.0..1.2343.4....20.4.', '...532.53.1...5....0.1.4.2..41134.2.', '.3....4.1.35.1.5233...01.5.01.14....',
+      '4..10.5.0......24.1.40.32..4.00..51.', '3.2.505....221..4.4.5.0.0.45..1..0..', '3...4.2....5453..2...354..45..52..03',
+      '...5..1...402.5.1.3.4..25.310.0.1...', '..32..2..3.0.2...1104..24.0....12.0.', '.5..0.....41.31024.2..352.5....13...',
+      '2104..4.5...04.5..3..01....3...031..', '..1..33.0.42.04...2.5...5.3.210..3..', '2.1..53....4...401......0..543.3.120',
+      '3....5...12...3....0.532..2340...251', '.....0....230..34.2.45014..23.3..0..', '..23.153.2......3.3.01.2..35..2....3',
+      '.1.23..0..14.51.4.........340.04.3..', '...3..0....415.043403.1.5....2....0.', '....43.2350........0543..3.....14.50',
+      '.3.51..05.2...42.5..0..4.5.0..0...5.', '.53........1....5...04.2321..5.051.3', '35....1.....0.53414....25...1..0.45.'
     ]
   };
 
   var TIERS = ['easy', 'medium', 'hard'];
   var ROUND_SIZE = 5;
   var EMPTY = -1;
-  var SHAPE_COUNT = 4; // the digits 1-4 (stored as 0-3)
+  // Squares per side for each tier. On a board of side N the numbers are
+  // 1-N (stored as 0 to N-1), and boxes are 2 rows by N/2 columns.
+  var SIZE = { easy: 4, medium: 4, hard: 6 };
+  var N = 4;
 
   // The solved board's green flash, after which the next board appears --
   // the same 0.7s as a right answer in Math.
   var NEXT_LEVEL_MS = 700;
 
-  // The 12 lines a shape may appear in only once: 4 rows, 4 columns, 4 boxes.
-  var UNITS = [];
-  (function(){
-    var r, c;
-    for (r = 0; r < 4; r++) UNITS.push([r * 4, r * 4 + 1, r * 4 + 2, r * 4 + 3]);
-    for (c = 0; c < 4; c++) UNITS.push([c, 4 + c, 8 + c, 12 + c]);
-    [0, 2, 8, 10].forEach(function(t){ UNITS.push([t, t + 1, t + 4, t + 5]); });
-  })();
-  // Every square that shares a row, column or box with square i.
-  var PEERS = [];
-  (function(){
-    for (var i = 0; i < 16; i++) {
+  // UNITS: the lines a number may appear in only once (every row, column
+  // and box). PEERS[i]: every square sharing a row, column or box with i.
+  // Both are rebuilt for the board's size by setBoardSize.
+  var UNITS = [], PEERS = [];
+  var BOX_ROWS = 2, BOX_COLS = 2;
+  function setBoardSize(n){
+    N = n;
+    BOX_ROWS = 2;
+    BOX_COLS = n / 2;
+    UNITS = [];
+    var r, c, br, bc, u;
+    for (r = 0; r < n; r++) { u = []; for (c = 0; c < n; c++) u.push(r * n + c); UNITS.push(u); }
+    for (c = 0; c < n; c++) { u = []; for (r = 0; r < n; r++) u.push(r * n + c); UNITS.push(u); }
+    for (br = 0; br < n; br += BOX_ROWS) {
+      for (bc = 0; bc < n; bc += BOX_COLS) {
+        u = [];
+        for (r = 0; r < BOX_ROWS; r++) for (c = 0; c < BOX_COLS; c++) u.push((br + r) * n + bc + c);
+        UNITS.push(u);
+      }
+    }
+    PEERS = [];
+    for (var i = 0; i < n * n; i++) {
       var seen = {}, list = [];
-      UNITS.forEach(function(u){
-        if (u.indexOf(i) === -1) return;
-        u.forEach(function(j){
+      UNITS.forEach(function(unit){
+        if (unit.indexOf(i) === -1) return;
+        unit.forEach(function(j){
           if (j !== i && !seen[j]) { seen[j] = true; list.push(j); }
         });
       });
       PEERS.push(list);
     }
-  })();
+  }
+  setBoardSize(4);
 
   var state = {
     difficulty: 'easy',
@@ -523,7 +542,7 @@
     progress: 0,    // levels solved this round
     perm: [],       // puzzle digit -> shape shown, shuffled per board
     given: [],      // true for the squares the puzzle fills in
-    cells: [],      // shape on each of the 16 squares, EMPTY if none
+    cells: [],      // number on each square (0 to N-1), EMPTY if none
     busy: false,
     flashing: false // the full-but-wrong red flash is showing
   };
@@ -637,11 +656,11 @@
     return typeof v === 'number' && Math.floor(v) === v && v >= min && v <= max;
   }
 
-  function isShapeOrder(perm){
-    if (!Array.isArray(perm) || perm.length !== SHAPE_COUNT) return false;
+  function isShapeOrder(perm, n){
+    if (!Array.isArray(perm) || perm.length !== n) return false;
     var seen = {};
     for (var i = 0; i < perm.length; i++) {
-      if (!isWholeNumber(perm[i], 0, SHAPE_COUNT - 1) || seen[perm[i]]) return false;
+      if (!isWholeNumber(perm[i], 0, n - 1) || seen[perm[i]]) return false;
       seen[perm[i]] = true;
     }
     return true;
@@ -659,12 +678,14 @@
     }
     if (!isWholeNumber(data.progress, 0, ROUND_SIZE - 1)) return false;
     var preset = null;
+    var n = SIZE[data.difficulty];
     if (data.cells != null) {
-      if (!isShapeOrder(data.perm)) return false;
-      if (!Array.isArray(data.cells) || data.cells.length !== 16) return false;
+      if (!isShapeOrder(data.perm, n)) return false;
+      if (!Array.isArray(data.cells) || data.cells.length !== n * n) return false;
       var puzzle = pool[data.round[data.progress]];
-      for (var s = 0; s < 16; s++) {
-        if (!isWholeNumber(data.cells[s], EMPTY, SHAPE_COUNT - 1)) return false;
+      setBoardSize(n); // rules only; buildLevel rebuilds the squares to match
+      for (var s = 0; s < n * n; s++) {
+        if (!isWholeNumber(data.cells[s], EMPTY, n - 1)) return false;
         // The puzzle's own squares must still hold its shapes.
         var ch = puzzle.charAt(s);
         if (ch !== '.' && data.cells[s] !== data.perm[Number(ch)]) return false;
@@ -697,7 +718,7 @@
   // Full and no shape twice in any row, column or box. Every puzzle here has
   // exactly one solution, so this is the same as matching it.
   function isSolved(cells){
-    for (var i = 0; i < 16; i++) {
+    for (var i = 0; i < cells.length; i++) {
       if (cells[i] === EMPTY || clashesWith(cells, i).length) return false;
     }
     return true;
@@ -721,36 +742,63 @@
   }
 
   // ---------- drawing ----------
-  // Where square k (0-3) of a row or column starts: k squares, plus a small
-  // gap between squares in the same box and a wide one between boxes.
-  function offset(k){
-    var boxes = k >= 2 ? 1 : 0;
+  // Where square k of a row or column starts: k squares, plus a small gap
+  // between squares in the same box and a wide one between boxes. boxSize is
+  // how many squares a box spans that way.
+  function offset(k, boxSize){
+    var boxes = Math.floor(k / boxSize);
     return 'calc(var(--cell) * ' + k + ' + var(--gap) * ' + (k - boxes) + ' + var(--box-gap) * ' + boxes + ')';
   }
 
-  // The digits 1-4, drawn once into every square (see .shape in the CSS),
-  // in Math's typeface. Earlier versions used shapes (circle, egg, oval,
-  // squircle; before that circle, square, triangle, diamond) -- see git.
+  // The digits 1-6, drawn once into every square (see .shape in the CSS;
+  // a 4x4 board only ever shows 1-4), in Math's typeface. Earlier versions
+  // used shapes (circle, egg, oval, squircle; before that circle, square,
+  // triangle, diamond) -- see git.
   var SHAPES_SVG = '<svg class="shape" viewBox="0 0 100 100" aria-hidden="true">' +
-    [1, 2, 3, 4].map(function(n, k){
+    [1, 2, 3, 4, 5, 6].map(function(n, k){
       return '<g class="s' + k + '"><circle class="disc" cx="50" cy="50" r="46"/>' +
         '<text class="digit" x="50" y="52">' + n + '</text></g>';
     }).join('') +
     '<circle class="empty-ring" cx="50" cy="50" r="46"/>' +
     '</svg>';
 
-  // The 16 squares are built once and kept: a tap only changes their
-  // attributes, so a square is never replaced under a finger.
-  function buildCells(){
-    for (var i = 0; i < 16; i++) {
+  // The squares are built once per board size and kept: a tap only changes
+  // their attributes, so a square is never replaced under a finger. Also
+  // builds the lines between boxes that the disc look draws (.box-line).
+  function buildCells(n){
+    setBoardSize(n);
+    cellEls.forEach(function(el){ el.remove(); });
+    cellEls = [];
+    els.boardWrap.querySelectorAll('.box-line').forEach(function(el){ el.remove(); });
+    var colBoxGaps = n / BOX_COLS - 1, rowBoxGaps = n / BOX_ROWS - 1;
+    var wrap = els.boardWrap.style;
+    wrap.setProperty('--n', n);
+    wrap.setProperty('--col-box-gaps', colBoxGaps);
+    wrap.setProperty('--col-gaps', n - 1 - colBoxGaps);
+    wrap.setProperty('--row-box-gaps', rowBoxGaps);
+    wrap.setProperty('--row-gaps', n - 1 - rowBoxGaps);
+    var k, line;
+    for (k = BOX_COLS; k < n; k += BOX_COLS) {
+      line = document.createElement('div');
+      line.className = 'box-line';
+      line.style.cssText = 'left:calc(' + offset(k, BOX_COLS) + ' - var(--box-gap) + var(--pad));top:0;bottom:0;width:2px';
+      els.boardWrap.appendChild(line);
+    }
+    for (k = BOX_ROWS; k < n; k += BOX_ROWS) {
+      line = document.createElement('div');
+      line.className = 'box-line';
+      line.style.cssText = 'top:calc(' + offset(k, BOX_ROWS) + ' - var(--box-gap) + var(--pad));left:0;right:0;height:2px';
+      els.boardWrap.appendChild(line);
+    }
+    for (var i = 0; i < n * n; i++) {
       var el = document.createElement('button');
       el.className = 'cell';
       // sound.js would click on any button tap; this page picks the one
       // sound per tap itself (click, or positive on the solving tap).
       el.setAttribute('data-own-sound', '');
       el.dataset.i = i;
-      el.style.left = offset(i % 4);
-      el.style.top = offset(Math.floor(i / 4));
+      el.style.left = offset(i % n, BOX_COLS);
+      el.style.top = offset(Math.floor(i / n), BOX_ROWS);
       el.innerHTML = '<span class="hop">' + SHAPES_SVG + '</span>';
       cellEls.push(el);
       els.boardWrap.appendChild(el);
@@ -782,13 +830,18 @@
   function buildLevel(preset){
     clearTimeout(winTimer);
     endFlash();
+    var n = SIZE[state.difficulty];
+    if (cellEls.length !== n * n) buildCells(n);
+    else setBoardSize(n);
     var puzzle = LEVELS[state.difficulty][state.round[state.progress]];
-    // Shuffling which shape stands for which digit makes each board look new
-    // even when a puzzle comes round again.
-    state.perm = preset ? preset.perm.slice() : shuffle([0, 1, 2, 3]);
+    // Shuffling which number stands for which digit makes each board look
+    // new even when a puzzle comes round again.
+    var order = [];
+    for (var d = 0; d < n; d++) order.push(d);
+    state.perm = preset ? preset.perm.slice() : shuffle(order);
     state.given = [];
     state.cells = [];
-    for (var i = 0; i < 16; i++) {
+    for (var i = 0; i < n * n; i++) {
       var ch = puzzle.charAt(i);
       var given = ch !== '.';
       state.given.push(given);
@@ -833,9 +886,9 @@
     var i = Number(el.dataset.i);
     if (state.given[i]) return; // given squares are static: no sound, no movement
     clearTimeout(flashTimer); // a new tap restarts the full-board check
-    // empty -> 1 -> 2 -> 3 -> 4 -> 1: once a
-    // square has a number it never goes back to empty.
-    var v = (state.cells[i] + 1) % SHAPE_COUNT;
+    // empty -> 1 -> 2 -> ... -> N -> 1: once a square has a number it never
+    // goes back to empty.
+    var v = (state.cells[i] + 1) % N;
     state.cells[i] = v;
     paintCell(i);
     replay(el, 'pop');
@@ -861,19 +914,19 @@
     state.flashing = true;
     clearTimeout(flashTimer);
     var answer = solution();
-    for (var i = 0; i < 16; i++) {
+    for (var i = 0; i < state.cells.length; i++) {
       if (!state.given[i] && state.cells[i] !== answer[i]) replay(cellEls[i], 'wrong');
     }
     flashTimer = setTimeout(endFlash, FLASH_MS);
   }
   // The board's one solution, worked out from the given squares (every
-  // puzzle here has exactly one; a 4x4 board solves instantly).
+  // puzzle here has exactly one; even a 6x6 board solves instantly).
   function solution(){
     var b = state.cells.map(function(v, i){ return state.given[i] ? v : EMPTY; });
     (function fill(){
       var i = b.indexOf(EMPTY);
       if (i === -1) return true;
-      for (var v = 0; v < SHAPE_COUNT; v++) {
+      for (var v = 0; v < N; v++) {
         b[i] = v;
         if (!clashesWith(b, i).length && fill()) return true;
       }
@@ -923,7 +976,7 @@
   function showCelebration(){
     endFlash(); // the last board's green flash ends here
     updateAppHeight();
-    els.celebration.innerHTML = celebrationFace('var(--shape-' + Math.floor(Math.random() * SHAPE_COUNT) + ')');
+    els.celebration.innerHTML = celebrationFace('var(--shape-' + Math.floor(Math.random() * 4) + ')');
     PLSound.play('complete');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
@@ -980,7 +1033,6 @@
   }
   introduceTraySlider();
 
-  buildCells();
   // Coming back from the rotate-block reload: continue the saved game.
   // Otherwise (or if the save is unusable) start a fresh easy round.
   var resumed = takeResume();
