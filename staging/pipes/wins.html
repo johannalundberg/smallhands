@@ -7,7 +7,8 @@
 <title>Pipes — solved looks</title>
 <style>
   /* Trial page: each version solves its own boards on a loop so the solved
-     moment can be compared. The switch sets the water colour for all. */
+     moment can be compared. The switch sets the solved colour for all;
+     the water stays pink. */
   html, body{ margin:0; background:#202020; color:#E4E4E4; font-family:-apple-system, system-ui, sans-serif; }
   .bar{ display:flex; gap:8px; align-items:center; padding:16px 16px 0; font-size:14px; }
   .bar button{ appearance:none; border:0; border-radius:999px; padding:8px 14px; font:inherit; cursor:pointer; background:#3a3a3a; color:#E4E4E4; }
@@ -23,25 +24,25 @@
 </style>
 </head>
 <body>
-<div class="bar">Water:
-  <button type="button" data-water="" class="on">Pink</button>
-  <button type="button" data-water="blue">Light blue</button>
+<div class="bar">Flash:
+  <button type="button" data-flash="" class="on">Green</button>
+  <button type="button" data-flash="blue">Light blue</button>
 </div>
 <div class="grid" id="grid"></div>
 <script>
 (function(){
   "use strict";
   var SETS = [
-    ['', 'Now', 'a light shine runs along the water'],
-    ['green', '1. Green route', 'the water turns green from start to goal'],
+    ['', 'Now', 'a light pink shine runs along the water'],
+    ['green', '1. Route', 'the water turns the flash colour, start to goal'],
     ['fade', '2. Fade', 'everything but the water fades away'],
-    ['tiles', '3. Tiles light up', 'the route’s tiles brighten one by one'],
-    ['both', '4. Fade + green', 'options 1 and 2 together'],
-    ['wave', '5. Green wave', 'the whole board turns green, like Sudoku']
+    ['tiles', '3. Tiles light up', 'the route\u2019s tiles turn the flash colour'],
+    ['both', '4. Fade + route', 'options 1 and 2 together'],
+    ['wave', '5. Wave', 'every tile turns the flash colour, like Sudoku; the water stays pink']
   ];
   var grid = document.getElementById('grid');
-  var water = '';
-  function url(win){ return './?demo=1' + (win ? '&win=' + win : '') + (water ? '&water=' + water : ''); }
+  var flash = '';
+  function url(win){ return './?demo=1' + (win ? '&win=' + win : '') + (flash ? '&flash=' + flash : ''); }
   SETS.forEach(function(set){
     var fig = document.createElement('figure');
     fig.innerHTML = '<div class="frame"><iframe title="' + set[1] + '"></iframe></div>' +
@@ -54,7 +55,7 @@
   }
   document.querySelectorAll('.bar button').forEach(function(b){
     b.addEventListener('click', function(){
-      water = b.dataset.water;
+      flash = b.dataset.flash;
       document.querySelectorAll('.bar button').forEach(function(x){ x.classList.toggle('on', x === b); });
       load();
     });

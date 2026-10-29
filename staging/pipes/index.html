@@ -281,17 +281,19 @@
   }
 
   /* Trial solved looks, picked with ?win= (wins.html shows them all side
-     by side); without it the shine above plays. ?water=blue tries light-blue
-     water. won: set on the board once the water is through. */
-  html[data-water="blue"]{ --water:#8ED1F2; --water-glow:#DDF4FF; }
+     by side); without it the shine above plays. --flash is the solved
+     colour, Sudoku's green or ?flash=blue for light blue; the water itself
+     stays pink. won: set on the board once the water is through. */
+  :root{ --flash:#71B143; }
+  html[data-flash="blue"]{ --flash:#8ED1F2; }
   html[data-win] .piece.glow .pipe path, html[data-win] .stub.glow{ animation:none; }
   /* green: the water turns green, square by square from the start. */
   html[data-win="green"] .piece.glow .pipe path,
   html[data-win="both"] .piece.glow .pipe path{ animation: pipe-green 260ms ease var(--glow-delay, 0ms) both; }
   html[data-win="green"] .stub.glow,
   html[data-win="both"] .stub.glow{ animation: stub-green 260ms ease var(--glow-delay, 0ms) both; }
-  @keyframes pipe-green{ to{ stroke:#71B143; } }
-  @keyframes stub-green{ to{ background:#71B143; } }
+  @keyframes pipe-green{ to{ stroke:var(--flash); } }
+  @keyframes stub-green{ to{ background:var(--flash); } }
   /* fade: everything but the water fades away. */
   html[data-win="fade"] .board-wrap, html[data-win="both"] .board-wrap{ transition: border-color 400ms ease; }
   html[data-win="fade"] .board-wrap.won, html[data-win="both"] .board-wrap.won{ border-color:transparent; }
@@ -303,14 +305,12 @@
   html[data-win="both"] .board-wrap.won .piece:not(.wet) .pipe{ opacity:0; transition: opacity 400ms ease; }
   /* tiles: the squares the water runs through light up, one after another. */
   html[data-win="tiles"] .piece.glow{ animation: tile-lit 260ms ease var(--glow-delay, 0ms) both; }
-  @keyframes tile-lit{ to{ background-color:#A08C63; } }
-  /* wave: like Sudoku's solved board -- every tile turns green, one
-     diagonal after another from the top-left corner (--wave-delay, set in
-     buildLevel), and the water with it; dry pipes stay dark. */
+  @keyframes tile-lit{ to{ background-color:var(--flash); } }
+  /* wave: like Sudoku's solved board -- every tile turns the flash colour,
+     one diagonal after another from the top-left corner (--wave-delay, set
+     in buildLevel). The water stays pink so the route still shows. */
   html[data-win="wave"] .board-wrap.won .spot{ animation: tile-green 250ms ease var(--wave-delay, 0ms) both; }
-  html[data-win="wave"] .board-wrap.won .piece.wet .pipe path{ animation: pipe-green 250ms ease var(--wave-delay, 0ms) both; }
-  html[data-win="wave"] .board-wrap.won .stub{ animation: stub-green 250ms ease var(--wave-delay, 0ms) both; }
-  @keyframes tile-green{ to{ background-color:#71B143; } }
+  @keyframes tile-green{ to{ background-color:var(--flash); } }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -469,13 +469,13 @@
   "use strict";
 
 
-  // Trials (see wins.html): ?win= picks a solved look, ?water=blue tries
-  // light-blue water, ?demo=1 solves each board by itself so the solved
-  // moment can be watched on a loop.
+  // Trials (see wins.html): ?win= picks a solved look, ?flash=blue a
+  // light-blue solved colour instead of green, ?demo=1 solves each board by
+  // itself so the solved moment can be watched on a loop.
   var params = new URLSearchParams(location.search);
   var WIN = params.get('win'), DEMO = params.get('demo') === '1';
   if (WIN) document.documentElement.setAttribute('data-win', WIN);
-  if (params.get('water') === 'blue') document.documentElement.setAttribute('data-water', 'blue');
+  if (params.get('flash') === 'blue') document.documentElement.setAttribute('data-flash', 'blue');
 
   // iOS Safari only applies :active styles on tap if some element on the
   // page has a touch listener -- this is that listener (a no-op is enough).
