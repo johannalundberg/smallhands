@@ -417,6 +417,11 @@
   (function(){
     var params = new URLSearchParams(location.search);
     if (params.get('style') !== 'plain') document.documentElement.classList.add('style-circles');
+    // Trial colours for tones.html: ?given=B36400 / ?disc=FFC266 (hex).
+    [['given', '--disc-given'], ['disc', '--disc']].forEach(function(p){
+      var hex = params.get(p[0]);
+      if (/^[0-9a-fA-F]{6}$/.test(hex || '')) document.documentElement.style.setProperty(p[1], '#' + hex);
+    });
   })();
 </script>
 </head>
