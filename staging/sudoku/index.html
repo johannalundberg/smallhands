@@ -202,8 +202,15 @@
     transition: transform 120ms ease, background 80ms ease;
   }
   .cell.given{ background:var(--spot-given); cursor:default; }
-  /* Full but wrong: squares flash red (see flashIncorrect). */
-  .cell.repeat{ background:var(--incorrect); }
+  /* Full but wrong: the wrong numbers shake their heads (see flashIncorrect). */
+  .cell.wrong .hop{ animation: digit-shake 520ms ease-in-out; }
+  @keyframes digit-shake{
+    0%, 100%{ transform:translateX(0) rotate(0); }
+    15%{ transform:translateX(-9%) rotate(-8deg); }
+    35%{ transform:translateX(8%) rotate(7deg); }
+    55%{ transform:translateX(-6%) rotate(-5deg); }
+    75%{ transform:translateX(4%) rotate(3deg); }
+  }
 
   /* Each square holds all four shapes; data-shape picks the one that shows,
      so a tap only swaps an attribute and never rebuilds the square. */
@@ -715,7 +722,7 @@
     el.classList.add(cls);
   }
 
-  var ANIM_CLASS = { 'shape-pop': 'pop', 'shape-wave': 'wave' };
+  var ANIM_CLASS = { 'shape-pop': 'pop', 'shape-wave': 'wave', 'digit-shake': 'wrong' };
   els.boardWrap.addEventListener('animationend', function(e){
     var cls = ANIM_CLASS[e.animationName];
     var el = e.target.closest && e.target.closest('.cell');
@@ -794,20 +801,20 @@
 
   // ---------- full but wrong ----------
   // Nothing is said while the board is still filling up: spotting a repeat
-  // is the puzzle. Once every square holds a shape and it isn't solved, the
-  // squares the player got wrong flash red with the wrong sound -- only
-  // those, never a given square or the page. The check waits SETTLE_MS
-  // after the last tap, so cycling the last square through the shapes
-  // doesn't flash at each wrong one on the way to the right one.
+  // is the puzzle. Once every square holds a number and it isn't solved,
+  // the numbers the player got wrong shake, with the wrong sound -- only
+  // those, never a given number. The check waits SETTLE_MS after the last
+  // tap, so cycling the last square through the numbers doesn't shake at
+  // each wrong one on the way to the right one.
   var SETTLE_MS = 1000;
-  var FLASH_MS = 700;
+  var FLASH_MS = 560; // the shake, plus a moment
   function flashIncorrect(){
     PLSound.play('negative');
     state.flashing = true;
     clearTimeout(flashTimer);
     var answer = solution();
     for (var i = 0; i < 16; i++) {
-      if (!state.given[i] && state.cells[i] !== answer[i]) cellEls[i].classList.add('repeat');
+      if (!state.given[i] && state.cells[i] !== answer[i]) replay(cellEls[i], 'wrong');
     }
     flashTimer = setTimeout(endFlash, FLASH_MS);
   }
@@ -831,7 +838,7 @@
     clearTimeout(flashTimer);
     state.flashing = false;
     document.body.style.background = '';
-    cellEls.forEach(function(el){ el.classList.remove('repeat'); });
+    cellEls.forEach(function(el){ el.classList.remove('wrong'); });
   }
 
   // ---------- solved ----------
