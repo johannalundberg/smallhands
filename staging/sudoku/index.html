@@ -55,8 +55,11 @@
     --ink-muted:rgba(32,32,32,0.4);
     --incorrect:#F2383B;
     --success:#04BA50; /* same green as a right answer in Math */
-    /* Figma frame: 1728x1117 */
-    --board-size: min(76vmin, 76vw, 570px);
+    /* Figma frame: 1728x1117. The board may be as wide as the page between
+       the side margins (--board-w) and as tall as the room between the icon
+       rows (--board-h); the squares are sized to fit both. */
+    --board-w: calc(100vw - 2 * var(--unit));
+    --board-h: 76vmin;
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
   }
@@ -74,7 +77,7 @@
     :root{
       --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
       --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
-      --board-size: min(76vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 743px);
+      --board-h: calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom));
     }
   }
 
@@ -165,7 +168,7 @@
      4px ones between the boxes (--box-gap), plus a 2px outline. --cell is one
      square. buildCells sets --n (squares per side) and how many small and
      box gaps run across (--col-*) and down (--row-*); the squares are sized
-     to fit down, which has as many or more box gaps. */
+     to fit both ways (6x6 has more box gaps down than across). */
   .board-wrap{
     position:relative;
     --n: 4;
@@ -173,7 +176,8 @@
     --row-gaps: 2; --row-box-gaps: 1;
     --gap: 2px;
     --box-gap: 4px;
-    --cell: calc((var(--board-size) - var(--row-gaps) * var(--gap) - var(--row-box-gaps) * var(--box-gap)) / var(--n));
+    --cell: min(calc((var(--board-w) - var(--col-gaps) * var(--gap) - var(--col-box-gaps) * var(--box-gap)) / var(--n)),
+                calc((var(--board-h) - var(--row-gaps) * var(--gap) - var(--row-box-gaps) * var(--box-gap)) / var(--n)));
     width: calc(var(--cell) * var(--n) + var(--col-gaps) * var(--gap) + var(--col-box-gaps) * var(--box-gap));
     height: calc(var(--cell) * var(--n) + var(--row-gaps) * var(--gap) + var(--row-box-gaps) * var(--box-gap));
     background:#000;
@@ -185,7 +189,8 @@
      board shrinks by a few px to fit whole squares plus the lines. */
   @supports (width: round(down, 10.5px, 1px)){
     .board-wrap{
-      --cell: round(down, calc((var(--board-size) - var(--row-gaps) * var(--gap) - var(--row-box-gaps) * var(--box-gap)) / var(--n)), 1px);
+      --cell: round(down, min(calc((var(--board-w) - var(--col-gaps) * var(--gap) - var(--col-box-gaps) * var(--box-gap)) / var(--n)),
+                              calc((var(--board-h) - var(--row-gaps) * var(--gap) - var(--row-box-gaps) * var(--box-gap)) / var(--n))), 1px);
     }
   }
   .cell{
@@ -257,22 +262,25 @@
      about as heavy as Labyrinth's walls but in whole pixels (--line: 3px,
      2px on phones) so Safari draws every line the same width
      (.box-line, built in buildCells): no outline and no lines between the
-     squares inside a box. Each disc leaves 4% of its square free on every
-     side, so neighbours are 8% apart; --pad adds another 4% each side of a
-     box line, so a disc is 8% from the line too. */
+     squares inside a box. Each disc leaves --k (4%) of its square free on
+     every side, so neighbours are 8% apart; --pad adds another 4% each side
+     of a box line, so a disc is 8% from the line too. */
   html.style-circles .board-wrap{
     --gap:0px;
     --line: 3px;
-    --cell: calc((var(--board-size) - var(--row-box-gaps) * var(--line)) / (var(--n) + var(--row-box-gaps) * 0.08));
-    --pad: calc(var(--cell) * 0.04);
+    --k: 0.04;
+    --cell: min(calc((var(--board-w) - var(--col-box-gaps) * var(--line)) / (var(--n) + var(--col-box-gaps) * 2 * var(--k))),
+                calc((var(--board-h) - var(--row-box-gaps) * var(--line)) / (var(--n) + var(--row-box-gaps) * 2 * var(--k))));
+    --pad: calc(var(--cell) * var(--k));
     --box-gap: calc(var(--pad) * 2 + var(--line));
     box-shadow:none;
     background:none;
   }
   @supports (width: round(down, 10.5px, 1px)){
     html.style-circles .board-wrap{
-      --cell: round(down, calc((var(--board-size) - var(--row-box-gaps) * var(--line)) / (var(--n) + var(--row-box-gaps) * 0.08)), 1px);
-      --pad: round(calc(var(--cell) * 0.04), 1px);
+      --cell: round(down, min(calc((var(--board-w) - var(--col-box-gaps) * var(--line)) / (var(--n) + var(--col-box-gaps) * 2 * var(--k))),
+                              calc((var(--board-h) - var(--row-box-gaps) * var(--line)) / (var(--n) + var(--row-box-gaps) * 2 * var(--k)))), 1px);
+      --pad: round(calc(var(--cell) * var(--k)), 1px);
     }
   }
   html.style-circles .cell, html.style-circles .cell.given{ background:none; }
@@ -308,6 +316,11 @@
   @media (max-width: 767px), (max-height: 500px){
     /* Close to Labyrinth's phone wall weight, in whole pixels. */
     html.style-circles .board-wrap{ --line: 2px; }
+    /* 6x6 squares are small on a phone: smaller discs (r 43 of 50, so 7%
+       free each side) give them nearly twice the room between them. */
+    html.style-circles .board-wrap[data-n="6"]{ --k: 0.07; }
+    html.style-circles .board-wrap[data-n="6"] .disc,
+    html.style-circles .board-wrap[data-n="6"] .empty-ring{ r: 43px; }
     /* Touch has no hover, so desktop's grow-on-hover feedback never fires
        here -- darken on tap instead, so pressing any icon button is
        actually visible. (The icons inside the tray deliberately don't grow:
@@ -320,7 +333,7 @@
          tray below it): small fingers tap the squares, so every extra pixel
          helps. The height limit leaves room for the progress dots above and
          the tray below. */
-      --board-size: min(calc(100vw - 2 * var(--unit)), calc(var(--app-height, 100vh) - var(--unit) * 4 - var(--icon-size) * 1.25), 720px);
+      --board-h: calc(var(--app-height, 100vh) - var(--unit) * 4 - var(--icon-size) * 1.25);
     }
     .controls-slider{
       display:flex;
@@ -778,6 +791,7 @@
     var colBoxGaps = n / BOX_COLS - 1, rowBoxGaps = n / BOX_ROWS - 1;
     var wrap = els.boardWrap.style;
     wrap.setProperty('--n', n);
+    els.boardWrap.setAttribute('data-n', n);
     wrap.setProperty('--col-box-gaps', colBoxGaps);
     wrap.setProperty('--col-gaps', n - 1 - colBoxGaps);
     wrap.setProperty('--row-box-gaps', rowBoxGaps);
