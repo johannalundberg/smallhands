@@ -242,8 +242,9 @@
   html.style-circles .disc{ display:inline; fill:var(--bright); }
   html.style-circles .cell.given .disc{ fill:#2B2B2B; }
   html.style-circles .shape .digit{ font-size:58px; }
-  /* An empty square shows an empty circle, so it's clear where to tap. */
-  .empty-ring{ display:none; fill:none; stroke:#2B2B2B; stroke-width:3; }
+  /* An empty square shows a muted circle (the unselected buttons' grey),
+     so it's clear where to tap. */
+  .empty-ring{ display:none; fill:var(--ink-muted); }
   html.style-circles .cell:not([data-shape]) .empty-ring{ display:inline; }
   html.style-circles .cell.given .digit{ fill:var(--bright); }
   /* ...with no square colours, and only the cross between the four boxes
@@ -719,7 +720,7 @@
       return '<g class="s' + k + '"><circle class="disc" cx="50" cy="50" r="46"/>' +
         '<text class="digit" x="50" y="52">' + n + '</text></g>';
     }).join('') +
-    '<circle class="empty-ring" cx="50" cy="50" r="44.5"/>' +
+    '<circle class="empty-ring" cx="50" cy="50" r="46"/>' +
     '</svg>';
 
   // The 16 squares are built once and kept: a tap only changes their
