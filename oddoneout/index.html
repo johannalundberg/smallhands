@@ -46,8 +46,8 @@
     --shape:#000000; /* Figma 417:5400: black on the blue page */
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.4);
-    --success:#169802; /* Figma 417:5400 */
-    --incorrect:#FF272B; /* Figma 417:5400 */
+    --success:#4FB73F; /* her pick */
+    --incorrect:#F23A3D; /* her pick */
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
     --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
@@ -454,12 +454,17 @@
     rect: 'oval', triangle: 'diamond'
   };
   var ROUND_SIZE = 10;
+  // Two tries per set of cards. A second wrong tap sends the progress dots
+  // back to zero and starts the round over with new cards, so tapping all
+  // three to find the right one doesn't pay off.
+  var MAX_TRIES = 2;
 
   var state = {
     difficulty: 'easy',
     clusters: null,
     correctIndex: -1,
     progress: 0,
+    wrongTries: 0,  // wrong taps on the current set of cards
     busy: false
   };
 
@@ -579,6 +584,7 @@
   }
 
   function renderRound(round){
+    state.wrongTries = 0; // fresh tries for every new set of cards
     state.clusters = round.clusters;
     state.correctIndex = round.correctIndex;
     renderClusters();
@@ -649,12 +655,20 @@
 
   function flashWrong(card){
     state.busy = true;
-    PLSound.play('negative');
+    state.wrongTries++;
+    var out = state.wrongTries >= MAX_TRIES;
+    PLSound.play(out ? 'tryagain' : 'negative');
     card.classList.add('wrong', 'pop');
     setTimeout(function(){
       card.classList.remove('wrong', 'pop');
+      if (out) {
+        // Out of tries: the dots empty and the round starts over.
+        state.progress = 0;
+        updateProgressDots();
+        buildRound();
+      }
       state.busy = false;
-    }, 420);
+    }, out ? 700 : 420);
   }
 
   function flashCorrect(card){

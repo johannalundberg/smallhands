@@ -48,13 +48,17 @@
   }
 
   :root{
-    --bg:#3452A0;
-    --cell:#FD6427;
-    --bright:#E4E4E4;
+    /* Figma node 417:5590: dark green page, mustard squares, black X/O and
+       icons (--bright is the icon/glyph colour, black here), green for a
+       won line and red for a lost one. */
+    --bg:#1F492E;
+    --cell:#E4AA2D;
+    --bright:#101010;
+    --light:#E4E4E4; /* the highlighted score pill, so black numbers stay readable on it */
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
-    --success:#00C063;
-    --incorrect:#FF3F3F;
+    --success:#6AD32D;
+    --incorrect:#F03636;
     --draw: var(--ink-muted);
     /* Figma frame: 1728x1117 */
     --hero-size: clamp(2.6rem, 13.3102vw, 230px);
@@ -177,7 +181,7 @@
     transition:background 150ms ease;
   }
   .score-pill .num{ color:var(--bright); font-size:calc(var(--icon-size) * 0.58); transition:color 150ms ease; }
-  .score-pill.active{ background:var(--bright); }
+  .score-pill.active{ background:var(--light); }
   .score-pill.active .num{ color:var(--ink); }
 
   .board-wrap{ position:relative; }

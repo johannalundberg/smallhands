@@ -253,7 +253,7 @@
   .odd-badge .odd-frame:nth-child(2) .odd-shape{ animation: odd-green 4.5s linear -1.5s infinite; }
   @keyframes odd-green{
     0%, 10%{ stroke:#322FC0; }
-    12%, 33%{ stroke:#169802; }
+    12%, 33%{ stroke:#4FB73F; }
     34%, 100%{ stroke:#322FC0; }
   }
 
@@ -430,6 +430,11 @@
   .math-badge svg:nth-child(4){ animation-delay:-3.6s; }
 
   .mini-board{
+    /* Tic-Tac-Toe's own colours (Figma 417:5590): mustard squares, black
+       X/O, green won line. */
+    --tt-cell-bg:#E4AA2D;
+    --glyph:#101010;
+    --win:#6AD32D;
     display:grid;
     grid-template-columns:repeat(3,1fr);
     grid-template-rows:repeat(3,1fr);
