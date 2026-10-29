@@ -662,10 +662,10 @@
     setTimeout(function(){
       card.classList.remove('wrong', 'pop');
       if (out) {
-        // Out of tries: the dots empty and the round starts over.
-        state.progress = 0;
-        updateProgressDots();
-        buildRound();
+        // Out of tries: the sad face, then the dots empty and the round
+        // starts over (busy stays on until then).
+        showSad();
+        return;
       }
       state.busy = false;
     }, out ? 700 : 420);
@@ -696,6 +696,31 @@
     '<rect fill="var(--shape)" x="683" y="171" width="130" height="130"/>' +
     '<rect fill="var(--shape)" x="291" y="301" width="392" height="65"/>' +
     '</svg>';
+
+  // Pixel-art sad face (Figma node 198:1914), the same one Tic-Tac-Toe shows
+  // when the computer wins: the happy face's eyes, its mouth blocks
+  // rearranged (bar on top, corners hanging below).
+  var SAD_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="var(--shape)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--shape)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--shape)" x="291" y="171" width="392" height="65"/>' +
+    '<rect fill="var(--shape)" x="161" y="236" width="130" height="130"/>' +
+    '<rect fill="var(--shape)" x="683" y="236" width="130" height="130"/>' +
+    '</svg>';
+
+  // Out of tries: the sad face for 3s (the 'tryagain' sound already played
+  // on the tap), then the round starts over from zero dots.
+  function showSad(){
+    updateAppHeight();
+    els.celebration.innerHTML = SAD_FACE_SVG;
+    els.boardWrap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    setTimeout(function(){
+      els.celebration.style.display = 'none';
+      els.boardWrap.style.display = '';
+      startGame();
+    }, 3000);
+  }
 
   function showCelebration(){
     updateAppHeight();
