@@ -157,7 +157,7 @@
      tile with its own 2px pink outline, set edge to edge -- so 4px lines
      between tiles and 2px round the outside. --cell is one square in whole
      pixels (fractional ones made Safari draw the lines unevenly). The start
-     and goal pieces stick out STUB squares on either side, and the board is
+     and goal pipes stick out --stub squares on either side, and the board is
      sized so they fit inside the page margins too (on a phone they used to
      run off the screen). */
   .board-wrap{
@@ -165,7 +165,7 @@
     --n: 4;
     --start-row: 0;
     --end-row: 0;
-    --stub: 0.35;
+    --stub: 0.3558;
     --cell: min(calc(var(--board-size) / var(--n)), calc(var(--board-w) / (var(--n) + 2 * var(--stub))));
     width:calc(var(--cell) * var(--n));
     height:calc(var(--cell) * var(--n));
@@ -228,42 +228,20 @@
   }
   .piece.wet .pipe path{ stroke:var(--water); }
 
-  /* Where the water comes in and goes out: a short piece of tile sticking
-     out of the board on the start and end rows, outlined like the tiles,
-     with the pipe through it. The start is always full of water; the goal
-     fills when the water gets there. */
+  /* Where the water comes in and goes out (Figma 417:5251 and 417:5253):
+     short pink pipes sticking out of the board on the start and end rows,
+     66 of a tile's 185.49 long. Both are pink from the start -- the right
+     one marks the goal. */
   .stub{
     position:absolute;
-    top:calc(var(--cell) * var(--row));
-    width:calc(var(--cell) * var(--stub) + 2px);
-    height:var(--cell);
-    background:var(--tile);
-    border:2px solid var(--line);
+    top:calc(var(--cell) * var(--row) + (var(--cell) - var(--pipe-w)) / 2);
+    width:calc(var(--cell) * var(--stub));
+    height:var(--pipe-w);
+    background:var(--water);
     z-index:1;
   }
-  .stub::after{
-    content:'';
-    position:absolute;
-    top:calc((var(--cell) - 4px - var(--pipe-w)) / 2);
-    height:var(--pipe-w);
-    left:0;
-    right:0;
-    background:var(--pipe);
-    transition: background 150ms ease var(--flow-delay, 0ms);
-  }
-  .stub.start{
-    --row: var(--start-row);
-    right:calc(100% - 2px);
-    border-right:none;
-  }
-  .stub.end{
-    --row: var(--end-row);
-    left:calc(100% - 2px);
-    border-left:none;
-  }
-  /* Wet, the pipe runs on over the board's outline into the first tile. */
-  .stub.start::after{ background:var(--water); right:-2px; }
-  .stub.end.wet::after{ background:var(--water); left:-2px; }
+  .stub.start{ --row: var(--start-row); right:100%; }
+  .stub.end{ --row: var(--end-row); left:100%; }
 
   /* Solved: a quick shine runs along the water from the start to the end. */
   .piece.glow .pipe path{ animation: pipe-glow 420ms ease var(--glow-delay, 0ms) both; }
@@ -271,7 +249,7 @@
     0%, 100%{ stroke:var(--water); }
     45%{ stroke:var(--water-glow); }
   }
-  .stub.glow::after{ animation: stub-glow 420ms ease var(--glow-delay, 0ms) both; }
+  .stub.glow{ animation: stub-glow 420ms ease var(--glow-delay, 0ms) both; }
   @keyframes stub-glow{
     0%, 100%{ background:var(--water); }
     45%{ background:var(--water-glow); }
