@@ -32,19 +32,24 @@
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
 <style>
   :root{
-    /* First-draft colours, all here so they're easy to try out. */
-    --bg:#2A3542;
-    --spot:#212A35;
-    --frame:#000000;
-    --pipe:#8A949E;
-    --water:#74D5CA;
-    --water-glow:#E2FAF6;
+    /* Figma node 412:5049: brown page, lighter brown tiles outlined in
+       pink, pipes cut out of the tiles in the page colour that turn pink
+       when the water runs through. */
+    --bg:#423825;
+    --tile:#6C5D40;
+    --line:#EE65EA;
+    --pipe:#423825;
+    --water:#EE65EA;
+    --water-glow:#FFC2FD;
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
     --incorrect:#F2383B;
-    /* Figma frame: 1728x1117 */
+    /* Figma frame: 1728x1117. --board-size is the most the board's squares
+       may span (the height limit); --board-w the room across, which also has
+       to hold the start and goal pieces either side of the board. */
     --board-size: min(76vmin, 76vw, 570px);
+    --board-w: calc(100vw - 2 * var(--unit));
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
   }
@@ -63,7 +68,7 @@
     :root{
       --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
       --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
-      --board-size: min(76vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 743px);
+      --board-size: min(calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 743px);
     }
   }
 
@@ -148,45 +153,42 @@
   .progress-dots .dot.done{ background: var(--bright); }
 
   /* ---------- the board ---------- */
-  /* Same frame as Unblock: a 2px black outline with the squares inside it,
-     sized as fractions of the board so it scales to every screen. --n is the
-     grid size (4, 5 or 6 by level), --pad the space inside the outline, --gap
-     the space between squares, --cell one square. */
+  /* Figma node 412:5049: --n squares a side (4, 5 or 6 by level), each a
+     tile with its own 2px pink outline, set edge to edge -- so 4px lines
+     between tiles and 2px round the outside. --cell is one square in whole
+     pixels (fractional ones made Safari draw the lines unevenly). The start
+     and goal pieces stick out STUB squares on either side, and the board is
+     sized so they fit inside the page margins too (on a phone they used to
+     run off the screen). */
   .board-wrap{
     position:relative;
-    width:var(--board-size);
-    height:var(--board-size);
-    border:2px solid var(--frame);
     --n: 4;
     --start-row: 0;
     --end-row: 0;
-    --pad: calc(var(--board-size) * 0.025536);
-    --gap: calc(var(--board-size) * 0.012649);
-    --cell: calc((var(--board-size) - 4px - 2 * var(--pad) - (var(--n) - 1) * var(--gap)) / var(--n));
-    --step: calc(var(--cell) + var(--gap));
-    --radius: calc(var(--cell) * 0.12843);
-    /* A pipe's thickness: 26 of the 100 units its drawing spans (one square
-       plus a gap). The stubs outside the board use the same width. */
-    --pipe-w: calc((var(--cell) + var(--gap)) * 0.26);
-    /* Never past the screen edge: on a phone the board nearly fills the
-       width, and a stub sticking out would let the page scroll sideways. */
-    --stub-out: min(calc(var(--cell) * 0.6), calc((100vw - var(--board-size)) / 2));
+    --stub: 0.35;
+    --cell: min(calc(var(--board-size) / var(--n)), calc(var(--board-w) / (var(--n) + 2 * var(--stub))));
+    width:calc(var(--cell) * var(--n));
+    height:calc(var(--cell) * var(--n));
+    /* A pipe is 32 of the tile's 185.49 in the design. */
+    --pipe-w: calc(var(--cell) * 0.17252);
     touch-action:manipulation;
+  }
+  @supports (width: round(down, 10.5px, 1px)){
+    .board-wrap{
+      --cell: round(down, min(calc(var(--board-size) / var(--n)), calc(var(--board-w) / (var(--n) + 2 * var(--stub)))), 1px);
+    }
   }
   .lot{
     position:absolute;
-    left:var(--pad);
-    top:var(--pad);
-    width:calc(var(--cell) * var(--n) + var(--gap) * (var(--n) - 1));
-    height:calc(var(--cell) * var(--n) + var(--gap) * (var(--n) - 1));
+    inset:0;
     z-index:2;
   }
   .spot{
     position:absolute;
     width:var(--cell);
     height:var(--cell);
-    border-radius:var(--radius);
-    background:var(--spot);
+    background:var(--tile);
+    border:2px solid var(--line);
   }
   .piece{
     cursor:pointer;
@@ -198,66 +200,70 @@
   /* Mouse only: the square under the pointer grows like the site's buttons
      and hub tiles do, so it reads as something you can tap. */
   @media (hover:hover) and (pointer:fine){
-    .piece:hover{ transform:scale(1.035); }
+    .piece:hover{ transform:scale(1.035); z-index:1; }
     .piece:hover:active{ transform:scale(0.95); }
   }
-  /* The pipe drawing is half a gap bigger than its square on every side, so
-     two pipes that line up meet in the middle of the gap and read as one
-     pipe. It turns around the square's centre. */
+  /* The pipe drawing covers the whole tile, outline included, and turns
+     around its centre. A dry pipe stops at the tile's pink outline (the
+     clip); a wet one runs over it, so the water reads as one pink pipe
+     from tile to tile. */
   .pipe{
     position:absolute;
-    left:calc(var(--gap) / -2);
-    top:calc(var(--gap) / -2);
-    width:calc(var(--cell) + var(--gap));
-    height:calc(var(--cell) + var(--gap));
-    overflow:hidden;
+    left:-2px;
+    top:-2px;
+    width:var(--cell);
+    height:var(--cell);
     pointer-events:none;
+    clip-path:inset(2px);
     transition: transform 180ms cubic-bezier(0.25, 0.8, 0.35, 1);
   }
+  .piece.wet .pipe{ clip-path:none; }
   .pipe path{
     fill:none;
     stroke:var(--pipe);
-    stroke-width:26;
-    stroke-linecap:round;
-    stroke-linejoin:round;
+    stroke-width:17.252;
+    stroke-linecap:butt;
+    stroke-linejoin:miter;
     transition: stroke 150ms ease var(--flow-delay, 0ms);
   }
   .piece.wet .pipe path{ stroke:var(--water); }
 
-  /* Where the water comes in and goes out: openings in the outline, like
-     Unblock's exit, each with a short pipe through it. The left one is
-     always full of water; the right one fills when the water gets there. */
-  .opening{
-    position:absolute;
-    top:calc(var(--pad) + var(--step) * var(--row) - var(--gap));
-    width:calc(var(--board-size) * 0.037685);
-    height:calc(var(--cell) + var(--gap) * 2);
-    background:var(--bg);
-    z-index:1;
-  }
-  .opening.start{ --row: var(--start-row); left:calc(-2px - var(--board-size) * 0.018843); }
-  .opening.end{ --row: var(--end-row); right:calc(-2px - var(--board-size) * 0.018843); }
+  /* Where the water comes in and goes out: a short piece of tile sticking
+     out of the board on the start and end rows, outlined like the tiles,
+     with the pipe through it. The start is always full of water; the goal
+     fills when the water gets there. */
   .stub{
     position:absolute;
-    top:calc(var(--pad) + var(--step) * var(--row) + (var(--cell) - var(--pipe-w)) / 2);
-    width:calc(var(--stub-out) + 2px + var(--pad));
-    height:var(--pipe-w);
-    background:var(--pipe);
+    top:calc(var(--cell) * var(--row));
+    width:calc(var(--cell) * var(--stub) + 2px);
+    height:var(--cell);
+    background:var(--tile);
+    border:2px solid var(--line);
     z-index:1;
+  }
+  .stub::after{
+    content:'';
+    position:absolute;
+    top:calc((var(--cell) - 4px - var(--pipe-w)) / 2);
+    height:var(--pipe-w);
+    left:0;
+    right:0;
+    background:var(--pipe);
     transition: background 150ms ease var(--flow-delay, 0ms);
   }
   .stub.start{
     --row: var(--start-row);
-    left:calc(-2px - var(--stub-out));
-    background:var(--water);
-    border-radius:calc(var(--pipe-w) / 2) 0 0 calc(var(--pipe-w) / 2);
+    right:calc(100% - 2px);
+    border-right:none;
   }
   .stub.end{
     --row: var(--end-row);
-    right:calc(-2px - var(--stub-out));
-    border-radius:0 calc(var(--pipe-w) / 2) calc(var(--pipe-w) / 2) 0;
+    left:calc(100% - 2px);
+    border-left:none;
   }
-  .stub.end.wet{ background:var(--water); }
+  /* Wet, the pipe runs on over the board's outline into the first tile. */
+  .stub.start::after{ background:var(--water); right:-2px; }
+  .stub.end.wet::after{ background:var(--water); left:-2px; }
 
   /* Solved: a quick shine runs along the water from the start to the end. */
   .piece.glow .pipe path{ animation: pipe-glow 420ms ease var(--glow-delay, 0ms) both; }
@@ -265,7 +271,7 @@
     0%, 100%{ stroke:var(--water); }
     45%{ stroke:var(--water-glow); }
   }
-  .stub.glow{ animation: stub-glow 420ms ease var(--glow-delay, 0ms) both; }
+  .stub.glow::after{ animation: stub-glow 420ms ease var(--glow-delay, 0ms) both; }
   @keyframes stub-glow{
     0%, 100%{ background:var(--water); }
     45%{ background:var(--water-glow); }
@@ -303,7 +309,7 @@
          tray below it): small fingers tap the squares, so every extra pixel
          of square helps. The height limit leaves room for the progress dots
          above and the tray below. */
-      --board-size: min(calc(100vw - 2 * var(--unit)), calc(var(--app-height, 100vh) - var(--unit) * 4 - var(--icon-size) * 1.25), 720px);
+      --board-size: calc(var(--app-height, 100vh) - var(--unit) * 4 - var(--icon-size) * 1.25);
     }
     .controls-slider{
       display:flex;
@@ -411,8 +417,6 @@
   </div>
 
   <div class="board-wrap" id="boardWrap">
-    <div class="opening start"></div>
-    <div class="opening end"></div>
     <div class="stub start" id="startStub"></div>
     <div class="stub end" id="endStub"></div>
     <div class="lot" id="lot"></div>
@@ -764,12 +768,13 @@
   }
 
   // ---------- drawing ----------
-  // Each piece in its resting shape on a 100x100 square; the round joins
-  // soften the corner's bend. Ends run to the edge and are cut flat there, so
-  // pipes that line up across the gap meet as one.
+  // Each piece in its resting shape on a 100x100 tile, outline included.
+  // Ends run to the edge and are cut flat there, so pipes that line up meet
+  // as one. The corner bends round in a quarter circle (the sketch only
+  // drew straights).
   var PIPE_PATHS = {
     I: 'M50 0V100',
-    L: 'M50 0V50H100',
+    L: 'M50 0A50 50 0 0 0 100 50',
     T: 'M50 0V100M50 50H100'
   };
 
@@ -803,8 +808,8 @@
       var type = level.types.charAt(i);
       var s = document.createElement('div');
       s.className = 'spot';
-      s.style.left = 'calc(var(--step) * ' + (i % level.n) + ')';
-      s.style.top = 'calc(var(--step) * ' + Math.floor(i / level.n) + ')';
+      s.style.left = 'calc(var(--cell) * ' + (i % level.n) + ')';
+      s.style.top = 'calc(var(--cell) * ' + Math.floor(i / level.n) + ')';
       if (PIPE_PATHS[type]) {
         s.className = 'spot piece';
         s.setAttribute('data-cell', i);
