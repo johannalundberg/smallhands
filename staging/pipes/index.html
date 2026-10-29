@@ -210,11 +210,11 @@
     cursor:pointer;
     touch-action:manipulation;
     -webkit-touch-callout:none;
-    transition: transform 120ms ease, background 120ms ease;
+    transition: background 120ms ease;
   }
-  .piece:active{ transform:scale(0.95); }
-  /* Mouse only: the tile under the pointer turns slightly darker, so it
-     reads as something you can tap (no grow: she found that too much). */
+  /* Pressed (touch or mouse), and under a mouse pointer: the tile turns
+     slightly darker. No grow or shrink -- she found size changes too much. */
+  .piece:active{ background:var(--tile-hover); }
   @media (hover:hover) and (pointer:fine){
     .piece:hover{ background:var(--tile-hover); }
   }
