@@ -180,8 +180,12 @@
     height:calc(var(--cell) * var(--n) + 2px);
     border:1px solid var(--line);
     /* A pipe is 32 of the tile's 185.49 in the design (of the pipe
-       drawing, which is 2px bigger than the tile -- see .pipe). */
-    --pipe-w: calc((var(--cell) + 2px) * 0.17252);
+       drawing, which is 2px bigger than the tile -- see .pipe) -- on 4x4.
+       Smaller tiles get a bigger share (--pipe-k, and the stroke-width in
+       .pipe path to match), or on 6x6 the pipes and the start and goal got
+       too thin to see. */
+    --pipe-k: 0.17252;
+    --pipe-w: calc((var(--cell) + 2px) * var(--pipe-k));
     touch-action:manipulation;
   }
   @supports (width: round(down, 10.5px, 1px)){
@@ -240,6 +244,10 @@
     transition: stroke 150ms ease var(--flow-delay, 0ms);
   }
   .piece.wet .pipe path{ stroke:var(--water); }
+  .board-wrap[data-n="5"]{ --pipe-k: 0.195; }
+  .board-wrap[data-n="5"] .pipe path{ stroke-width:19.5; }
+  .board-wrap[data-n="6"]{ --pipe-k: 0.22; }
+  .board-wrap[data-n="6"] .pipe path{ stroke-width:22; }
 
   /* Where the water comes in and goes out (Figma 417:5251 and 417:5253):
      short pink pipes sticking out of the board on the start and end rows,
@@ -801,6 +809,7 @@
     els.celebration.style.display = 'none';
     els.boardWrap.style.display = '';
     els.boardWrap.style.setProperty('--n', level.n);
+    els.boardWrap.setAttribute('data-n', level.n);
     els.boardWrap.style.setProperty('--start-row', level.startRow);
     els.boardWrap.style.setProperty('--end-row', level.endRow);
     [els.startStub, els.endStub].forEach(function(stub){
