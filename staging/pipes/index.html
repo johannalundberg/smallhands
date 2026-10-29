@@ -219,6 +219,14 @@
      the tile dark and fades it back (onTap adds .tap). */
   .piece.tap{ animation: tile-tap 320ms ease-out; }
   @keyframes tile-tap{ from{ background-color:var(--tile-hover); } }
+  /* First visit only (showFirstHint): the tiles the water can go into next
+     blink darker twice, to show they're the ones to turn. */
+  .piece.hint{ animation: tile-hint 1600ms ease-in-out; }
+  @keyframes tile-hint{
+    0%, 40%, 100%{ background-color:var(--tile); }
+    20%, 60%{ background-color:var(--tile-hover); }
+    80%{ background-color:var(--tile); }
+  }
   @media (hover:hover) and (pointer:fine){
     .piece:hover{ background:var(--tile-hover); }
   }
@@ -928,6 +936,7 @@
   // runs out are ignored, sound and all.
   els.lot.addEventListener('animationend', function(e){
     if (e.animationName === 'tile-tap') e.target.classList.remove('tap');
+    if (e.animationName === 'tile-hint') e.target.classList.remove('hint');
   });
   els.lot.addEventListener('click', function(e){
     var el = e.target.closest && e.target.closest('.piece');
@@ -936,6 +945,7 @@
     state.turns[i] = (state.turns[i] + 1) % 4;
     state.spins[i] += 1;
     el.firstChild.style.transform = spinTransform(state.spins[i]);
+    state.pieces.forEach(function(p){ if (p) p.classList.remove('hint'); });
     el.classList.remove('tap');
     void el.offsetWidth; // restart the darken on quick repeat taps
     el.classList.add('tap');
@@ -1101,10 +1111,43 @@
 
   // Coming back from the rotate-block reload: continue the saved game.
   // Otherwise (or if the save is unusable) start a fresh easy round.
+  // First visit only: once the first board is up, the tiles the water can
+  // flow into next -- the one beside the start pipe, or the next ones on
+  // if that's already connected -- blink darker twice, as a wordless "turn
+  // these". Remembered per device, so it never plays again.
+  var HINT_KEY = 'pipes.firstHintShown';
+  function showFirstHint(){
+    try { if (localStorage.getItem(HINT_KEY)) return; } catch (e) { return; }
+    setTimeout(function(){
+      if (state.busy || !state.level) return;
+      var level = state.level, n = level.n, f = flow(level, state.turns);
+      var start = level.startRow * n, next = [];
+      if (f.dist[start] === -1) {
+        next.push(start);
+      } else {
+        f.dist.forEach(function(d, i){
+          if (d === -1) return;
+          var m = openings(level.types.charAt(i), state.turns[i]);
+          var r = Math.floor(i / n), c = i % n;
+          for (var s = 0; s < 4; s++) {
+            if (!(m & SIDES[s])) continue;
+            var nr = r + ROW_STEP[s], nc = c + COL_STEP[s];
+            if (nr < 0 || nc < 0 || nr >= n || nc >= n) continue;
+            var j = nr * n + nc;
+            if (f.dist[j] === -1 && state.pieces[j] && next.indexOf(j) === -1) next.push(j);
+          }
+        });
+      }
+      next.forEach(function(i){ if (state.pieces[i]) state.pieces[i].classList.add('hint'); });
+      try { localStorage.setItem(HINT_KEY, '1'); } catch (e) {}
+    }, 900);
+  }
+
   var resumed = takeResume();
   if (!(resumed && restoreGame(resumed))) {
     els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
     restartRound();
+    showFirstHint();
   }
 })();
 </script>
