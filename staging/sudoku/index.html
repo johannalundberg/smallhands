@@ -295,18 +295,17 @@
   .box-line{ display:none; position:absolute; background:var(--line-color); pointer-events:none; }
   html.style-circles .box-line{ display:block; }
 
-  /* Colour trials, picked with ?theme= (colours.html shows them all). Built
-     from colours already on the site: Labyrinth's pink, Math's purple,
-     Tic Tac Toe's blue and orange, Odd One Out's orange and teal, Number
-     Puzzle's blue, Pipes' water. w* have white numbers, b* black, and mix
-     has white on the given discs and black on the player's. */
-  html[data-theme="w1"]{ --bg:#E88CE5; --disc-given:#8104C9; --disc:#3452A0; --digit-given:#fff; --digit:#fff; --empty:rgba(32,32,32,0.22); --line-color:#202020; }
-  html[data-theme="w2"]{ --bg:#1F2A44; --disc-given:#EE643E; --disc:#707EFF; --digit-given:#fff; --digit:#fff; --empty:rgba(255,255,255,0.14); --line-color:#E4E4E4; }
-  html[data-theme="w3"]{ --bg:#74D5CA; --disc-given:#053133; --disc:#EE643E; --digit-given:#fff; --digit:#fff; --empty:rgba(5,49,51,0.22); --line-color:#053133; }
-  html[data-theme="b1"]{ --bg:#FD6427; --disc-given:#E4E4E4; --disc:#74D5CA; --empty:rgba(32,32,32,0.28); }
-  html[data-theme="b2"]{ --bg:#4B2A6B; --disc-given:#E88CE5; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
-  html[data-theme="b3"]{ --bg:#0B6E6A; --disc-given:#FD6427; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); }
+  /* Colour trials, picked with ?theme= (colours.html shows them all). Round
+     2, from her two favourites (the current periwinkle + orange, and mix:
+     violet with dark given discs) -- coloured given discs instead of black,
+     light discs for the player's numbers. */
   html[data-theme="mix"]{ --bg:#6B4FA0; --disc-given:#202020; --digit-given:#fff; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
+  html[data-theme="v1"]{ --bg:#6B4FA0; --disc-given:#E88CE5; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
+  html[data-theme="v2"]{ --bg:#6B4FA0; --disc-given:#EE643E; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
+  html[data-theme="v3"]{ --bg:#7080B5; --disc-given:#0E6A6E; --digit-given:#fff; --disc:#E4E4E4; }
+  html[data-theme="v4"]{ --bg:#7080B5; --disc-given:#8104C9; --digit-given:#fff; --disc:#E4E4E4; }
+  html[data-theme="v5"]{ --bg:#8E7CC3; --disc-given:#3B2470; --digit-given:#fff; --disc:#F3ECFF; --empty:rgba(32,20,70,0.3); --line-color:#2A1B52; }
+  html[data-theme="v6"]{ --bg:#5A5FA8; --disc-given:#F2B33D; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); --line-color:#E4E4E4; }
 
   /* A new shape pops into its square. */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
