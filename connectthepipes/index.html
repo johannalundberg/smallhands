@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#F2383B">
-<meta name="robots" content="noindex">
 
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
@@ -16,16 +15,26 @@
   gtag('config', 'G-45ZK78NND7');
 </script>
 
-<title>Connect the Pipes</title>
-<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
-<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
-<link rel="manifest" href="../../manifest.json">
+<title>Connect the Pipes: Pipe Puzzle for Kids — Play and Learn</title>
+<meta name="description" content="Turn the pipes so the water flows from start to goal, on 4x4, 5x5 or 6x6 boards. Free, no ads or pop-ups. Designed by a mom and her 6-year-old.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
 
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://playandlearn.kids/pipes/">
+<meta property="og:url" content="https://playandlearn.kids/connectthepipes/">
 <meta property="og:title" content="Connect the Pipes — Play and Learn">
 <meta property="og:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
 <meta property="og:image" content="https://playandlearn.kids/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<!-- The same face with its eyes looking around and blinking: iMessage
+     plays this in the link preview; other apps show og:image. -->
+<meta property="og:video" content="https://playandlearn.kids/og-video.mp4">
+<meta property="og:video:secure_url" content="https://playandlearn.kids/og-video.mp4">
+<meta property="og:video:type" content="video/mp4">
+<meta property="og:video:width" content="1200">
+<meta property="og:video:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Connect the Pipes — Play and Learn">
 <meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
@@ -410,6 +419,44 @@
      with zoom otherwise locked there was no way back out. */
   html, body, .controls-slider{ touch-action:manipulation; }
 </style>
+<!-- What this page is, for search engines (schema.org); nothing on screen. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "Connect the Pipes",
+  "url": "https://playandlearn.kids/connectthepipes/",
+  "description": "Turn the pipes so the water flows from start to goal, on 4x4, 5x5 or 6x6 boards. Free, no ads or pop-ups. Designed by a mom and her 6-year-old.",
+  "genre": [
+    "Puzzle",
+    "Logic"
+  ],
+  "gamePlatform": "Web browser",
+  "applicationCategory": "Game",
+  "operatingSystem": "Any",
+  "isAccessibleForFree": true,
+  "isFamilyFriendly": true,
+  "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Play and Learn",
+    "url": "https://playandlearn.kids/"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Play and Learn",
+    "url": "https://playandlearn.kids/"
+  }
+}
+</script>
 </head>
 <body>
 
@@ -461,7 +508,7 @@
 
   <div class="celebration" id="celebration"></div>
 
-<script src="../../sound.js?v=20261025ze"></script>
+<script src="../sound.js?v=20261025ze"></script>
 <script>
 (function(){
   "use strict";
@@ -1096,7 +1143,7 @@
   });
 
   els.refreshBtn.addEventListener('click', restartRound);
-  els.backBtn.addEventListener('click', function(){ PLSound.go('../../index.html'); });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../index.html'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
   // it scrolls (there are more icons than fit on a phone screen), then ease back to
