@@ -74,6 +74,9 @@
 
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
+  /* The start and goal pipes may run off the screen on a phone: cut them
+     at the edge instead of letting the page scroll sideways. */
+  html, body{ overflow-x:hidden; overflow-x:clip; }
   body{
     position:relative;
     margin:0;
@@ -157,16 +160,18 @@
      tile with its own 2px pink outline, set edge to edge -- so 4px lines
      between tiles and 2px round the outside. --cell is one square in whole
      pixels (fractional ones made Safari draw the lines unevenly). The start
-     and goal pipes stick out --stub squares on either side, and the board is
-     sized so they fit inside the page margins too (on a phone they used to
-     run off the screen). */
+     and goal pipes stick out --stub squares on either side. --stub-room is
+     how much of that the board leaves room for: all of it on tablets and
+     desktops, none on phones, where the board takes the full width between
+     the margins and the pipes run on off the screen edge. */
   .board-wrap{
     position:relative;
     --n: 4;
     --start-row: 0;
     --end-row: 0;
     --stub: 0.3558;
-    --cell: min(calc(var(--board-size) / var(--n)), calc(var(--board-w) / (var(--n) + 2 * var(--stub))));
+    --stub-room: var(--stub);
+    --cell: min(calc(var(--board-size) / var(--n)), calc(var(--board-w) / (var(--n) + 2 * var(--stub-room))));
     width:calc(var(--cell) * var(--n));
     height:calc(var(--cell) * var(--n));
     /* A pipe is 32 of the tile's 185.49 in the design. */
@@ -175,7 +180,7 @@
   }
   @supports (width: round(down, 10.5px, 1px)){
     .board-wrap{
-      --cell: round(down, min(calc(var(--board-size) / var(--n)), calc(var(--board-w) / (var(--n) + 2 * var(--stub)))), 1px);
+      --cell: round(down, min(calc(var(--board-size) / var(--n)), calc(var(--board-w) / (var(--n) + 2 * var(--stub-room)))), 1px);
     }
   }
   .lot{
@@ -280,6 +285,10 @@
        actually visible. (The icons inside the tray deliberately don't grow:
        the tray itself is the thing that grows, see .controls-slider:active.) */
     .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
+    .board-wrap{ --stub-room: 0; }
+    /* ...and always run past the screen edge, even on 6x6 where a third of
+       a tile is shorter than the margin. */
+    .stub{ width:calc((100vw - var(--cell) * var(--n)) / 2 + 12px); }
     :root{
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
