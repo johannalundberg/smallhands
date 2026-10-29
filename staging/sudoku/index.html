@@ -55,6 +55,13 @@
     --ink-muted:rgba(32,32,32,0.4);
     --incorrect:#F2383B;
     --success:#04BA50; /* same green as a right answer in Math */
+    /* The disc look's colours; ?theme= swaps them (see colours.html). */
+    --disc-given: var(--shape-0);
+    --digit-given: #000;
+    --disc: var(--bright);
+    --digit: #000;
+    --empty: var(--ink-muted);
+    --line-color: #000;
     /* Figma frame: 1728x1117. The board may be as wide as the page between
        the side margins (--board-w) and as tall as the room between the icon
        rows (--board-h); the squares are sized to fit both. */
@@ -238,7 +245,7 @@
   .s3{ fill:var(--shape-3); }
   /* Digits 1-4 (1-6 on hard) in black, set like Math's numbers. */
   .shape .digit{
-    fill:#000;
+    fill:var(--digit);
     font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
     font-weight:400;
     font-size:78px;
@@ -251,12 +258,13 @@
      the given numbers, light discs for the player's; black numbers on both,
      since a light number on orange is hard to read. */
   .disc{ display:none; }
-  html.style-circles .disc{ display:inline; fill:var(--bright); }
-  html.style-circles .cell.given .disc{ fill:var(--shape-0); }
+  html.style-circles .disc{ display:inline; fill:var(--disc); }
+  html.style-circles .cell.given .disc{ fill:var(--disc-given); }
+  html.style-circles .cell.given .digit{ fill:var(--digit-given); }
   html.style-circles .shape .digit{ font-size:58px; }
   /* An empty square shows a muted circle (the unselected buttons' grey),
      so it's clear where to tap. */
-  .empty-ring{ display:none; fill:var(--ink-muted); }
+  .empty-ring{ display:none; fill:var(--empty); }
   html.style-circles .cell:not([data-shape]) .empty-ring{ display:inline; }
   /* ...with no square colours, and only lines between the boxes drawn,
      about as heavy as Labyrinth's walls but in whole pixels (--line: 3px,
@@ -284,8 +292,21 @@
     }
   }
   html.style-circles .cell, html.style-circles .cell.given{ background:none; }
-  .box-line{ display:none; position:absolute; background:#000; pointer-events:none; }
+  .box-line{ display:none; position:absolute; background:var(--line-color); pointer-events:none; }
   html.style-circles .box-line{ display:block; }
+
+  /* Colour trials, picked with ?theme= (colours.html shows them all). Built
+     from colours already on the site: Labyrinth's pink, Math's purple,
+     Tic Tac Toe's blue and orange, Odd One Out's orange and teal, Number
+     Puzzle's blue, Pipes' water. w* have white numbers, b* black, and mix
+     has white on the given discs and black on the player's. */
+  html[data-theme="w1"]{ --bg:#E88CE5; --disc-given:#8104C9; --disc:#3452A0; --digit-given:#fff; --digit:#fff; --empty:rgba(32,32,32,0.22); --line-color:#202020; }
+  html[data-theme="w2"]{ --bg:#1F2A44; --disc-given:#EE643E; --disc:#707EFF; --digit-given:#fff; --digit:#fff; --empty:rgba(255,255,255,0.14); --line-color:#E4E4E4; }
+  html[data-theme="w3"]{ --bg:#74D5CA; --disc-given:#053133; --disc:#EE643E; --digit-given:#fff; --digit:#fff; --empty:rgba(5,49,51,0.22); --line-color:#053133; }
+  html[data-theme="b1"]{ --bg:#FD6427; --disc-given:#E4E4E4; --disc:#74D5CA; --empty:rgba(32,32,32,0.28); }
+  html[data-theme="b2"]{ --bg:#4B2A6B; --disc-given:#E88CE5; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); }
+  html[data-theme="b3"]{ --bg:#0B6E6A; --disc-given:#FD6427; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); }
+  html[data-theme="mix"]{ --bg:#6B4FA0; --disc-given:#202020; --digit-given:#fff; --disc:#E4E4E4; --empty:rgba(0,0,0,0.3); }
 
   /* A new shape pops into its square. */
   .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -316,11 +337,12 @@
   @media (max-width: 767px), (max-height: 500px){
     /* Close to Labyrinth's phone wall weight, in whole pixels. */
     html.style-circles .board-wrap{ --line: 2px; }
-    /* 6x6 squares are small on a phone: smaller discs (r 43 of 50, so 7%
-       free each side) give them nearly twice the room between them. */
-    html.style-circles .board-wrap[data-n="6"]{ --k: 0.07; }
+    /* 6x6 squares are small on a phone, where 4x4's 8% gaps look cramped:
+       discs of r 45 of 50 (5% free each side, 10% gaps) read about as
+       airy as the 4x4 board. */
+    html.style-circles .board-wrap[data-n="6"]{ --k: 0.05; }
     html.style-circles .board-wrap[data-n="6"] .disc,
-    html.style-circles .board-wrap[data-n="6"] .empty-ring{ r: 43px; }
+    html.style-circles .board-wrap[data-n="6"] .empty-ring{ r: 45px; }
     /* Touch has no hover, so desktop's grow-on-hover feedback never fires
        here -- darken on tap instead, so pressing any icon button is
        actually visible. (The icons inside the tray deliberately don't grow:
@@ -452,9 +474,10 @@
   // Each number sits on its own disc (html.style-circles). Trial options
   // (see compare.html): ?style=plain shows bare numbers on coloured squares
   // instead; ?seed=N makes the random picks repeat, so pages opened with the
-  // same seed show the same boards.
+  // same seed show the same boards; ?theme= picks a colour trial.
   var params = new URLSearchParams(location.search);
   if (params.get('style') !== 'plain') document.documentElement.classList.add('style-circles');
+  if (params.get('theme')) document.documentElement.setAttribute('data-theme', params.get('theme'));
   var SEED = parseInt(params.get('seed'), 10);
   if (!isNaN(SEED)) {
     Math.random = function(){ // mulberry32
