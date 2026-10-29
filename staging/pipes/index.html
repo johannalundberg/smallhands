@@ -38,6 +38,7 @@
     --bg:#8E4424;
     --tile:#573114;
     --tile-hover:#4B2A11; /* hover/press: a step darker than --tile */
+    --tile-hint:#331A08; /* the first-visit blink: clearly darker, so it shows on a phone */
     --line:#DC51D8;
     --pipe:#8E4424;
     --water:#DC51D8;
@@ -224,7 +225,7 @@
   .piece.hint{ animation: tile-hint 1600ms ease-in-out; }
   @keyframes tile-hint{
     0%, 40%, 100%{ background-color:var(--tile); }
-    20%, 60%{ background-color:var(--tile-hover); }
+    20%, 60%{ background-color:var(--tile-hint); }
     80%{ background-color:var(--tile); }
   }
   @media (hover:hover) and (pointer:fine){
