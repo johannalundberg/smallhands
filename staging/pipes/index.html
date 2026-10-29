@@ -32,16 +32,17 @@
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
 <style>
   :root{
-    /* Figma node 417:5256 (layout from 412:5049): rust page, dark brown
-       tiles outlined in pink, pipes cut out of the tiles in the page colour
-       that turn pink when the water runs through. */
-    --bg:#8E4424;
-    --tile:#573114;
-    --tile-hover:#4B2A11; /* hover/press: a step darker than --tile */
-    --line:#DC51D8;
-    --pipe:#8E4424;
-    --water:#DC51D8;
-    --success:#0B94A0; /* the solved water (teal, her pick) */
+    /* Figma node 417:5328 (layout from 412:5049): the tiles are the page's
+       own colour, so the board is drawn by its dark-blue lines; dry pipes
+       are orange, water dark blue like the lines, and the solved flow a
+       lighter blue. */
+    --bg:#A1642B;
+    --tile:#A1642B;
+    --tile-hover:#915A27; /* hover/press and the first-visit hint: a step darker */
+    --line:#0028B6;
+    --pipe:#FF5F1A;
+    --water:#0028B6;
+    --success:#43A4BF; /* the solved water flow */
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(32,32,32,0.4);
