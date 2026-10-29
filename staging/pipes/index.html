@@ -37,6 +37,7 @@
        when the water runs through. */
     --bg:#423825;
     --tile:#6C5D40;
+    --tile-hover:#62543A;
     --line:#EE65EA;
     --pipe:#423825;
     --water:#EE65EA;
@@ -199,19 +200,19 @@
     height:var(--cell);
     background:var(--tile);
     border:1px solid var(--line);
+    transition: background 120ms ease;
   }
   .piece{
     cursor:pointer;
     touch-action:manipulation;
     -webkit-touch-callout:none;
-    transition: transform 120ms ease;
+    transition: transform 120ms ease, background 120ms ease;
   }
   .piece:active{ transform:scale(0.95); }
-  /* Mouse only: the square under the pointer grows like the site's buttons
-     and hub tiles do, so it reads as something you can tap. */
+  /* Mouse only: the tile under the pointer turns slightly darker, so it
+     reads as something you can tap (no grow: she found that too much). */
   @media (hover:hover) and (pointer:fine){
-    .piece:hover{ transform:scale(1.035); z-index:1; }
-    .piece:hover:active{ transform:scale(0.95); }
+    .piece:hover{ background:var(--tile-hover); }
   }
   /* The pipe drawing covers the whole tile, outline included, plus 1px
      more on every side, and turns around the tile's centre. A dry pipe
