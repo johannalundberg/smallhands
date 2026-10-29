@@ -236,17 +236,17 @@
     dominant-baseline:central;
   }
   /* Trial, ?style=circles (see compare.html): each number sits on its own
-     disc, like the reference -- dark discs with light numbers for the
-     given ones, light discs with black numbers for the player's. */
+     disc, like the reference -- orange discs (Figma's circle colour) for
+     the given numbers, light discs for the player's; black numbers on both,
+     since a light number on orange is hard to read. */
   .disc{ display:none; }
   html.style-circles .disc{ display:inline; fill:var(--bright); }
-  html.style-circles .cell.given .disc{ fill:#2B2B2B; }
+  html.style-circles .cell.given .disc{ fill:var(--shape-0); }
   html.style-circles .shape .digit{ font-size:58px; }
   /* An empty square shows a muted circle (the unselected buttons' grey),
      so it's clear where to tap. */
   .empty-ring{ display:none; fill:var(--ink-muted); }
   html.style-circles .cell:not([data-shape]) .empty-ring{ display:inline; }
-  html.style-circles .cell.given .digit{ fill:var(--bright); }
   /* ...with no square colours, and only the cross between the four boxes
      drawn: no outline and no lines between the squares inside a box. */
   html.style-circles .board-wrap{ --gap:0px; --box-gap:2px; box-shadow:none; background:none; }
