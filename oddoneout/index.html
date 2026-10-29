@@ -657,7 +657,7 @@
     state.busy = true;
     state.wrongTries++;
     var out = state.wrongTries >= MAX_TRIES;
-    PLSound.play(out ? 'tryagain' : 'negative');
+    PLSound.play('negative');
     card.classList.add('wrong', 'pop');
     setTimeout(function(){
       card.classList.remove('wrong', 'pop');
@@ -708,11 +708,13 @@
     '<rect fill="var(--shape)" x="683" y="236" width="130" height="130"/>' +
     '</svg>';
 
-  // Out of tries: the sad face for 3s (the 'tryagain' sound already played
-  // on the tap), then the round starts over from zero dots.
+  // Out of tries: the sad face for 3s with the 'tryagain' sound (as
+  // Tic-Tac-Toe does when the computer wins), then the round starts over
+  // from zero dots.
   function showSad(){
     updateAppHeight();
     els.celebration.innerHTML = SAD_FACE_SVG;
+    PLSound.play('tryagain');
     els.boardWrap.style.display = 'none';
     els.celebration.style.display = 'flex';
     setTimeout(function(){
