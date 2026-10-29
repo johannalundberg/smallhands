@@ -55,6 +55,7 @@
     --ink-muted:rgba(32,32,32,0.4);
     --incorrect:#F2383B;
     --success:#04BA50; /* same green as a right answer in Math */
+    --win:#71B143; /* the solved board's wave (her pick) */
     /* The disc look's colours. */
     --disc-given: #B36400;
     --digit-given: #000;
@@ -307,6 +308,16 @@
     100%{ transform:scale(1); }
   }
 
+  /* Solved: a green wave runs across the board from the top-left corner --
+     each disc pops and turns green in turn (--d, set by onSolved). */
+  html.style-circles .cell.win .disc,
+  html.style-circles .cell.given.win .disc{ fill:var(--win); transition: fill 120ms ease var(--d); }
+  .cell.win .shape{ animation: win-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--d) both; }
+  @keyframes win-pop{
+    0%, 100%{ transform:scale(1); }
+    45%{ transform:scale(1.14); }
+  }
+
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
     100%{ transform:scale(var(--final-scale)); opacity:1; }
@@ -540,9 +551,12 @@
   var SIZE = { easy: 4, medium: 4, hard: 6 };
   var N = 4;
 
-  // The solved board's green flash, after which the next board appears --
-  // the same 0.7s as a right answer in Math.
-  var NEXT_LEVEL_MS = 700;
+  // The solved board's green wave: one diagonal of discs every WAVE_STEP_MS,
+  // each popping for WAVE_POP_MS; the board then holds green for WIN_HOLD_MS
+  // before the next one appears.
+  var WAVE_STEP_MS = 70;
+  var WAVE_POP_MS = 320;
+  var WIN_HOLD_MS = 600;
 
   // UNITS: the lines a number may appear in only once (every row, column
   // and box). PEERS[i]: every square sharing a row, column or box with i.
@@ -894,7 +908,7 @@
     els.celebration.style.display = 'none';
     els.boardWrap.style.display = '';
     cellEls.forEach(function(el, i){
-      el.classList.remove('pop');
+      el.classList.remove('pop', 'win');
       el.classList.toggle('given', state.given[i]);
       paintCell(i);
       // Every shape on a new board pops in: a quiet "here's a new one".
@@ -989,9 +1003,15 @@
   function onSolved(){
     state.busy = true;
     PLSound.play('positive');
-    // The numbers stay still and the page flashes green, the same flash as
-    // a right answer in Math; buildLevel (via endFlash) turns it back.
-    document.body.style.background = 'var(--success)';
+    // A green wave across the board, one diagonal at a time from the top
+    // left; buildLevel clears it. (Was the page flashing green like Math,
+    // which clashed with the orange discs.)
+    cellEls.forEach(function(el, i){
+      var diagonal = Math.floor(i / N) + i % N;
+      el.style.setProperty('--d', diagonal * WAVE_STEP_MS + 'ms');
+      el.classList.remove('pop');
+      el.classList.add('win');
+    });
     winTimer = setTimeout(function(){
       state.progress += 1;
       updateProgressDots();
@@ -1000,7 +1020,7 @@
       } else {
         buildLevel();
       }
-    }, NEXT_LEVEL_MS);
+    }, (2 * N - 2) * WAVE_STEP_MS + WAVE_POP_MS + WIN_HOLD_MS);
   }
 
   // Pixel-art smiley (Figma node 198:1809) -- two round eyes and a
