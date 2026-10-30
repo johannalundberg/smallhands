@@ -41,13 +41,13 @@
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
 <style>
   :root{
-    --bg:#322FC0; /* Figma 417:5400 */
+    --bg:#6284FF; /* Figma 425:955 */
     --bright:#E4E4E4;
-    --shape:#000000; /* Figma 417:5400: black on the blue page */
+    --shape:#44290F; /* Figma 425:955: dark brown on the blue page */
     --ink:#202020;
-    --ink-muted:rgba(0,0,0,0.4);
-    --success:#4FB73F; /* her pick */
-    --incorrect:#F23A3D; /* her pick */
+    --ink-muted:rgba(32,32,32,0.5); /* Figma 425:955 buttons */
+    --success:#1B690F; /* Figma 425:955 */
+    --incorrect:#B42323; /* Figma 425:955 */
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
     --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
@@ -140,7 +140,7 @@
     width: calc(var(--icon-size) * 0.25);
     height: calc(var(--icon-size) * 0.25);
     border-radius:50%;
-    background: var(--ink-muted);
+    background: rgba(32,32,32,0.4); /* Figma 425:955 dots */
     transition: background 150ms ease;
   }
   .progress-dots .dot.done{ background: var(--bright); }
