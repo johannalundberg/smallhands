@@ -188,10 +188,10 @@
     100%{ transform:scale(1); }
   }
   .cluster-card svg{ width:100%; height:100%; display:block; overflow:visible; }
-  /* Same line weight as Labyrinths' own .wall-line (3.5px / 2.5px on
-     phone) -- the square isn't a card frame, it's just one of the shape
+  /* 1px heavier than Labyrinths. .wall-line (her call: thin lines read too
+     light on the 6284FF blue). The square isn't a card frame, it's just one of the shape
      types, so it and every other shape share one stroke convention. */
-  .cluster-shape{ fill:none; stroke:var(--shape); stroke-width:3.5px; vector-effect:non-scaling-stroke; }
+  .cluster-shape{ fill:none; stroke:var(--shape); stroke-width:4.5px; vector-effect:non-scaling-stroke; }
   .cluster-card.wrong .cluster-shape{ stroke:var(--incorrect); }
   .cluster-card.correct .cluster-shape{ stroke:var(--success); }
 
@@ -233,7 +233,7 @@
        actually visible. (The icons inside the tray deliberately don't grow:
        the tray itself is the thing that grows, see .controls-slider:active.) */
     .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
-    .cluster-shape{ stroke-width:2px; }
+    .cluster-shape{ stroke-width:3px; }
     .cluster-row{ flex-direction:column; }
     .cluster-card{
       width: min(
