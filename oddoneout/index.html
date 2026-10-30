@@ -187,6 +187,19 @@
   .cluster-shape{ fill:none; stroke:var(--shape); stroke-width:4.5px; vector-effect:non-scaling-stroke; }
   .cluster-card.wrong .cluster-shape{ stroke:var(--incorrect); }
   .cluster-card.correct .cluster-shape{ stroke:var(--success); }
+  /* Tablets held upright: stack the three cards like on phones (her call), each
+     sized by the height left between the icon rows. */
+  @media (min-width: 768px) and (min-height: 501px) and (orientation: portrait){
+    :root{ --cluster-gap: 32px; }
+    .cluster-row{ flex-direction:column; }
+    .cluster-card{
+      width: min(
+        56vw,
+        calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom) - 2 * var(--cluster-gap)) / 3),
+        400px
+      );
+    }
+  }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }

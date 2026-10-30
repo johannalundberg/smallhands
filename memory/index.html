@@ -976,13 +976,16 @@
   // sketches, so tiles can grow to fill the tall narrow viewport instead of staying
   // landscape-shaped and leaving empty space above/below.
   var mobileMQ = window.matchMedia('(max-width: 767px), (max-height: 500px)');
+  // Tablets held upright get the same tall grid as phones (her call): a wide
+  // 4-across board left the iPad's portrait screen mostly empty.
+  var portraitTabletMQ = window.matchMedia('(min-width: 768px) and (min-height: 501px) and (orientation: portrait)');
 
   // The grid's cols/rows for the current tier -- swapped to a portrait shape on
   // the phone breakpoint. Total tile count is the same either way.
   function boardShape(){
     var tier = TIERS[state.difficulty];
     var cols = tier.cols, rows = tier.rows;
-    if (mobileMQ.matches) { cols = tier.rows; rows = tier.cols; }
+    if (mobileMQ.matches || portraitTabletMQ.matches) { cols = tier.rows; rows = tier.cols; }
     return { cols: cols, rows: rows };
   }
 
@@ -1221,6 +1224,18 @@
     mobileMQ.addEventListener('change', buildBoard);
   } else if (mobileMQ.addListener) {
     mobileMQ.addListener(buildBoard); // older Safari
+  }
+  // Rotating an iPad mid-game keeps the game: same tiles, same matched pairs,
+  // just re-flowed into the other grid shape.
+  function relayout(){
+    var snap = snapshotGame();
+    if (snap) renderBoard(snap.layout, snap.matched);
+    else buildBoard();
+  }
+  if (portraitTabletMQ.addEventListener) {
+    portraitTabletMQ.addEventListener('change', relayout);
+  } else if (portraitTabletMQ.addListener) {
+    portraitTabletMQ.addListener(relayout);
   }
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
