@@ -41,13 +41,13 @@
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
 <style>
   :root{
-    --bg:#707EFF; /* Number Puzzle's blue (her call; Figma 425:955 had 6284FF) */
+    --bg:#1F2533; /* dark ink, her pick 2026-10-30 (light blue stood out from the other games) */
     --bright:#E4E4E4;
-    --shape:#4A2C12; /* Figma 425:955: dark brown on the blue page */
+    --shape:#707EFF; /* Number Puzzle's blue */
     --ink:#202020;
-    --ink-muted:rgba(32,32,32,0.5); /* Figma 425:955 buttons */
-    --success:#57CE44; /* Figma 425:955 */
-    --incorrect:#D33535; /* Figma 425:955 */
+    --ink-muted:rgba(0,0,0,0.3); /* dark see-through circles, like the other games */
+    --success:#57CE44;
+    --incorrect:#D33535;
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
     --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
@@ -140,7 +140,7 @@
     width: calc(var(--icon-size) * 0.25);
     height: calc(var(--icon-size) * 0.25);
     border-radius:50%;
-    background: rgba(32,32,32,0.4); /* Figma 425:955 dots */
+    background: var(--ink-muted);
     transition: background 150ms ease;
   }
   .progress-dots .dot.done{ background: var(--bright); }
@@ -254,6 +254,8 @@
       background: rgba(0,0,0,0.22);
       border-radius:999px;
       overflow-x:auto;
+      /* buttons sit on this tray, so their circles go darker inside it (like Othello) */
+      --ink-muted: rgba(0,0,0,0.45);
       -webkit-overflow-scrolling:touch;
       scrollbar-width:none;
     }
