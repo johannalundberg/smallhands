@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+<meta name="robots" content="noindex">
+<!-- GoatCounter: counts visits without cookies or personal data (here: which broken links people land on) -->
+<script data-goatcounter="https://playandlearn.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<title>Play and Learn</title>
+<!-- GitHub Pages serves this file for any missing address, at any depth, so
+     every path here is absolute. -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+  :root{
+    /* Same --unit/--icon-size as every game page and About, so the back
+       button sits and sizes exactly like theirs. */
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+  }
+  @media (min-width:768px) and (max-width:1023px) and (min-height:501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+  @media (max-width:767px){
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    min-height: var(--app-height, 100vh);
+    background:#EE3B3B; /* same red as the phone-landscape block */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* Wordless "nothing here": the site's sad face, sized like the games'
+     lose-state face. */
+  .face{ width:min(70vmin, 700px); height:auto; margin-bottom:calc(var(--icon-size) * 0.5); }
+
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:#EE3B3B;
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height:500px) and (min-width:500px) and (orientation:landscape){
+    .rotate-block{ display:flex; }
+  }
+
+  /* Back to the hub: the same bottom-left button as About and the games. */
+  .back-btn{
+    position:fixed;
+    left:var(--unit);
+    bottom:var(--unit);
+    width:var(--icon-size);
+    height:var(--icon-size);
+    display:flex;
+    cursor:pointer;
+    transition:transform 120ms ease;
+  }
+  .back-btn svg{ width:100%; height:100%; display:block; transform:rotate(-90deg); }
+  .back-btn:active{ transform:scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .back-btn:hover{ transform:scale(1.035); }
+  }
+  @media (max-width:767px){
+    .back-btn:active{ transform:scale(1.035); filter: brightness(0.7); }
+  }
+  html, body{ touch-action:manipulation; }
+</style>
+</head>
+<body>
+
+  <svg class="face" viewBox="0 0 973 366" aria-hidden="true">
+    <circle fill="#202020" cx="65" cy="65" r="65"/>
+    <circle fill="#202020" cx="908" cy="65" r="65"/>
+    <rect fill="#202020" x="291" y="171" width="392" height="65"/>
+    <rect fill="#202020" x="161" y="236" width="130" height="130"/>
+    <rect fill="#202020" x="683" y="236" width="130" height="130"/>
+  </svg>
+
+  <a class="back-btn" href="/" aria-label="Back">
+    <svg viewBox="0 0 150 150">
+      <circle cx="75" cy="75" r="75" fill="rgba(0,0,0,0.28)"/>
+      <path fill="#E4E4E4" d="M69.8479 33.4658L72.6653 30.2627L75.6809 33.2803L107.803 65.4228L104.974 68.25L102.145 71.0781L77.2073 46.124L77.2072 118.086L69.4963 118.086L69.4963 45.9795L47.5881 70.8916L41.5803 65.6084L69.8479 33.4658Z"/>
+    </svg>
+  </a>
+
+  <div class="rotate-block">
+    <svg viewBox="0 0 973 366">
+      <circle fill="#202020" cx="65" cy="65" r="65"/>
+      <circle fill="#202020" cx="908" cy="65" r="65"/>
+      <rect fill="#202020" x="291" y="171" width="392" height="65"/>
+      <rect fill="#202020" x="161" y="236" width="130" height="130"/>
+      <rect fill="#202020" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
+<script src="/sound.js?v=20261025ze"></script>
+<script>
+(function(){
+  "use strict";
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') updateAppHeight();
+  });
+
+  // Same as About: leaving the phone-landscape block reloads, so iOS doesn't
+  // keep the landscape zoom.
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) location.reload();
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  else if (landscapeBlockMQ.addListener) landscapeBlockMQ.addListener(onLandscapeBlockChange);
+})();
+</script>
+
+</body>
+</html>

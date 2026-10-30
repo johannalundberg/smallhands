@@ -5,18 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#F2383B">
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-45ZK78NND7"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-45ZK78NND7');
-</script>
+<!-- GoatCounter: counts visits without cookies or personal data -->
+<script data-goatcounter="https://playandlearn.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 <title>Sudoku for Kids: 4x4 and 6x6 Puzzles — Play and Learn</title>
-<meta name="description" content="Sudoku for kids on 4x4 and 6x6 boards: every row, column and box has each number once. Free, no ads or pop-ups. Designed by a mom and her 6-year-old.">
+<meta name="description" content="Sudoku for kids on 4x4 and 6x6 boards: every row, column and box has each number once. Free, no ads, pop-ups or cookies. Designed by a mom and her 6-year-old.">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <link rel="manifest" href="../manifest.json">
@@ -95,6 +88,9 @@
       --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
       --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
       --board-h: calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom));
+      /* Full width only on phones (her call); from tablet up, the same width
+         cap as Unblock (76vw, 743px) so it isn't oversized on an iPad. */
+      --board-w: min(76vw, 743px);
     }
   }
 
@@ -448,7 +444,7 @@
   "@type": "VideoGame",
   "name": "Sudoku",
   "url": "https://playandlearn.kids/sudoku/",
-  "description": "Sudoku for kids on 4x4 and 6x6 boards: every row, column and box has each number once. Free, no ads or pop-ups. Designed by a mom and her 6-year-old.",
+  "description": "Sudoku for kids on 4x4 and 6x6 boards: every row, column and box has each number once. Free, no ads, pop-ups or cookies. Designed by a mom and her 6-year-old.",
   "genre": [
     "Puzzle",
     "Logic"
