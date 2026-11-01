@@ -293,6 +293,28 @@
     .pad-spacer{ display:block; }
   }
 
+  /* iPad landscape and computers: side by side instead, like a calculator --
+     the sum on a light purple panel down the left half, the pad as a 3x4
+     grid in the purple on the right. (A band across the top took half these
+     screens, since the sum has to sit below the row of top icons.) */
+  @media (orientation: landscape) and (min-width: 768px) and (min-height: 501px){
+    :root{
+      --key: max(44px, min(
+        var(--icon-size),
+        calc((50vw - var(--unit) * 4) / 3.25),
+        calc((var(--app-height, 100vh) - var(--unit) * 10 - var(--icon-size) * 2) / 4.37)
+      ));
+    }
+    .equation-row{ right:50%; bottom:0; height:auto; padding-top:0; }
+    .equation{ font-size: calc(var(--hero-size) * 0.7 * var(--eq-scale, 1)); }
+    body{ padding:0 0 0 50%; }
+    .num-pad{ grid-template-columns: repeat(3, var(--key)); }
+    .pad-spacer{ display:block; }
+    /* Only the sign buttons sit on the panel now; difficulty is back on the
+       purple, where selected is light as in every game. */
+    .diff-btn.active .fill-bg{ fill:var(--bright); }
+  }
+
   /* ---------- phone: single scrollable slider-menu bar ---------- */
   /* max-height clause catches a phone in landscape (width alone would otherwise put
      it in the iPad-tuned tablet breakpoint above) — matches on width OR shortness. */
@@ -809,7 +831,10 @@
   // trigger this and render at full size exactly as before.
   function fitEquationText(){
     var el = els.equation;
-    var maxWidth = window.innerWidth * 0.94;
+    // Full-width band: 94% of the screen. Half-width panel (wide screens):
+    // 85% of the panel, to keep clear of its edges.
+    var panel = el.parentNode.clientWidth;
+    var maxWidth = panel < window.innerWidth ? panel * 0.85 : window.innerWidth * 0.94;
     var scale = 1;
     el.style.setProperty('--eq-scale', scale);
     while (el.scrollWidth > maxWidth && scale > 0.5) {
