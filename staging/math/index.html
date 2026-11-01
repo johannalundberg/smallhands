@@ -398,19 +398,26 @@
       --hero-size: clamp(2.6rem, 16.5587vw, 140px); /* 65.08px on the 393px phone frame */
       --unit: 5.089vw; /* 20px on the 393px phone frame */
       --icon-size: clamp(52px, 20.5344vw, 100px); /* 80.71px on the 393px phone frame */
-      /* The sum starts below the progress dots, not a row of icons, and
-         takes only the room it needs: the 3x4 keys (as big as the tray's
-         buttons where they fit, smaller on shorter phones) get the rest,
-         and the sum's purple grows on phones tall enough for full-size
-         keys. */
+      /* Like Apple's calculator: the keys come first, as big as the tray's
+         buttons so the 4 columns fill the same width as the tray, from just
+         above it (one unit's gap) upwards. They shrink only on phones too
+         short to leave the progress dots and a 40px sum above them. The
+         sum gets everything above the keys, sitting at its bottom. */
       --top-reserve: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
-      --band-min: calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit) * 1.5);
       --key: max(44px, min(
         var(--icon-size),
-        calc((var(--app-height, 100vh) - var(--band-min) - var(--unit) * 5 - var(--icon-size)) / 4.37)
+        calc((var(--app-height, 100vh) - var(--unit) * 2.5 - var(--icon-size) - var(--top-reserve) - 60px) / 4.37)
       ));
-      --band-h: max(var(--band-min), calc(var(--app-height, 100vh) - var(--unit) * 5 - var(--icon-size) - var(--key) * 4.37));
+      --band-h: calc(var(--app-height, 100vh) - var(--unit) * 2.5 - var(--icon-size) - var(--key) * 4.37);
     }
+    /* The sum at the bottom right of that space, its last digit over the
+       keys' right edge, as big as the room allows up to its usual size. A
+       blank shows only where the next digit goes, so the sum grows leftwards
+       as it's typed, like the calculator's display. */
+    .equation-row{ padding-bottom:0; }
+    .equation{ font-size: calc(min(var(--hero-size), (var(--band-h) - var(--top-reserve)) / 1.4864) * var(--eq-scale, 1)); }
+    .answer-digit.placeholder{ display:none; }
+    .equation-tap{ align-items:flex-start; padding-top:calc(var(--unit) * 0.5); }
     .controls-slider{
       display:flex;
       align-items:flex-end;
@@ -434,9 +441,8 @@
     .controls-slider:active{ transform: scale(1.03); }
     .op-group, .diff-group, .btn-row{ display:contents; }
     .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
-    /* Measured from the tray's top edge, so the space above and below the
-       keys comes out even. */
-    .equation-tap{ padding-bottom: calc(var(--unit) + var(--icon-size)); }
+    /* The keys end one unit above the tray. */
+    .equation-tap{ padding-bottom: calc(var(--unit) * 2 + var(--icon-size)); }
     /* Memory's tray colour, which shows on the grey (Math's own see-through
        grey disappears on it). */
     .controls-slider{ background: rgba(0,0,0,0.2); }
