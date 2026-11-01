@@ -263,6 +263,7 @@
     gap: calc(var(--key) * 0.1239);
   }
   .pad-spacer{ display:none; }
+  .pad-op{ display:none; } /* upright screens only, see there */
   .icon-btn.pad-key{ width:var(--key); height:var(--key); }
   .pad-key .fill-bg{ fill:var(--band); }
   .pad-key .digit{
@@ -282,9 +283,11 @@
      Math's own purple, as it always was, and the keys on a dark panel (Memory's
      background) filling the rest of the screen, so the purple sum is the
      focus -- as Memory's buttons: black see-through circles, light digits.
-     1 2 3 / 4 5 6 / 7 8 9 / _ 0 delete, like a calculator, each key as big
-     as the corner icons when there's room: 4 keys and 3 gaps = 4.37 keys
-     tall. */
+     Laid out like Apple's calculator: 7 8 9 on top, a wide 0, and the signs
+     as a purple column on the right (out of the tray), the chosen one light
+     with a purple sign. The sum sits right-aligned just above the keys.
+     Each key as big as the corner icons when there's room: 4 keys and 3
+     gaps = 4.37 keys, both ways. */
   @media (orientation: portrait){
     :root{
       --key: max(44px, min(
@@ -292,9 +295,14 @@
         calc((var(--app-height, 100vh) - var(--band-h) - var(--unit) * 6 - var(--icon-size)) / 4.37)
       ));
     }
-    .equation-row{ background:transparent; }
-    /* The sum's numbers the same size as the key digits (95/150 of a key). */
-    .equation{ color:var(--bright); font-size: calc(var(--key) * 0.633 * var(--eq-scale, 1)); }
+    .equation-row{
+      background:transparent;
+      align-items:flex-end;
+      justify-content:flex-end;
+      padding-right:calc(50vw - var(--key) * 2.185);
+      padding-bottom:var(--unit);
+    }
+    .equation{ color:var(--bright); }
     .op-btn.active .fill-bg,
     .diff-btn.active .fill-bg{ fill:var(--bright); }
     .op-btn.active .fill-glyph{ fill:var(--ink); }
@@ -309,8 +317,36 @@
     .pad-key .fill-bg{ fill:rgba(0,0,0,0.4); }
     .pad-key .digit{ fill:var(--bright); }
     .pad-key .del-glyph{ stroke:var(--bright); }
-    .num-pad{ grid-template-columns: repeat(3, var(--key)); }
-    .pad-spacer{ display:block; }
+    .num-pad{ grid-template-columns: repeat(4, var(--key)); }
+    body .op-group{ display:none; }
+    .pad-op{ display:flex; }
+    .pad-op .fill-bg{ fill:var(--bg); }
+    .pad-op .fill-glyph{ fill:var(--bright); }
+    .pad-op.active .fill-bg{ fill:var(--bright); }
+    .pad-op.active .fill-glyph{ fill:var(--bg); }
+    .pad-key[data-digit="7"]{ grid-area:1 / 1; }
+    .pad-key[data-digit="8"]{ grid-area:1 / 2; }
+    .pad-key[data-digit="9"]{ grid-area:1 / 3; }
+    .pad-key[data-op="div"]{ grid-area:1 / 4; }
+    .pad-key[data-digit="4"]{ grid-area:2 / 1; }
+    .pad-key[data-digit="5"]{ grid-area:2 / 2; }
+    .pad-key[data-digit="6"]{ grid-area:2 / 3; }
+    .pad-key[data-op="mul"]{ grid-area:2 / 4; }
+    .pad-key[data-digit="1"]{ grid-area:3 / 1; }
+    .pad-key[data-digit="2"]{ grid-area:3 / 2; }
+    .pad-key[data-digit="3"]{ grid-area:3 / 3; }
+    .pad-key[data-op="sub"]{ grid-area:3 / 4; }
+    .pad-key[data-key="delete"]{ grid-area:4 / 3; }
+    .pad-key[data-op="add"]{ grid-area:4 / 4; }
+    /* The wide 0 spans two columns as a pill. */
+    .icon-btn.pad-key[data-digit="0"]{
+      grid-area:4 / 1 / 5 / 3;
+      width:auto;
+      aspect-ratio:auto;
+      border-radius:999px;
+      background:rgba(0,0,0,0.4);
+    }
+    .pad-key[data-digit="0"] .fill-bg{ display:none; }
   }
 
   /* iPad landscape and computers: side by side instead, like a calculator --
@@ -353,6 +389,7 @@
     .equation-row{ background:var(--band); }
     .equation{ color:#000; }
     .equation-tap{ position:static; padding:0; background:none; }
+    body .op-group{ display:flex; }
     .op-btn.active .fill-bg,
     .diff-btn.active .fill-bg{ fill:var(--bright); }
     .op-btn.active .fill-glyph{ fill:var(--ink); }
@@ -377,7 +414,7 @@
          and the sum's purple grows on phones tall enough for full-size
          keys. */
       --top-reserve: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
-      --band-min: calc(var(--top-reserve) + var(--icon-size) * 0.633 * 1.4864 + var(--unit) * 1.5);
+      --band-min: calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit) * 1.5);
       --key: max(44px, min(
         var(--icon-size),
         calc((var(--app-height, 100vh) - var(--band-min) - var(--unit) * 5 - var(--icon-size)) / 4.37)
@@ -562,7 +599,9 @@
         <span class="num" id="numA">--</span><span class="num" id="opSign">+</span><span class="num" id="numB">--</span><span class="num">=</span><span class="answer-slots" id="answerSlots"></span>
       </div>
     </div>
-    <!-- On-screen number pad: 1-9, a gap the 3x4 grid needs, 0, delete. -->
+    <!-- On-screen number pad: 1-9, a gap the 3x4 grid needs, 0, delete, and
+         (upright screens only) the signs as a column on the right, like
+         Apple's calculator. -->
     <div class="num-pad" id="numPad">
       <button class="icon-btn pad-key" data-digit="1" aria-label="1"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><text class="digit" x="75" y="75">1</text></svg></button>
       <button class="icon-btn pad-key" data-digit="2" aria-label="2"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><text class="digit" x="75" y="75">2</text></svg></button>
@@ -576,6 +615,10 @@
       <span class="pad-spacer"></span>
       <button class="icon-btn pad-key" data-digit="0" aria-label="0"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><text class="digit" x="75" y="75">0</text></svg></button>
       <button class="icon-btn pad-key" data-key="delete" aria-label="Delete"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="del-glyph" d="M62 50H108V100H62L42 75Z M72 63L96 87 M96 63L72 87"/></svg></button>
+      <button class="icon-btn pad-key pad-op" data-op="div" aria-label="Division"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><g class="fill-glyph"><path d="M36.0391 78.8185V71.1074H113.149V78.8185H36.0391Z"/><circle cx="74.5109" cy="53.0812" r="6.33117"/><circle cx="74.5109" cy="95.9405" r="6.33117"/></g></svg></button>
+      <button class="icon-btn pad-key pad-op" data-op="mul" aria-label="Multiplication"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="fill-glyph" d="M44.6029 50.0612L50.0554 44.6086L74.5918 69.145L99.1282 44.6086L104.581 50.0612L80.0443 74.5976L104.581 99.1339L99.1282 104.586L74.5918 80.0501L50.0554 104.586L44.6029 99.1339L69.1393 74.5976L44.6029 50.0612Z"/></svg></button>
+      <button class="icon-btn pad-key pad-op" data-op="sub" aria-label="Subtraction"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="fill-glyph" d="M36.0391 78.8185V71.1074H113.149V78.8185H36.0391Z"/></svg></button>
+      <button class="icon-btn pad-key pad-op" data-op="add" aria-label="Addition"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="fill-glyph" d="M36.0391 78.4439V70.7329H70.7387V36.0332H78.4498V70.7329H113.149V78.4439H78.4498V113.144H70.7387V78.4439H36.0391Z"/></svg></button>
     </div>
   </div>
 
@@ -855,7 +898,7 @@
     els.answerSlots.innerHTML = html;
     updateProgressDots();
 
-    els.opGroup.querySelectorAll('.op-btn').forEach(function(btn){
+    document.querySelectorAll('.op-btn, .pad-op').forEach(function(btn){
       var op = btn.getAttribute('data-op');
       btn.classList.toggle('active', state.activeOp === op);
     });
@@ -873,10 +916,13 @@
   // trigger this and render at full size exactly as before.
   function fitEquationText(){
     var el = els.equation;
-    // Full-width band: 94% of the screen. Half-width panel (wide screens):
-    // 85% of the panel, to keep clear of its edges.
-    var panel = el.parentNode.clientWidth;
-    var maxWidth = panel < window.innerWidth ? panel * 0.85 : window.innerWidth * 0.94;
+    // The room inside the sum's band or panel (less the right margin that
+    // lines it up with the keys on upright screens): 94% of it across the
+    // full width, 85% in the half-width panel of wide screens, to keep clear
+    // of its edges.
+    var row = el.parentNode, cs = getComputedStyle(row);
+    var room = row.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var maxWidth = room * (row.clientWidth < window.innerWidth ? 0.85 : 0.94);
     var scale = 1;
     el.style.setProperty('--eq-scale', scale);
     while (el.scrollWidth > maxWidth && scale > 0.5) {
@@ -989,7 +1035,8 @@
   els.numPad.addEventListener('click', function(e){
     var btn = e.target.closest('.pad-key');
     if (!btn) return;
-    if (btn.getAttribute('data-key') === 'delete') deleteDigit();
+    if (btn.hasAttribute('data-op')) selectOp(btn.getAttribute('data-op'));
+    else if (btn.getAttribute('data-key') === 'delete') deleteDigit();
     else addDigit(btn.getAttribute('data-digit'));
   });
 
@@ -1001,13 +1048,15 @@
     e.preventDefault();
   });
 
-  els.opGroup.addEventListener('click', function(e){
-    var btn = e.target.closest('.op-btn');
-    if (!btn) return;
-    var op = btn.getAttribute('data-op');
+  function selectOp(op){
     if (op === state.activeOp) return; // already selected — don't reset the current problem
     state.activeOp = op;
     newProblem();
+  }
+
+  els.opGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.op-btn');
+    if (btn) selectOp(btn.getAttribute('data-op'));
   });
 
   els.diffGroup.addEventListener('click', function(e){
