@@ -279,13 +279,12 @@
      with a cross in it, a fine line, sharp corners and square ends. */
   .pad-key .del-glyph{ fill:none; stroke:#000; stroke-width:8; }
 
-  /* Upright screens (phones, iPad portrait): the sum in light type on
-     Math's own purple, as it always was, and the keys on a dark panel (Memory's
-     background) filling the rest of the screen, so the purple sum is the
-     focus -- as Memory's buttons: black see-through circles, light digits.
-     Laid out like Apple's calculator: 7 8 9 on top, a wide 0, and the signs
-     as a purple column on the right (out of the tray), the chosen one light
-     with a purple sign. The sum sits right-aligned just above the keys.
+  /* Upright screens (phones, iPad portrait), after Apple's calculator: the
+     whole page one dark grey (Memory's background), the sum in light type
+     right-aligned just above the keys like the calculator's display, and
+     the keys as Memory's buttons -- black see-through circles, light digits
+     -- 7 8 9 on top, 0 under the 2, and the signs as a purple column on the
+     right (out of the tray), the chosen one light with a purple sign.
      Each key as big as the corner icons when there's room: 4 keys and 3
      gaps = 4.37 keys, both ways. */
   @media (orientation: portrait){
@@ -306,14 +305,13 @@
     .op-btn.active .fill-bg,
     .diff-btn.active .fill-bg{ fill:var(--bright); }
     .op-btn.active .fill-glyph{ fill:var(--ink); }
+    body{ background:#212121; }
+    :root{ --ink-muted: rgba(0,0,0,0.4); } /* Memory's buttons, which show on the grey */
     .equation-tap{
       position:fixed;
       top:var(--band-h); left:0; right:0; bottom:0;
       padding-bottom:calc(var(--unit) * 2 + var(--icon-size));
-      background:#212121;
-      transition: background 80ms ease;
     }
-    body.flashing .equation-tap{ background:transparent; }
     .pad-key .fill-bg{ fill:rgba(0,0,0,0.4); }
     .pad-key .digit{ fill:var(--bright); }
     .pad-key .del-glyph{ stroke:var(--bright); }
@@ -338,15 +336,7 @@
     .pad-key[data-op="sub"]{ grid-area:3 / 4; }
     .pad-key[data-key="delete"]{ grid-area:4 / 3; }
     .pad-key[data-op="add"]{ grid-area:4 / 4; }
-    /* The wide 0 spans two columns as a pill. */
-    .icon-btn.pad-key[data-digit="0"]{
-      grid-area:4 / 1 / 5 / 3;
-      width:auto;
-      aspect-ratio:auto;
-      border-radius:999px;
-      background:rgba(0,0,0,0.4);
-    }
-    .pad-key[data-digit="0"] .fill-bg{ display:none; }
+    .pad-key[data-digit="0"]{ grid-area:4 / 2; }
   }
 
   /* iPad landscape and computers: side by side instead, like a calculator --
@@ -385,7 +375,7 @@
       transform:translateY(-50%);
     }
     .equation{ font-size: calc(var(--hero-size) * var(--eq-scale, 1)); }
-    body{ padding:0; }
+    body{ padding:0; background:var(--bg); }
     .equation-row{ background:var(--band); }
     .equation{ color:#000; }
     .equation-tap{ position:static; padding:0; background:none; }
@@ -444,12 +434,11 @@
     .controls-slider:active{ transform: scale(1.03); }
     .op-group, .diff-group, .btn-row{ display:contents; }
     .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
-    /* Measured from the tray's top edge, so the dark above and below the
+    /* Measured from the tray's top edge, so the space above and below the
        keys comes out even. */
     .equation-tap{ padding-bottom: calc(var(--unit) + var(--icon-size)); }
-    /* The tray sits on the dark panel: Memory's tray and button colours,
-       which show there (Math's own see-through grey disappears on it). */
-    :root{ --ink-muted: rgba(0,0,0,0.4); }
+    /* Memory's tray colour, which shows on the grey (Math's own see-through
+       grey disappears on it). */
     .controls-slider{ background: rgba(0,0,0,0.2); }
   }
 
