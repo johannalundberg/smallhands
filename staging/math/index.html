@@ -315,6 +315,26 @@
     .diff-btn.active .fill-bg{ fill:var(--bright); }
   }
 
+  /* Computers with a mouse or trackpad: no number keys -- children type on
+     the keyboard, as Math always worked there (the hard-to-leave problem
+     was the phone's keyboard, never a computer's). The sum sits on a light
+     purple band across the middle, with the usual corner icons on the
+     purple above and below it. Touch screens of any size keep the keys. */
+  @media (hover: hover) and (pointer: fine) and (min-width: 768px) and (min-height: 501px){
+    .num-pad{ display:none; }
+    .equation-row{
+      top:50%; right:0; bottom:auto;
+      height:calc(var(--hero-size) * 1.4864 + var(--unit) * 4);
+      padding-top:0;
+      transform:translateY(-50%);
+    }
+    .equation{ font-size: calc(var(--hero-size) * var(--eq-scale, 1)); }
+    body{ padding:0; }
+    .op-btn.active .fill-bg,
+    .diff-btn.active .fill-bg{ fill:var(--bright); }
+    .op-btn.active .fill-glyph{ fill:var(--ink); }
+  }
+
   /* ---------- phone: single scrollable slider-menu bar ---------- */
   /* max-height clause catches a phone in landscape (width alone would otherwise put
      it in the iPad-tuned tablet breakpoint above) — matches on width OR shortness. */
