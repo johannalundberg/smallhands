@@ -275,9 +275,9 @@
     text-anchor:middle;
     dominant-baseline:central;
   }
-  /* Backspace: a tag pointing left with a cross in it, its line as heavy
-     as the digits'. */
-  .pad-key .del-glyph{ fill:none; stroke:#000; stroke-width:10; }
+  /* Backspace, in the style of Apple's: a short, almost square tag with
+     rounded corners pointing left, a cross in it, a fine line. */
+  .pad-key .del-glyph{ fill:none; stroke:#000; stroke-width:7; stroke-linejoin:round; stroke-linecap:round; }
 
   /* Upright screens (iPad portrait): 1 2 3 / 4 5 6 / 7 8 9 / _ 0 delete,
      each key as big as the corner icons when there's room. 4 keys and 3
@@ -511,7 +511,7 @@
       <button class="icon-btn pad-key" data-digit="9" aria-label="9"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><text class="digit" x="75" y="75">9</text></svg></button>
       <span class="pad-spacer"></span>
       <button class="icon-btn pad-key" data-digit="0" aria-label="0"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><text class="digit" x="75" y="75">0</text></svg></button>
-      <button class="icon-btn pad-key" data-key="delete" aria-label="Delete"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="del-glyph" d="M55 48H118V102H55L33 75Z M74 62L99 88 M99 62L74 88"/></svg></button>
+      <button class="icon-btn pad-key" data-key="delete" aria-label="Delete"><svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/><path class="del-glyph" d="M62 50H98Q108 50 108 60V90Q108 100 98 100H62L42 75Z M73 66L91 84 M91 66L73 84"/></svg></button>
     </div>
   </div>
 
