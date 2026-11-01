@@ -183,11 +183,11 @@
   }
 
   /* ---------- the sum ----------
-     On a full-width orange band across the top third, in black (taller only
+     On a full-width light purple band across the top third, in black (taller only
      if the sum needs it; Figma equation: 1188x327 on the 1728x1117 frame). The sum sits below the top corner icons on
      iPad/desktop and below the progress dots on phones (see there). */
   :root{
-    --band:#FFA226; /* Sudoku's orange */
+    --band:#D3A8FF; /* light purple, her pick 2026-11-01 (orange felt too intense) */
     --top-reserve: calc(var(--unit) * 2 + var(--icon-size));
     --band-h: max(calc(var(--app-height, 100vh) / 3), calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit) * 2));
   }
@@ -237,7 +237,7 @@
      The site's own buttons instead of the phone's keyboard, so the back
      button and the rest of the icons stay where they are in every game. The
      answer is checked as soon as every blank is filled. Keys in the band's
-     orange with black digits (like Sudoku's black digits on orange discs),
+     light purple with black digits (like Sudoku's black digits on its discs),
      so the sum and the keys read as one set.
      Wide screens: one row, 1-9 then 0 like a keyboard's number row, then
      delete. iPad portrait: a 3x4 grid. Phones: 4 across (see there). */
