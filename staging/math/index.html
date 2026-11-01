@@ -279,8 +279,8 @@
   .pad-key .del-glyph{ fill:none; stroke:#000; stroke-width:8; }
 
   /* Upright screens (phones, iPad portrait): the sum in light type on
-     Math's own purple, as it always was, and the keys on a light purple
-     panel filling the rest of the screen, as the site's usual dark
+     Math's own purple, as it always was, and the keys on a light grey
+     panel filling the rest of the screen, so the purple sum is the focus, as the site's usual dark
      see-through circles (black digits read better than light ones there).
      1 2 3 / 4 5 6 / 7 8 9 / _ 0 delete, like a calculator, each key as big
      as the corner icons when there's room: 4 keys and 3 gaps = 4.37 keys
@@ -301,7 +301,7 @@
       position:fixed;
       top:var(--band-h); left:0; right:0; bottom:0;
       padding-bottom:calc(var(--unit) * 2 + var(--icon-size));
-      background:var(--band);
+      background:var(--bright);
       transition: background 80ms ease;
     }
     body.flashing .equation-tap{ background:transparent; }
