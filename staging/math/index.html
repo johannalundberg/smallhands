@@ -33,8 +33,6 @@
 <meta name="twitter:title" content="Math — Play and Learn">
 <meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
-<script>/* TEMP: equation container options, ?eq=band-grey|band-lilac|band-orange|band-blue */
-(function(){ var m = /[?&]eq=([\w-]+)/.exec(location.search); if (m) document.documentElement.className += ' eq-' + m[1]; })();</script>
 <style>
   @font-face{
     font-family:'Spline Sans Mono';
@@ -184,16 +182,29 @@
     100%{ transform: scale(var(--final-scale)); opacity:1; }
   }
 
-  /* equation: Figma width 1188px height 327px, centered on both axes of the 1728x1117 frame.
-     The number pad sits under it and the two are centred as one group. */
-  .equation-tap{
+  /* ---------- the sum ----------
+     On a full-width orange band across the top third, in black (taller only
+     if the sum needs it; Figma equation: 1188x327 on the 1728x1117 frame). The sum sits below the top corner icons on
+     iPad/desktop and below the progress dots on phones (see there). */
+  :root{
+    --band:#FFA226; /* Sudoku's orange */
+    --top-reserve: calc(var(--unit) * 2 + var(--icon-size));
+    --band-h: max(calc(var(--app-height, 100vh) / 3), calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit) * 2));
+  }
+  .equation-row{
+    position:fixed;
+    top:0; left:0; right:0;
+    height:var(--band-h);
+    padding-top:var(--top-reserve);
     display:flex;
-    flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap: var(--pad-top-gap);
+    background:var(--band);
+    z-index:1;
+    transition: background 80ms ease;
   }
-  .equation-row{ position:relative; display:inline-block; }
+  /* A right or wrong answer turns the whole screen green/red, band included. */
+  body.flashing .equation-row{ background:transparent; }
   .equation{
     display:flex;
     align-items:baseline;
@@ -202,9 +213,8 @@
     gap:0.15em;
     font-size: calc(var(--hero-size) * var(--eq-scale, 1));
     line-height:1.4864;
-    color:var(--bright);
+    color:#000;
     max-width:94vw;
-    transition: color 80ms ease;
   }
   .answer-slots{ display:inline-flex; }
   .answer-digit{ display:inline-block; min-width:0.62em; text-align:center; }
@@ -215,80 +225,39 @@
   @keyframes blink{
     50%{ opacity:0; }
   }
-
-
-  /* ---------- TEMP: equation container options ---------- */
-  /* The sum on a full-width band across the top of the screen, black type
-     on its own colour; the number pad centres in the purple below it. */
-  html[class*="eq-band"]{
-    --band: #E4E4E4;
-    --top-reserve: calc(var(--unit) * 2 + var(--icon-size));
-    --band-h: max(calc(var(--app-height, 100vh) * 0.38), calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit) * 2));
-    --band-reserve: calc(var(--band-h) + var(--unit) * 6 + var(--icon-size));
-  }
-  html.eq-band-grey{ --band:#E4E4E4; }
-  html.eq-band-lilac{ --band:#D3A8FF; }
-  html.eq-band-orange{ --band:#FFA226; }
-  html.eq-band-blue{ --band:#707EFF; }
-  html[class*="eq-band"] .equation-row{
-    position:fixed; top:0; left:0; right:0; height:var(--band-h);
-    padding-top:var(--top-reserve);
-    display:flex; align-items:center; justify-content:center;
-    background:var(--band); z-index:1;
-    transition: background 80ms ease;
-  }
-  html[class*="eq-band"] .equation{ color:#000; }
-  html[class*="eq-band"] body{
-    padding-top:var(--band-h);
-    padding-bottom:calc(var(--unit) * 2 + var(--icon-size));
-  }
-  /* The flash colours the band too, so the whole screen goes green/red. */
-  html[class*="eq-band"] body.flashing .equation-row{ background:transparent; }
-  html[class*="eq-band"] .progress-dots{ z-index:2; }
-  @media (max-width: 767px), (max-height: 500px){
-    /* The band takes everything above the pad: 1.5 units of purple above
-       the pad and between the pad and the tray. */
-    html[class*="eq-band"]{
-      --top-reserve: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
-      --band-min: calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit));
-      --band-h: max(var(--band-min), calc(var(--app-height, 100vh) - var(--unit) * 5 - var(--icon-size) - var(--key) * 3.25));
-    }
-    /* Measured from the tray's top edge, so the purple above and below the
-       pad comes out even. */
-    html[class*="eq-band"] body{ padding-bottom:calc(var(--unit) + var(--icon-size)); }
-    /* The dots sit on the band on phones: dark, filled ones in black. */
-    html[class*="eq-band"] .progress-dots .dot{ background:rgba(0,0,0,0.18); }
-    html[class*="eq-band"] .progress-dots .dot.done{ background:#000; }
-  }
-  html[class*="eq-band"] .op-group, html[class*="eq-band"] .diff-group{ z-index:2; }
   /* iPad/desktop: the top icons sit on the band, where a light "selected"
      circle would vanish -- selected goes black there. */
   @media (min-width: 768px) and (min-height: 501px){
-    html[class*="eq-band"] .op-btn.active .fill-bg,
-    html[class*="eq-band"] .diff-btn.active .fill-bg{ fill:#202020; }
-    html[class*="eq-band"] .op-btn.active .fill-glyph{ fill:var(--bright); }
+    .op-btn.active .fill-bg,
+    .diff-btn.active .fill-bg{ fill:#202020; }
+    .op-btn.active .fill-glyph{ fill:var(--bright); }
   }
 
   /* ---------- number pad ----------
-     The site's own buttons instead of the phone's keyboard: dark see-through
-     circles with light digits, like every other game's buttons. With no
-     keyboard to make room for, the back button and the rest of the icons stay
-     where they are in every game. The answer is checked as soon as every
-     blank is filled.
+     The site's own buttons instead of the phone's keyboard, so the back
+     button and the rest of the icons stay where they are in every game. The
+     answer is checked as soon as every blank is filled. Keys in the band's
+     orange with black digits (like Sudoku's black digits on orange discs),
+     so the sum and the keys read as one set.
      Wide screens: one row, 1-9 then 0 like a keyboard's number row, then
-     delete. Upright screens (below): a phone-style 3x4 grid. */
+     delete. iPad portrait: a 3x4 grid. Phones: 4 across (see there). */
   :root{
-    --pad-top-gap: calc(var(--unit) * 2);
     /* Keys as big as the icon buttons, with the tray's gap between them
        (0.1239 of a key), as far as there's room: one row of 11 keys and 10
-       gaps has to fit the width, and the row plus the equation has to fit
-       between the top and bottom icons. */
+       gaps has to fit the width, and fit between the band and the bottom
+       icons. */
     --key: max(44px, min(
       var(--icon-size),
       calc((100vw - var(--unit) * 4) / 12.24),
-      calc(var(--app-height, 100vh) - var(--band-reserve, calc(var(--unit) * 6 + var(--icon-size) * 2 + var(--hero-size) * 1.4864 + var(--pad-top-gap))))
+      calc(var(--app-height, 100vh) - var(--band-h) - var(--unit) * 6 - var(--icon-size))
     ));
   }
+  /* The pad centres in the purple between the band and the bottom icons. */
+  body{
+    padding-top:var(--band-h);
+    padding-bottom:calc(var(--unit) * 2 + var(--icon-size));
+  }
+  .equation-tap{ display:flex; align-items:center; justify-content:center; }
   .num-pad{
     display:grid;
     grid-template-columns: repeat(11, var(--key));
@@ -296,9 +265,9 @@
   }
   .pad-spacer{ display:none; }
   .icon-btn.pad-key{ width:var(--key); height:var(--key); }
-  .pad-key .fill-bg{ fill:var(--ink-muted); }
+  .pad-key .fill-bg{ fill:var(--band); }
   .pad-key .digit{
-    fill:var(--bright);
+    fill:#000;
     font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
     font-weight:400;
     font-size:95px; /* the same share of the circle as Sudoku's digits */
@@ -306,7 +275,7 @@
     text-anchor:middle;
     dominant-baseline:central;
   }
-  .pad-key .del-glyph{ fill:none; stroke:var(--bright); stroke-width:8; }
+  .pad-key .del-glyph{ fill:none; stroke:#000; stroke-width:8; }
 
   /* Upright screens (iPad portrait): 1 2 3 / 4 5 6 / 7 8 9 / _ 0 delete,
      each key as big as the corner icons when there's room. 4 keys and 3
@@ -315,7 +284,7 @@
     :root{
       --key: max(44px, min(
         var(--icon-size),
-        calc((var(--app-height, 100vh) - var(--band-reserve, calc(var(--unit) * 6 + var(--icon-size) * 2 + var(--hero-size) * 1.4864 + var(--pad-top-gap)))) / 4.37)
+        calc((var(--app-height, 100vh) - var(--band-h) - var(--unit) * 6 - var(--icon-size)) / 4.37)
       ));
     }
     .num-pad{ grid-template-columns: repeat(3, var(--key)); }
@@ -335,14 +304,16 @@
       --hero-size: clamp(2.6rem, 16.5587vw, 140px); /* 65.08px on the 393px phone frame */
       --unit: 5.089vw; /* 20px on the 393px phone frame */
       --icon-size: clamp(52px, 20.5344vw, 100px); /* 80.71px on the 393px phone frame */
-      --pad-top-gap: calc(var(--unit) * 1.5);
+      /* The band starts below the progress dots, not a row of icons. */
+      --top-reserve: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
+      --band-h: max(calc(var(--app-height, 100vh) / 3), calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit) * 1.5));
       /* Keys exactly the tray's buttons (same size, same gap), 4 across
          so the pad is as wide as the tray: 1 2 3 4 / 5 6 7 8 / 9 0 _ delete.
          3 rows and 2 gaps = 3.25 keys tall; shrinks only on phones too
          short for that. */
       --key: max(44px, min(
         var(--icon-size),
-        calc((var(--app-height, 100vh) - var(--unit) * 5 - var(--icon-size) - var(--band-min, calc(var(--unit) * 2 + var(--icon-size) * 0.25 + var(--hero-size) * 1.4864))) / 3.25)
+        calc((var(--app-height, 100vh) - var(--band-h) - var(--unit) * 5 - var(--icon-size)) / 3.25)
       ));
     }
     .num-pad{ grid-template-columns: repeat(4, var(--key)); }
@@ -371,12 +342,12 @@
     .controls-slider:active{ transform: scale(1.03); }
     .op-group, .diff-group, .btn-row{ display:contents; }
     .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
-    /* Room for the progress dots at the top and the tray at the bottom, so the
-       equation and pad centre in the space between them. */
-    body{
-      padding-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
-      padding-bottom: calc(var(--unit) * 2 + var(--icon-size));
-    }
+    /* Measured from the tray's top edge, so the purple above and below the
+       pad comes out even. */
+    body{ padding-bottom: calc(var(--unit) + var(--icon-size)); }
+    /* The dots sit on the band here: dark, filled ones in black. */
+    .progress-dots .dot{ background:rgba(0,0,0,0.18); }
+    .progress-dots .dot.done{ background:#000; }
   }
 
   /* Phone in landscape: the sizing above is all vw-based (tuned for a tall portrait
