@@ -33,6 +33,8 @@
 <meta name="twitter:title" content="Math — Play and Learn">
 <meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
+<script>/* TEMP: equation container options, ?eq=band-grey|band-lilac|band-orange|band-blue */
+(function(){ var m = /[?&]eq=([\w-]+)/.exec(location.search); if (m) document.documentElement.className += ' eq-' + m[1]; })();</script>
 <style>
   @font-face{
     font-family:'Spline Sans Mono';
@@ -214,6 +216,59 @@
     50%{ opacity:0; }
   }
 
+
+  /* ---------- TEMP: equation container options ---------- */
+  /* The sum on a full-width band across the top of the screen, black type
+     on its own colour; the number pad centres in the purple below it. */
+  html[class*="eq-band"]{
+    --band: #E4E4E4;
+    --top-reserve: calc(var(--unit) * 2 + var(--icon-size));
+    --band-h: max(calc(var(--app-height, 100vh) * 0.38), calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit) * 2));
+    --band-reserve: calc(var(--band-h) + var(--unit) * 6 + var(--icon-size));
+  }
+  html.eq-band-grey{ --band:#E4E4E4; }
+  html.eq-band-lilac{ --band:#D3A8FF; }
+  html.eq-band-orange{ --band:#FFA226; }
+  html.eq-band-blue{ --band:#707EFF; }
+  html[class*="eq-band"] .equation-row{
+    position:fixed; top:0; left:0; right:0; height:var(--band-h);
+    padding-top:var(--top-reserve);
+    display:flex; align-items:center; justify-content:center;
+    background:var(--band); z-index:1;
+    transition: background 80ms ease;
+  }
+  html[class*="eq-band"] .equation{ color:#000; }
+  html[class*="eq-band"] body{
+    padding-top:var(--band-h);
+    padding-bottom:calc(var(--unit) * 2 + var(--icon-size));
+  }
+  /* The flash colours the band too, so the whole screen goes green/red. */
+  html[class*="eq-band"] body.flashing .equation-row{ background:transparent; }
+  html[class*="eq-band"] .progress-dots{ z-index:2; }
+  @media (max-width: 767px), (max-height: 500px){
+    /* The band takes everything above the pad: 1.5 units of purple above
+       the pad and between the pad and the tray. */
+    html[class*="eq-band"]{
+      --top-reserve: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
+      --band-min: calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit));
+      --band-h: max(var(--band-min), calc(var(--app-height, 100vh) - var(--unit) * 5 - var(--icon-size) - var(--key) * 3.25));
+    }
+    /* Measured from the tray's top edge, so the purple above and below the
+       pad comes out even. */
+    html[class*="eq-band"] body{ padding-bottom:calc(var(--unit) + var(--icon-size)); }
+    /* The dots sit on the band on phones: dark, filled ones in black. */
+    html[class*="eq-band"] .progress-dots .dot{ background:rgba(0,0,0,0.18); }
+    html[class*="eq-band"] .progress-dots .dot.done{ background:#000; }
+  }
+  html[class*="eq-band"] .op-group, html[class*="eq-band"] .diff-group{ z-index:2; }
+  /* iPad/desktop: the top icons sit on the band, where a light "selected"
+     circle would vanish -- selected goes black there. */
+  @media (min-width: 768px) and (min-height: 501px){
+    html[class*="eq-band"] .op-btn.active .fill-bg,
+    html[class*="eq-band"] .diff-btn.active .fill-bg{ fill:#202020; }
+    html[class*="eq-band"] .op-btn.active .fill-glyph{ fill:var(--bright); }
+  }
+
   /* ---------- number pad ----------
      The site's own buttons instead of the phone's keyboard: dark see-through
      circles with light digits, like every other game's buttons. With no
@@ -224,19 +279,20 @@
      delete. Upright screens (below): a phone-style 3x4 grid. */
   :root{
     --pad-top-gap: calc(var(--unit) * 2);
-    /* One row of 11 keys (plus 10 gaps of 0.18 key) has to fit the width,
-       and the row plus the equation has to fit between the top and bottom
-       icons. */
+    /* Keys as big as the icon buttons, with the tray's gap between them
+       (0.1239 of a key), as far as there's room: one row of 11 keys and 10
+       gaps has to fit the width, and the row plus the equation has to fit
+       between the top and bottom icons. */
     --key: max(44px, min(
-      calc(var(--icon-size) * 0.8),
-      calc((100vw - var(--unit) * 4) / 12.8),
-      calc(var(--app-height, 100vh) - var(--unit) * 6 - var(--icon-size) * 2 - var(--hero-size) * 1.4864 - var(--pad-top-gap))
+      var(--icon-size),
+      calc((100vw - var(--unit) * 4) / 12.24),
+      calc(var(--app-height, 100vh) - var(--band-reserve, calc(var(--unit) * 6 + var(--icon-size) * 2 + var(--hero-size) * 1.4864 + var(--pad-top-gap))))
     ));
   }
   .num-pad{
     display:grid;
     grid-template-columns: repeat(11, var(--key));
-    gap: calc(var(--key) * 0.18);
+    gap: calc(var(--key) * 0.1239);
   }
   .pad-spacer{ display:none; }
   .icon-btn.pad-key{ width:var(--key); height:var(--key); }
@@ -245,7 +301,7 @@
     fill:var(--bright);
     font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
     font-weight:400;
-    font-size:72px;
+    font-size:95px; /* the same share of the circle as Sudoku's digits */
     font-feature-settings:"zero" 1;
     text-anchor:middle;
     dominant-baseline:central;
@@ -254,12 +310,12 @@
 
   /* Upright screens (iPad portrait): 1 2 3 / 4 5 6 / 7 8 9 / _ 0 delete,
      each key as big as the corner icons when there's room. 4 keys and 3
-     gaps = 4.54 keys tall. */
+     gaps = 4.37 keys tall. */
   @media (orientation: portrait){
     :root{
       --key: max(44px, min(
         var(--icon-size),
-        calc((var(--app-height, 100vh) - var(--unit) * 6 - var(--icon-size) * 2 - var(--hero-size) * 1.4864 - var(--pad-top-gap)) / 4.54)
+        calc((var(--app-height, 100vh) - var(--band-reserve, calc(var(--unit) * 6 + var(--icon-size) * 2 + var(--hero-size) * 1.4864 + var(--pad-top-gap)))) / 4.37)
       ));
     }
     .num-pad{ grid-template-columns: repeat(3, var(--key)); }
@@ -280,13 +336,18 @@
       --unit: 5.089vw; /* 20px on the 393px phone frame */
       --icon-size: clamp(52px, 20.5344vw, 100px); /* 80.71px on the 393px phone frame */
       --pad-top-gap: calc(var(--unit) * 1.5);
-      /* 3x4 grid between the progress dots and the tray (body's padding
-         below), shrinking on short phones so it always fits. */
+      /* Keys exactly the tray's buttons (same size, same gap), 4 across
+         so the pad is as wide as the tray: 1 2 3 4 / 5 6 7 8 / 9 0 _ delete.
+         3 rows and 2 gaps = 3.25 keys tall; shrinks only on phones too
+         short for that. */
       --key: max(44px, min(
-        calc(var(--icon-size) * 0.9),
-        calc((var(--app-height, 100vh) - var(--unit) * 5 - var(--icon-size) * 1.25 - var(--hero-size) * 1.4864 - var(--pad-top-gap)) / 4.54)
+        var(--icon-size),
+        calc((var(--app-height, 100vh) - var(--unit) * 5 - var(--icon-size) - var(--band-min, calc(var(--unit) * 2 + var(--icon-size) * 0.25 + var(--hero-size) * 1.4864))) / 3.25)
       ));
     }
+    .num-pad{ grid-template-columns: repeat(4, var(--key)); }
+    .pad-spacer{ display:block; order:1; }
+    .pad-key[data-key="delete"]{ order:2; }
     .controls-slider{
       display:flex;
       align-items:flex-end;
@@ -731,9 +792,14 @@
     newProblem();
   }
 
+  // Each digit in its own span, so a digit can sit on its own disc.
+  function digitSpans(n){
+    return String(n).split('').map(function(ch){ return '<span class="d">' + ch + '</span>'; }).join('');
+  }
+
   function render(){
-    els.numA.textContent = state.a;
-    els.numB.textContent = state.b;
+    els.numA.innerHTML = digitSpans(state.a);
+    els.numB.innerHTML = digitSpans(state.b);
     els.opSign.textContent = state.op;
 
     var digitCount = String(state.answerValue).length;
@@ -784,10 +850,12 @@
     PLSound.play('positive');
     clearTimeout(flashTimer);
     document.body.style.background = 'var(--success)';
+    document.body.classList.add('flashing');
     flashTimer = setTimeout(function(){
       state.progress += 1;
       updateProgressDots();
       document.body.style.background = '';
+      document.body.classList.remove('flashing');
       if (state.progress >= ROUND_SIZE) {
         showCelebration();
       } else {
@@ -829,8 +897,10 @@
     PLSound.play('negative');
     clearTimeout(flashTimer);
     document.body.style.background = 'var(--incorrect)';
+    document.body.classList.add('flashing');
     flashTimer = setTimeout(function(){
       document.body.style.background = '';
+      document.body.classList.remove('flashing');
       state.busy = false;
       if (state.attempts >= MAX_ATTEMPTS) {
         newProblem();
