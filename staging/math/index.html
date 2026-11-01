@@ -293,7 +293,8 @@
       ));
     }
     .equation-row{ background:transparent; }
-    .equation{ color:var(--bright); }
+    /* The sum's numbers the same size as the key digits (95/150 of a key). */
+    .equation{ color:var(--bright); font-size: calc(var(--key) * 0.633 * var(--eq-scale, 1)); }
     .op-btn.active .fill-bg,
     .diff-btn.active .fill-bg{ fill:var(--bright); }
     .op-btn.active .fill-glyph{ fill:var(--ink); }
@@ -376,7 +377,7 @@
          and the sum's purple grows on phones tall enough for full-size
          keys. */
       --top-reserve: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
-      --band-min: calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit) * 1.5);
+      --band-min: calc(var(--top-reserve) + var(--icon-size) * 0.633 * 1.4864 + var(--unit) * 1.5);
       --key: max(44px, min(
         var(--icon-size),
         calc((var(--app-height, 100vh) - var(--band-min) - var(--unit) * 5 - var(--icon-size)) / 4.37)
