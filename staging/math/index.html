@@ -280,8 +280,9 @@
 
   /* Upright screens (phones, iPad portrait): the sum in light type on
      Math's own purple, as it always was, and the keys on a light grey
-     panel filling the rest of the screen, so the purple sum is the focus, as the site's usual dark
-     see-through circles (black digits read better than light ones there).
+     panel filling the rest of the screen, so the purple sum is the focus,
+     as the site's usual dark see-through circles (black digits read better
+     than light ones there).
      1 2 3 / 4 5 6 / 7 8 9 / _ 0 delete, like a calculator, each key as big
      as the corner icons when there's room: 4 keys and 3 gaps = 4.37 keys
      tall. */
@@ -404,9 +405,14 @@
     .controls-slider:active{ transform: scale(1.03); }
     .op-group, .diff-group, .btn-row{ display:contents; }
     .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
-    /* Measured from the tray's top edge, so the light purple above and
-       below the keys comes out even. */
+    /* Measured from the tray's top edge, so the grey above and below the
+       keys comes out even. */
     .equation-tap{ padding-bottom: calc(var(--unit) + var(--icon-size)); }
+    /* The tray sits on the grey panel, where a light "selected" circle
+       would vanish -- selected goes black there. */
+    .op-btn.active .fill-bg,
+    .diff-btn.active .fill-bg{ fill:#202020; }
+    .op-btn.active .fill-glyph{ fill:var(--bright); }
   }
 
   /* Phone in landscape: the sizing above is all vw-based (tuned for a tall portrait
