@@ -228,9 +228,9 @@
      found-a-pair bounce). The page stays as it is. */
   body.flash-wrong .answer-digit{ animation: digit-shake 520ms ease-in-out; }
   body.flash-right .answer-slots{ animation: ans-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1); }
-  /* Out of tries: while the right answer is shown, the sum turns the signs'
+  /* Out of tries: while the right answer is shown, it turns the signs'
      bright purple so it's clear this is the answer, not another try. */
-  body.showing-answer .equation{ color:#B15CFF; }
+  body.showing-answer .answer-slots{ color:#B15CFF; }
 
   /* ---------- number pad ----------
      The site's own buttons instead of the phone's keyboard, so the back
@@ -367,7 +367,7 @@
      keep the keys. Applies however the window is shaped. */
   @media (hover: hover) and (pointer: fine) and (min-width: 768px) and (min-height: 501px){
     :root{ --face: var(--bright); --ink-muted: rgba(32,32,32,0.4); }
-    body.showing-answer .equation{ color:var(--bright); } /* purple on purple wouldn't show */
+    body.showing-answer .answer-slots{ color:var(--bright); } /* purple on purple wouldn't show */
     body{ padding:0; background:var(--bg); }
     .num-pad{ display:none; }
     body .op-group{ display:flex; }
