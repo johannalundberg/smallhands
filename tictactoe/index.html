@@ -222,6 +222,15 @@
   }
 
   .cell.fade{ background: var(--fade-color, var(--cell)); }
+  /* A winning row (yours or the computer's) bounces as it turns green/red:
+     Memory's found-a-pair pop, up bigger then settle. A draw just fades. */
+  .cell.row-pop{ animation: row-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes row-pop{
+    0%{ transform:scale(1); }
+    45%{ transform:scale(1.18); }
+    75%{ transform:scale(0.96); }
+    100%{ transform:scale(1); }
+  }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -694,16 +703,21 @@
     if(!res.winner) return false;
     state.over = true;
     if(res.winner === 'draw'){ PLSound.play('negative'); runFade(allIndices(), '--draw', resetBoard); }
-    else if(res.winner === 'X'){ PLSound.play('positive'); runFade(res.line, '--success', onWinResolved); }
-    else { PLSound.play('negative'); runFade(res.line, '--incorrect', onLoseResolved); }
+    else if(res.winner === 'X'){ PLSound.play('positive'); runFade(res.line, '--success', onWinResolved, true); }
+    else { PLSound.play('negative'); runFade(res.line, '--incorrect', onLoseResolved, true); }
     return true;
   }
 
-  function runFade(cells, colorVar, after){
+  function runFade(cells, colorVar, after, pop){
     els.board.style.setProperty('--fade-color', 'var(' + colorVar + ')');
-    cells.forEach(function(i){ els.board.children[i].classList.add('fade'); });
+    cells.forEach(function(i){
+      var cell = els.board.children[i];
+      cell.classList.remove('spring'); // the tap's own bounce gives way to the row's
+      cell.classList.add('fade');
+      if (pop) cell.classList.add('row-pop');
+    });
     fadeTimer = setTimeout(function(){
-      cells.forEach(function(i){ els.board.children[i].classList.remove('fade'); });
+      cells.forEach(function(i){ els.board.children[i].classList.remove('fade', 'row-pop'); });
       after();
     }, 1600);
   }
@@ -778,7 +792,7 @@
     state.over = false;
     els.boardWrap.classList.remove('busy');
     for(var i=0;i<9;i++){
-      els.board.children[i].classList.remove('fade');
+      els.board.children[i].classList.remove('fade', 'row-pop');
       renderCell(i);
     }
   }
