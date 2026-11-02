@@ -183,32 +183,24 @@
     100%{ transform: scale(var(--final-scale)); opacity:1; }
   }
 
-  /* ---------- the sum ----------
-     On a full-width light purple band across the top third, in black (taller only
-     if the sum needs it; Figma equation: 1188x327 on the 1728x1117 frame). The sum sits below the top corner icons on
-     iPad/desktop and below the progress dots on phones (see there). */
+  /* ---------- the look ----------
+     After Apple's calculator (her pick, 2026-11-02): on every touch screen
+     the page is one dark grey (Memory's background), the sum big light type,
+     and the keys Memory's buttons -- black see-through circles with soft
+     grey digits: 7 8 9 on top, a wide 0 with its digit under the 1, and the
+     signs as a fourth column (out of the tray), dark keys with bright purple
+     signs, only the chosen one filled in Math's purple. Computers (no keys)
+     stay purple, see the end. */
   :root{
-    --band:#D3A8FF; /* light purple, her pick 2026-11-01 (orange felt too intense) */
-    --top-reserve: calc(var(--unit) * 2 + var(--icon-size));
-    --band-h: max(calc(var(--app-height, 100vh) / 3), calc(var(--top-reserve) + var(--hero-size) * 1.4864 + var(--unit) * 2));
+    --page:#212121;
+    --ink-muted: rgba(0,0,0,0.4); /* Memory's buttons, which show on the grey */
+    --face: var(--bg); /* the happy and sad faces, in Math's purple */
+    --top-reserve: calc(var(--unit) * 2 + var(--icon-size)); /* the top corner icons */
   }
-  .equation-row{
-    position:fixed;
-    top:0; left:0; right:0;
-    height:var(--band-h);
-    padding-top:var(--top-reserve);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:var(--band);
-    z-index:1;
-    transition: background 80ms ease;
-  }
-  /* Right or wrong without colour, on every screen: a wrong answer's digits
-     shake their heads (Sudoku's wobble), a right answer pops (Memory's
-     found-a-pair bounce). The page stays as it is. */
-  body.flash-wrong .answer-digit{ animation: digit-shake 520ms ease-in-out; }
-  body.flash-right .answer-slots{ animation: ans-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  body{ background:var(--page); }
+
+  /* ---------- the sum ---------- */
+  .equation-row{ position:fixed; z-index:1; display:flex; }
   .equation{
     display:flex;
     align-items:baseline;
@@ -217,61 +209,47 @@
     gap:0.15em;
     font-size: calc(var(--hero-size) * var(--eq-scale, 1));
     line-height:1.4864;
-    color:#000;
+    color:var(--bright);
     max-width:94vw;
   }
   .answer-slots{ display:inline-flex; }
   .answer-digit{ display:inline-block; min-width:0.62em; text-align:center; }
-  .answer-digit.placeholder{ visibility:hidden; }
+  /* A blank shows only where the next digit goes, so a right-aligned sum
+     grows leftwards as it's typed, like the calculator's display. */
+  .answer-digit.placeholder{ display:none; }
   .answer-digit.cursor{
     animation: blink 1s steps(1) infinite;
   }
   @keyframes blink{
     50%{ opacity:0; }
   }
-  /* iPad/desktop: the top icons sit on the band, where a light "selected"
-     circle would vanish -- selected goes black there. */
-  @media (min-width: 768px) and (min-height: 501px){
-    .op-btn.active .fill-bg,
-    .diff-btn.active .fill-bg{ fill:#202020; }
-    .op-btn.active .fill-glyph{ fill:var(--bright); }
-  }
+  /* Right or wrong without colour, on every screen: a wrong answer's digits
+     shake their heads (Sudoku's wobble), a right answer pops (Memory's
+     found-a-pair bounce). The page stays as it is. */
+  body.flash-wrong .answer-digit{ animation: digit-shake 520ms ease-in-out; }
+  body.flash-right .answer-slots{ animation: ans-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  /* Out of tries: while the right answer is shown, the sum turns the signs'
+     bright purple so it's clear this is the answer, not another try. */
+  body.showing-answer .equation{ color:#B15CFF; }
 
   /* ---------- number pad ----------
      The site's own buttons instead of the phone's keyboard, so the back
      button and the rest of the icons stay where they are in every game. The
-     answer is checked as soon as every blank is filled. Digits in black
-     (the same share of the circle as Sudoku's).
-     Upright screens: a 3x4 grid like a calculator. Wide screens: one row,
-     1-9 then 0 like a keyboard's number row, then delete. */
-  :root{
-    /* Keys as big as the icon buttons, with the tray's gap between them
-       (0.1239 of a key), as far as there's room: one row of 11 keys and 10
-       gaps has to fit the width, and fit between the band and the bottom
-       icons. */
-    --key: max(44px, min(
-      var(--icon-size),
-      calc((100vw - var(--unit) * 4) / 12.24),
-      calc(var(--app-height, 100vh) - var(--band-h) - var(--unit) * 6 - var(--icon-size))
-    ));
-  }
-  /* The pad centres in the purple between the band and the bottom icons. */
-  body{
-    padding-top:var(--band-h);
-    padding-bottom:calc(var(--unit) * 2 + var(--icon-size));
-  }
-  .equation-tap{ display:flex; align-items:center; justify-content:center; }
+     answer is checked as soon as every blank is filled. Keys as big as the
+     icon buttons where they fit, with the tray's gap between them (0.1239
+     of a key): 4 keys and 3 gaps = 4.37 keys, both ways. */
+  .equation-tap{ display:flex; justify-content:center; }
   .num-pad{
     display:grid;
-    grid-template-columns: repeat(11, var(--key));
+    grid-template-columns: repeat(4, var(--key));
     gap: calc(var(--key) * 0.1239);
   }
   .pad-spacer{ display:none; }
-  .pad-op{ display:none; } /* upright screens only, see there */
   .icon-btn.pad-key{ width:var(--key); height:var(--key); }
-  .pad-key .fill-bg{ fill:var(--band); }
+  .pad-key .fill-bg{ fill:rgba(0,0,0,0.4); }
   .pad-key .digit{
-    fill:#000;
+    /* Softer grey than the usual light, so the keys don't outshine the sum. */
+    fill:#A6A6A6;
     font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
     font-weight:400;
     font-size:76px; /* about half the circle, a little smaller than the site's 58% so the keys stay quiet: 41px on a phone */
@@ -281,7 +259,14 @@
   }
   /* Backspace, after Apple's: a short, almost square tag pointing left
      with a cross in it, a fine line, sharp corners and square ends. */
-  .pad-key .del-glyph{ fill:none; stroke:#000; stroke-width:6; } /* as heavy as the 76px digits' strokes */
+  .pad-key .del-glyph{ fill:none; stroke:#A6A6A6; stroke-width:6; } /* as heavy as the 76px digits' strokes */
+  /* Pressed, the key turns solid black with its digit lit up white,
+     instead of the whole key darkening. */
+  .pad-key:not(.pad-op).pressed .fill-bg{ fill:#000; }
+  .icon-btn.pad-key[data-digit="0"].pressed{ background:#000; }
+  .pad-key.pressed .digit{ fill:var(--bright); }
+  .pad-key.pressed .del-glyph{ stroke:var(--bright); }
+  .icon-btn.pad-key:not(.pad-op):active{ filter:none; }
   /* Press feedback, livelier than a plain shrink so a tap feels like
      Memory's tiles: pressed in to 92% while held, then a springy bounce
      past full size on release (Memory's pop curve). Driven by classes on
@@ -293,138 +278,108 @@
     55%{ transform:scale(1.06); }
     100%{ transform:scale(1); }
   }
+  /* The signs live in the pad, not the tray. */
+  body .op-group{ display:none; }
+  .pad-op .fill-glyph{ fill:#B15CFF; }
+  .pad-op.active .fill-bg{ fill:var(--bg); }
+  .pad-op.active .fill-glyph{ fill:var(--bright); }
+  .pad-key[data-digit="7"]{ grid-area:1 / 1; }
+  .pad-key[data-digit="8"]{ grid-area:1 / 2; }
+  .pad-key[data-digit="9"]{ grid-area:1 / 3; }
+  .pad-key[data-op="div"]{ grid-area:1 / 4; }
+  .pad-key[data-digit="4"]{ grid-area:2 / 1; }
+  .pad-key[data-digit="5"]{ grid-area:2 / 2; }
+  .pad-key[data-digit="6"]{ grid-area:2 / 3; }
+  .pad-key[data-op="mul"]{ grid-area:2 / 4; }
+  .pad-key[data-digit="1"]{ grid-area:3 / 1; }
+  .pad-key[data-digit="2"]{ grid-area:3 / 2; }
+  .pad-key[data-digit="3"]{ grid-area:3 / 3; }
+  .pad-key[data-op="sub"]{ grid-area:3 / 4; }
+  .pad-key[data-key="delete"]{ grid-area:4 / 3; }
+  .pad-key[data-op="add"]{ grid-area:4 / 4; }
+  /* A wide 0 across the first two columns, its digit under the 1. */
+  .icon-btn.pad-key[data-digit="0"]{
+    grid-area:4 / 1 / 5 / 3;
+    width:auto;
+    aspect-ratio:auto;
+    border-radius:999px;
+    background:rgba(0,0,0,0.4);
+    justify-content:flex-start;
+  }
+  .pad-key[data-digit="0"] svg{ width:var(--key); flex:none; }
+  .pad-key[data-digit="0"] .fill-bg{ display:none; }
 
-  /* Upright screens (phones, iPad portrait), after Apple's calculator: the
-     whole page one dark grey (Memory's background), the sum in light type
-     right-aligned just above the keys like the calculator's display, and
-     the keys as Memory's buttons -- black see-through circles, light digits
-     -- 7 8 9 on top, a wide 0, and the signs as a column on the right (out
-     of the tray): dark keys like the rest with bright purple signs, only
-     the chosen one filled in Math's purple.
-     Each key as big as the corner icons when there's room: 4 keys and 3
-     gaps = 4.37 keys, both ways. */
+  /* Upright screens (phones, iPad portrait), like the calculator: the keys
+     from just above the bottom icons upwards (one unit's gap), shrinking
+     only on screens too short to leave the top icons and a 40px sum above
+     them. The sum gets everything above the keys, sitting at its bottom
+     right with its last digit over the keys' right edge, as big as the room
+     allows up to its usual size. */
   @media (orientation: portrait){
     :root{
       --key: max(44px, min(
         var(--icon-size),
-        calc((var(--app-height, 100vh) - var(--band-h) - var(--unit) * 6 - var(--icon-size)) / 4.37)
+        calc((var(--app-height, 100vh) - var(--unit) * 2.5 - var(--icon-size) - var(--top-reserve) - 60px) / 4.37)
       ));
+      --band-h: calc(var(--app-height, 100vh) - var(--unit) * 2.5 - var(--icon-size) - var(--key) * 4.37);
     }
     .equation-row{
-      background:transparent;
+      top:0; left:0; right:0;
+      height:var(--band-h);
+      padding-top:var(--top-reserve);
+      padding-right:calc(50vw - var(--key) * 2.185);
       align-items:flex-end;
       justify-content:flex-end;
-      padding-right:calc(50vw - var(--key) * 2.185);
-      padding-bottom:var(--unit);
     }
-    .equation{ color:var(--bright); }
-    .op-btn.active .fill-bg,
-    .diff-btn.active .fill-bg{ fill:var(--bright); }
-    .op-btn.active .fill-glyph{ fill:var(--ink); }
-    body{ background:#212121; }
-    :root{
-      --ink-muted: rgba(0,0,0,0.4); /* Memory's buttons, which show on the grey */
-      --face: var(--bg); /* the happy and sad faces in Math's purple */
-    }
+    .equation{ font-size: calc(min(var(--hero-size), (var(--band-h) - var(--top-reserve)) / 1.4864) * var(--eq-scale, 1)); }
     .equation-tap{
       position:fixed;
       top:var(--band-h); left:0; right:0; bottom:0;
+      align-items:flex-start;
+      padding-top:calc(var(--unit) * 0.5);
       padding-bottom:calc(var(--unit) * 2 + var(--icon-size));
     }
-    .pad-key .fill-bg{ fill:rgba(0,0,0,0.4); }
-    /* Digits a softer grey than the usual light, so the keys don't
-       outshine the sum. */
-    .pad-key .digit{ fill:#A6A6A6; }
-    .pad-key .del-glyph{ stroke:#A6A6A6; }
-    /* Pressed, the key turns solid black with its digit lit up white,
-       instead of the whole key darkening. */
-    .pad-key:not(.pad-op).pressed .fill-bg{ fill:#000; }
-    .icon-btn.pad-key[data-digit="0"].pressed{ background:#000; }
-    .pad-key.pressed .digit{ fill:var(--bright); }
-    .pad-key.pressed .del-glyph{ stroke:var(--bright); }
-    .icon-btn.pad-key:not(.pad-op):active{ filter:none; }
-    .num-pad{ grid-template-columns: repeat(4, var(--key)); }
-    body .op-group{ display:none; }
-    .pad-op{ display:flex; }
-    .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
-    .pad-op .fill-glyph{ fill:#B15CFF; }
-    .pad-op.active .fill-bg{ fill:var(--bg); }
-    .pad-op.active .fill-glyph{ fill:var(--bright); }
-    .pad-key[data-digit="7"]{ grid-area:1 / 1; }
-    .pad-key[data-digit="8"]{ grid-area:1 / 2; }
-    .pad-key[data-digit="9"]{ grid-area:1 / 3; }
-    .pad-key[data-op="div"]{ grid-area:1 / 4; }
-    .pad-key[data-digit="4"]{ grid-area:2 / 1; }
-    .pad-key[data-digit="5"]{ grid-area:2 / 2; }
-    .pad-key[data-digit="6"]{ grid-area:2 / 3; }
-    .pad-key[data-op="mul"]{ grid-area:2 / 4; }
-    .pad-key[data-digit="1"]{ grid-area:3 / 1; }
-    .pad-key[data-digit="2"]{ grid-area:3 / 2; }
-    .pad-key[data-digit="3"]{ grid-area:3 / 3; }
-    .pad-key[data-op="sub"]{ grid-area:3 / 4; }
-    .pad-key[data-key="delete"]{ grid-area:4 / 3; }
-    .pad-key[data-op="add"]{ grid-area:4 / 4; }
-    /* A wide 0 across the first two columns, its digit under the 1 like
-       Apple's calculator. */
-    .icon-btn.pad-key[data-digit="0"]{
-      grid-area:4 / 1 / 5 / 3;
-      width:auto;
-      aspect-ratio:auto;
-      border-radius:999px;
-      background:rgba(0,0,0,0.4);
-      justify-content:flex-start;
-    }
-    .pad-key[data-digit="0"] svg{ width:var(--key); flex:none; }
-    .pad-key[data-digit="0"] .fill-bg{ display:none; }
   }
 
-  /* iPad landscape and computers: side by side instead, like a calculator --
-     the sum on a light purple panel down the left half, the pad as a 3x4
-     grid in the purple on the right. (A band across the top took half these
-     screens, since the sum has to sit below the row of top icons.) */
+  /* iPad landscape: side by side -- the sum centred in the left half, the
+     keys centred in the right half between the top and bottom icons. A
+     centred sum keeps its blanks' room (hidden), so it doesn't shift while
+     it's typed. */
   @media (orientation: landscape) and (min-width: 768px) and (min-height: 501px){
     :root{
       --key: max(44px, min(
         var(--icon-size),
-        calc((50vw - var(--unit) * 4) / 3.25),
-        calc((var(--app-height, 100vh) - var(--unit) * 10 - var(--icon-size) * 2) / 4.37)
+        calc((50vw - var(--unit) * 4) / 4.37),
+        calc((var(--app-height, 100vh) - var(--unit) * 6 - var(--icon-size) * 2) / 4.37)
       ));
     }
-    .equation-row{ right:50%; bottom:0; height:auto; padding-top:0; }
-    .equation{ font-size: calc(var(--hero-size) * 0.7 * var(--eq-scale, 1)); }
-    body{ padding:0 0 0 50%; }
-    .num-pad{ grid-template-columns: repeat(3, var(--key)); }
-    .pad-spacer{ display:block; }
-    /* Only the sign buttons sit on the panel now; difficulty is back on the
-       purple, where selected is light as in every game. */
-    .diff-btn.active .fill-bg{ fill:var(--bright); }
+    .equation-row{ top:0; bottom:0; left:0; right:50%; align-items:center; justify-content:center; }
+    .equation{ font-size: calc(var(--hero-size) * 0.8 * var(--eq-scale, 1)); }
+    .answer-digit.placeholder{ display:inline-block; visibility:hidden; }
+    .equation-tap{ position:fixed; top:0; bottom:0; left:50%; right:0; align-items:center; }
   }
 
   /* Computers with a mouse or trackpad: no number keys -- children type on
      the keyboard, as Math always worked there (the hard-to-leave problem
      was the phone's keyboard, never a computer's). The sum in light type on
-     Math's purple across the middle, as it always was, with the usual
-     corner icons above and below it. Touch screens of any size keep the keys. */
+     Math's purple across the middle, as it always was, with the signs back
+     in the top-left corner and the faces light. Touch screens of any size
+     keep the keys. Applies however the window is shaped. */
   @media (hover: hover) and (pointer: fine) and (min-width: 768px) and (min-height: 501px){
+    :root{ --face: var(--bright); --ink-muted: rgba(32,32,32,0.4); }
+    body.showing-answer .equation{ color:var(--bright); } /* purple on purple wouldn't show */
+    body{ padding:0; background:var(--bg); }
     .num-pad{ display:none; }
+    body .op-group{ display:flex; }
     .equation-row{
-      top:50%; right:0; bottom:auto;
-      height:calc(var(--hero-size) * 1.4864 + var(--unit) * 4);
-      padding-top:0;
+      top:50%; left:0; right:0; bottom:auto;
+      height:auto; padding:0;
       transform:translateY(-50%);
+      align-items:center; justify-content:center;
     }
     .equation{ font-size: calc(var(--hero-size) * var(--eq-scale, 1)); }
-    body{ padding:0; background:var(--bg); }
-    /* Even in a window taller than it is wide: purple, never the phones'
-       grey, with the faces light on it. */
-    :root{ --face: var(--bright); }
-    .equation-row{ background:transparent; }
-    .equation{ color:var(--bright); }
-    .equation-tap{ position:static; padding:0; background:none; }
-    body .op-group{ display:flex; }
-    .op-btn.active .fill-bg,
-    .diff-btn.active .fill-bg{ fill:var(--bright); }
-    .op-btn.active .fill-glyph{ fill:var(--ink); }
+    .answer-digit.placeholder{ display:inline-block; visibility:hidden; }
+    .equation-tap{ position:static; padding:0; }
   }
 
   /* ---------- phone: single scrollable slider-menu bar ---------- */
@@ -440,26 +395,10 @@
       --hero-size: clamp(2.6rem, 16.5587vw, 140px); /* 65.08px on the 393px phone frame */
       --unit: 5.089vw; /* 20px on the 393px phone frame */
       --icon-size: clamp(52px, 20.5344vw, 100px); /* 80.71px on the 393px phone frame */
-      /* Like Apple's calculator: the keys come first, as big as the tray's
-         buttons so the 4 columns fill the same width as the tray, from just
-         above it (one unit's gap) upwards. They shrink only on phones too
-         short to leave the progress dots and a 40px sum above them. The
-         sum gets everything above the keys, sitting at its bottom. */
+      /* Only the progress dots above the sum here, not a row of icons;
+         the keys fill the tray's width (same size, same gap). */
       --top-reserve: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
-      --key: max(44px, min(
-        var(--icon-size),
-        calc((var(--app-height, 100vh) - var(--unit) * 2.5 - var(--icon-size) - var(--top-reserve) - 60px) / 4.37)
-      ));
-      --band-h: calc(var(--app-height, 100vh) - var(--unit) * 2.5 - var(--icon-size) - var(--key) * 4.37);
     }
-    /* The sum at the bottom right of that space, its last digit over the
-       keys' right edge, as big as the room allows up to its usual size. A
-       blank shows only where the next digit goes, so the sum grows leftwards
-       as it's typed, like the calculator's display. */
-    .equation-row{ padding-bottom:0; }
-    .equation{ font-size: calc(min(var(--hero-size), (var(--band-h) - var(--top-reserve)) / 1.4864) * var(--eq-scale, 1)); }
-    .answer-digit.placeholder{ display:none; }
-    .equation-tap{ align-items:flex-start; padding-top:calc(var(--unit) * 0.5); }
     .controls-slider{
       display:flex;
       align-items:flex-end;
@@ -879,6 +818,7 @@
   }
 
   function newProblem(){
+    document.body.classList.remove('showing-answer');
     // A digit that just filled the last blank is waiting to be checked
     // against the old problem -- drop it.
     if (checkTimer) {
@@ -1065,7 +1005,9 @@
   function showAnswerThenSad(){
     state.input = String(state.answerValue);
     render();
+    document.body.classList.add('showing-answer');
     flashTimer = setTimeout(function(){
+      document.body.classList.remove('showing-answer');
       updateAppHeight();
       els.celebration.innerHTML = SAD_FACE_SVG;
       PLSound.play('tryagain');
