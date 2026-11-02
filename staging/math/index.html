@@ -337,6 +337,10 @@
        outshine the sum. */
     .pad-key .digit{ fill:#A6A6A6; }
     .pad-key .del-glyph{ stroke:#A6A6A6; }
+    /* Pressed, the digit lights up white instead of the whole key darkening. */
+    .pad-key.pressed .digit{ fill:var(--bright); }
+    .pad-key.pressed .del-glyph{ stroke:var(--bright); }
+    .icon-btn.pad-key:not(.pad-op):active{ filter:none; }
     .num-pad{ grid-template-columns: repeat(4, var(--key)); }
     body .op-group{ display:none; }
     .pad-op{ display:flex; }
