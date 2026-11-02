@@ -204,11 +204,11 @@
     z-index:1;
     transition: background 80ms ease;
   }
-  /* A right or wrong answer turns the whole screen green/red, band included
-     (upright screens: only the sum, see there). */
-  body.flash-right{ background:var(--success); }
-  body.flash-wrong{ background:var(--incorrect); }
-  body.flashing .equation-row{ background:transparent; }
+  /* Right or wrong without colour, on every screen: a wrong answer's digits
+     shake their heads (Sudoku's wobble), a right answer pops (Memory's
+     found-a-pair bounce). The page stays as it is. */
+  body.flash-wrong .answer-digit{ animation: digit-shake 520ms ease-in-out; }
+  body.flash-right .answer-slots{ animation: ans-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1); }
   .equation{
     display:flex;
     align-items:baseline;
@@ -321,16 +321,11 @@
     .op-btn.active .fill-bg,
     .diff-btn.active .fill-bg{ fill:var(--bright); }
     .op-btn.active .fill-glyph{ fill:var(--ink); }
-    body, body.flash-right, body.flash-wrong{ background:#212121; }
+    body{ background:#212121; }
     :root{
       --ink-muted: rgba(0,0,0,0.4); /* Memory's buttons, which show on the grey */
       --face: var(--bg); /* the happy and sad faces in Math's purple */
     }
-    /* Right or wrong without colour: a wrong answer's digits shake their
-       heads (Sudoku's wobble), a right answer pops (Memory's found-a-pair
-       bounce). The page stays as it is. */
-    body.flash-wrong .answer-digit{ animation: digit-shake 520ms ease-in-out; }
-    body.flash-right .answer-slots{ animation: ans-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1); }
     .equation-tap{
       position:fixed;
       top:var(--band-h); left:0; right:0; bottom:0;
@@ -420,11 +415,8 @@
     }
     .equation{ font-size: calc(var(--hero-size) * var(--eq-scale, 1)); }
     body{ padding:0; background:var(--bg); }
-    /* Even in a window taller than it is wide: the whole screen flashes
-       green/red as it always has here, never the phones' grey, and the faces
-       stay light on the purple. */
-    body.flash-right{ background:var(--success); }
-    body.flash-wrong{ background:var(--incorrect); }
+    /* Even in a window taller than it is wide: purple, never the phones'
+       grey, with the faces light on it. */
     :root{ --face: var(--bright); }
     .equation-row{ background:transparent; }
     .equation{ color:var(--bright); }
@@ -549,7 +541,7 @@
     75%{ transform:scale(0.9); }
     100%{ transform:scale(1); }
   }
-  /* Upright screens' right/wrong feedback (see there). */
+  /* Right/wrong feedback (see body.flash-wrong / body.flash-right). */
   @keyframes digit-shake{
     0%, 100%{ transform:translateX(0) rotate(0); }
     15%{ transform:translateX(-9%) rotate(-8deg); }
