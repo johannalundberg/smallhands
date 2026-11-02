@@ -272,7 +272,9 @@
   html.style-circles .disc{ display:inline; fill:var(--disc); }
   html.style-circles .cell.given .disc{ fill:var(--disc-given); }
   html.style-circles .cell.given .digit{ fill:var(--digit-given); }
-  html.style-circles .shape .digit{ font-size:58px; }
+  /* 47px on a phone's 4x4 board, the same as Othello's and Tic-Tac-Toe's
+     scores and Math's keys. */
+  html.style-circles .shape .digit{ font-size:53.4px; }
   /* An empty square shows a muted circle (the unselected buttons' grey),
      so it's clear where to tap. */
   .empty-ring{ display:none; fill:var(--empty); }
