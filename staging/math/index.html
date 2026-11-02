@@ -33,7 +33,7 @@
 <meta name="twitter:title" content="Math — Play and Learn">
 <meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
-<script>/* TEMP: colour looks to compare, ?look=light|purple|dark2|ref|small|v1..v6 */
+<script>/* TEMP: colour looks to compare, ?look=light|purple|dark2|ref|small|v1..v6|w1..w8 */
 (function(){ var m = /[?&]look=([\w-]+)/.exec(location.search); if (m) document.documentElement.className += ' look-' + m[1]; })();</script>
 <style>
   @font-face{
@@ -571,6 +571,20 @@
     /* 5. Look 3's colours with smaller digits on the keys, like Apple's
        calculator (about 44% of the key instead of 58%) */
     html.look-small .pad-key .digit{ font-size:66px; }
+
+    /* w1-w8: look 3 on dark backgrounds that aren't grey or purple */
+    html.look-w1 body{ background:#14213D; } /* navy */
+    html.look-w2 body{ background:#0F3B3A; } /* deep teal */
+    html.look-w3 body{ background:#1B3022; } /* forest green */
+    html.look-w4 body{ background:#3A1220; } /* burgundy */
+    html.look-w5 body{ background:#2E2118; } /* dark brown */
+    html.look-w6 body{ background:#102E3F; } /* petrol blue */
+    html.look-w7 body{ background:#2C2F17; } /* olive */
+    html.look-w8 body{ background:#1F2533; } /* Odd One Out's dark ink */
+    html.look-w1 .pad-op .fill-bg, html.look-w2 .pad-op .fill-bg, html.look-w3 .pad-op .fill-bg, html.look-w4 .pad-op .fill-bg, html.look-w5 .pad-op .fill-bg, html.look-w6 .pad-op .fill-bg, html.look-w7 .pad-op .fill-bg, html.look-w8 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
+    html.look-w1 .pad-op .fill-glyph, html.look-w2 .pad-op .fill-glyph, html.look-w3 .pad-op .fill-glyph, html.look-w4 .pad-op .fill-glyph, html.look-w5 .pad-op .fill-glyph, html.look-w6 .pad-op .fill-glyph, html.look-w7 .pad-op .fill-glyph, html.look-w8 .pad-op .fill-glyph{ fill:#B15CFF; }
+    html.look-w1 .pad-op.active .fill-bg, html.look-w2 .pad-op.active .fill-bg, html.look-w3 .pad-op.active .fill-bg, html.look-w4 .pad-op.active .fill-bg, html.look-w5 .pad-op.active .fill-bg, html.look-w6 .pad-op.active .fill-bg, html.look-w7 .pad-op.active .fill-bg, html.look-w8 .pad-op.active .fill-bg{ fill:var(--bg); }
+    html.look-w1 .pad-op.active .fill-glyph, html.look-w2 .pad-op.active .fill-glyph, html.look-w3 .pad-op.active .fill-glyph, html.look-w4 .pad-op.active .fill-glyph, html.look-w5 .pad-op.active .fill-glyph, html.look-w6 .pad-op.active .fill-glyph, html.look-w7 .pad-op.active .fill-glyph, html.look-w8 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
 
     /* 3a-3f: variations on look 3 */
     /* v1: lilac signs, Math purple when chosen */
