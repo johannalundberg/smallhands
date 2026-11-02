@@ -201,20 +201,24 @@
     cursor:pointer;
     transition: transform 120ms ease;
   }
-  .cell:active{ transform:scale(0.96); }
   .cell svg{ width:100%; height:100%; display:block; }
 
   @media (hover:hover) and (pointer:fine){
     .cell:hover{ transform:scale(1.035); }
   }
-  /* Touch press matches Memory's tiles: a slight shrink (0.96) while held.
-     Driven by a JS class (see bindPressFeedback), not :active -- :active
-     stopped re-triggering after the first tap on iOS Safari, since
-     .board-wrap's pointer-events is toggled on/off every move (see 'busy'
-     below) and that leaves :active's hit-testing stuck stale on WebKit. A
-     plain class toggle on real pointer events isn't affected by that. */
-  @media (hover:none){
-    .cell.tap-active{ transform:scale(0.96); }
+  /* Press feedback, livelier than a plain shrink so a tap feels like
+     Memory's tiles: pressed in to 92% while held, then a springy bounce
+     past full size on release (Memory's pop curve). Driven by classes on
+     real pointer events (see bindPress), not :active -- :active stopped
+     re-triggering after the first tap on iOS Safari, since .board-wrap's
+     pointer-events is toggled on/off every move (see 'busy' below), which
+     leaves :active's hit-testing stuck stale on WebKit. */
+  .cell.pressed{ transform:scale(0.92); transition:none; }
+  .cell.spring{ animation: press-spring 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes press-spring{
+    0%{ transform:scale(0.92); }
+    55%{ transform:scale(1.06); }
+    100%{ transform:scale(1); }
   }
 
   .cell.fade{ background: var(--fade-color, var(--cell)); }
@@ -542,12 +546,24 @@
     } catch (e) { return null; }
   }
 
-  function bindPressFeedback(cell){
-    cell.addEventListener('pointerdown', function(e){
-      if (e.pointerType === 'touch') cell.classList.add('tap-active');
+  // Pressed in while held, a springy bounce on release (see .pressed /
+  // .spring in the CSS).
+  function bindPress(el){
+    el.addEventListener('pointerdown', function(){
+      el.classList.remove('spring');
+      el.classList.add('pressed');
     });
+    function release(){
+      if (!el.classList.contains('pressed')) return;
+      el.classList.remove('pressed');
+      void el.offsetWidth; // restart the spring if the last one is still running
+      el.classList.add('spring');
+    }
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(function(evt){
-      cell.addEventListener(evt, function(){ cell.classList.remove('tap-active'); });
+      el.addEventListener(evt, release);
+    });
+    el.addEventListener('animationend', function(e){
+      if (e.target === el && e.animationName === 'press-spring') el.classList.remove('spring');
     });
   }
 
@@ -559,7 +575,7 @@
       cell.dataset.i = i;
       cell.setAttribute('aria-label', 'Cell ' + (i+1));
       cell.addEventListener('click', onCellClick);
-      bindPressFeedback(cell);
+      bindPress(cell);
       els.board.appendChild(cell);
     }
   }

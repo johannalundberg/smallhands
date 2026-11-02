@@ -224,6 +224,18 @@
     transition: transform 120ms ease, background 80ms ease;
   }
   .cell.given{ background:var(--spot-given); cursor:default; }
+  /* Press feedback, livelier than a plain shrink so a tap feels like
+     Memory's tiles: pressed in to 92% while held, then a springy bounce
+     past full size on release (Memory's pop curve). Driven by classes on
+     real pointer events (see bindPress), since :active goes stale on iOS.
+     (html ... :not(.given) so it outranks the hover grow below.) */
+  html .cell:not(.given).pressed{ transform:scale(0.92); transition:none; }
+  html .cell:not(.given).spring{ animation: press-spring 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes press-spring{
+    0%{ transform:scale(0.92); }
+    55%{ transform:scale(1.06); }
+    100%{ transform:scale(1); }
+  }
   /* Hover (mouse only): the squares you can tap grow slightly. Gentler than
      the site's 3.5% (icon buttons, Tic Tac Toe), which felt too much on
      these big circles. Given ones stay still. */
@@ -850,6 +862,28 @@
   // The squares are built once per board size and kept: a tap only changes
   // their attributes, so a square is never replaced under a finger. Also
   // builds the lines between boxes that the disc look draws (.box-line).
+  // Pressed in while held, a springy bounce on release (see .pressed /
+  // .spring in the CSS). Given squares can't be changed, so they stay still.
+  function bindPress(el){
+    el.addEventListener('pointerdown', function(){
+      if (el.classList.contains('given')) return;
+      el.classList.remove('spring');
+      el.classList.add('pressed');
+    });
+    function release(){
+      if (!el.classList.contains('pressed')) return;
+      el.classList.remove('pressed');
+      void el.offsetWidth; // restart the spring if the last one is still running
+      el.classList.add('spring');
+    }
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function(evt){
+      el.addEventListener(evt, release);
+    });
+    el.addEventListener('animationend', function(e){
+      if (e.target === el && e.animationName === 'press-spring') el.classList.remove('spring');
+    });
+  }
+
   function buildCells(n){
     setBoardSize(n);
     cellEls.forEach(function(el){ el.remove(); });
@@ -886,6 +920,7 @@
       el.style.left = offset(i % n, BOX_COLS);
       el.style.top = offset(Math.floor(i / n), BOX_ROWS);
       el.innerHTML = '<span class="hop">' + SHAPES_SVG + '</span>';
+      bindPress(el);
       cellEls.push(el);
       els.boardWrap.appendChild(el);
     }
