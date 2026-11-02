@@ -313,8 +313,10 @@
       padding-bottom:calc(var(--unit) * 2 + var(--icon-size));
     }
     .pad-key .fill-bg{ fill:rgba(0,0,0,0.4); }
-    .pad-key .digit{ fill:var(--bright); }
-    .pad-key .del-glyph{ stroke:var(--bright); }
+    /* Digits a softer grey than the usual light, so the keys don't
+       outshine the sum. */
+    .pad-key .digit{ fill:#A6A6A6; }
+    .pad-key .del-glyph{ stroke:#A6A6A6; }
     .num-pad{ grid-template-columns: repeat(4, var(--key)); }
     body .op-group{ display:none; }
     .pad-op{ display:flex; }
@@ -336,7 +338,18 @@
     .pad-key[data-op="sub"]{ grid-area:3 / 4; }
     .pad-key[data-key="delete"]{ grid-area:4 / 3; }
     .pad-key[data-op="add"]{ grid-area:4 / 4; }
-    .pad-key[data-digit="0"]{ grid-area:4 / 2; }
+    /* A wide 0 across the first two columns, its digit under the 1 like
+       Apple's calculator. */
+    .icon-btn.pad-key[data-digit="0"]{
+      grid-area:4 / 1 / 5 / 3;
+      width:auto;
+      aspect-ratio:auto;
+      border-radius:999px;
+      background:rgba(0,0,0,0.4);
+      justify-content:flex-start;
+    }
+    .pad-key[data-digit="0"] svg{ width:var(--key); flex:none; }
+    .pad-key[data-digit="0"] .fill-bg{ display:none; }
   }
 
   /* iPad landscape and computers: side by side instead, like a calculator --
