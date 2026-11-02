@@ -33,8 +33,6 @@
 <meta name="twitter:title" content="Math — Play and Learn">
 <meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
-<script>/* TEMP: colour looks to compare, ?look=light|purple|dark2|ref|small|v1..v6|w1..w8 */
-(function(){ var m = /[?&]look=([\w-]+)/.exec(location.search); if (m) document.documentElement.className += ' look-' + m[1]; })();</script>
 <style>
   @font-face{
     font-family:'Spline Sans Mono';
@@ -275,7 +273,7 @@
     fill:#000;
     font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
     font-weight:400;
-    font-size:87px; /* 58% of the circle, like Othello's and Tic-Tac-Toe's scores: 47px on a phone */
+    font-size:76px; /* about half the circle, a little smaller than the site's 58% so the keys stay quiet: 41px on a phone */
     font-feature-settings:"zero" 1;
     text-anchor:middle;
     dominant-baseline:central;
@@ -288,8 +286,9 @@
      whole page one dark grey (Memory's background), the sum in light type
      right-aligned just above the keys like the calculator's display, and
      the keys as Memory's buttons -- black see-through circles, light digits
-     -- 7 8 9 on top, 0 under the 2, and the signs as a purple column on the
-     right (out of the tray), the chosen one light with a purple sign.
+     -- 7 8 9 on top, a wide 0, and the signs as a column on the right (out
+     of the tray): dark keys like the rest with bright purple signs, only
+     the chosen one filled in Math's purple.
      Each key as big as the corner icons when there's room: 4 keys and 3
      gaps = 4.37 keys, both ways. */
   @media (orientation: portrait){
@@ -328,10 +327,10 @@
     .num-pad{ grid-template-columns: repeat(4, var(--key)); }
     body .op-group{ display:none; }
     .pad-op{ display:flex; }
-    .pad-op .fill-bg{ fill:var(--bg); }
-    .pad-op .fill-glyph{ fill:var(--bright); }
-    .pad-op.active .fill-bg{ fill:var(--bright); }
-    .pad-op.active .fill-glyph{ fill:var(--bg); }
+    .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
+    .pad-op .fill-glyph{ fill:#B15CFF; }
+    .pad-op.active .fill-bg{ fill:var(--bg); }
+    .pad-op.active .fill-glyph{ fill:var(--bright); }
     .pad-key[data-digit="7"]{ grid-area:1 / 1; }
     .pad-key[data-digit="8"]{ grid-area:1 / 2; }
     .pad-key[data-digit="9"]{ grid-area:1 / 3; }
@@ -515,113 +514,6 @@
      two quick taps on the level buttons there zoomed the whole page in, and
      with zoom otherwise locked there was no way back out. */
   html, body, .controls-slider{ touch-action:manipulation; }
-  /* ---------- TEMP: colour looks to compare (phones/upright) ---------- */
-  @media (orientation: portrait){
-    /* 1. Light page, in Math's lilac */
-    html.look-light{ --ink-muted: rgba(32,32,32,0.4); }
-    html.look-light body{ background:#D3A8FF; }
-    html.look-light .equation{ color:#202020; }
-    html.look-light .progress-dots .dot{ background:rgba(32,32,32,0.25); }
-    html.look-light .progress-dots .dot.done{ background:#202020; }
-    html.look-light .pad-key .fill-bg{ fill:rgba(32,32,32,0.4); }
-    html.look-light .pad-key .digit{ fill:#E4E4E4; }
-    html.look-light .pad-key .del-glyph{ stroke:#E4E4E4; }
-    html.look-light .icon-btn.pad-key[data-digit="0"]{ background:rgba(32,32,32,0.4); }
-    html.look-light .pad-op .fill-bg{ fill:var(--bg); }
-    html.look-light .pad-op.active .fill-bg{ fill:#202020; }
-    html.look-light .pad-op.active .fill-glyph{ fill:#E4E4E4; }
-    html.look-light .controls-slider{ background:rgba(32,32,32,0.15); }
-    html.look-light .diff-btn.active .fill-bg{ fill:#202020; }
-
-    /* 2. Purple page (Math's own) */
-    html.look-purple{ --ink-muted: rgba(32,32,32,0.4); }
-    html.look-purple body{ background:var(--bg); }
-    html.look-purple .pad-key .fill-bg{ fill:rgba(32,32,32,0.4); }
-    html.look-purple .pad-key .digit{ fill:#CFCFCF; }
-    html.look-purple .pad-key .del-glyph{ stroke:#CFCFCF; }
-    html.look-purple .icon-btn.pad-key[data-digit="0"]{ background:rgba(32,32,32,0.4); }
-    html.look-purple .pad-op .fill-bg{ fill:#D3A8FF; }
-    html.look-purple .pad-op .fill-glyph{ fill:#202020; }
-    html.look-purple .pad-op.active .fill-bg{ fill:#E4E4E4; }
-    html.look-purple .pad-op.active .fill-glyph{ fill:var(--bg); }
-    html.look-purple .controls-slider{ background:rgba(32,32,32,0.4); }
-
-    /* 3. Dark, signs as dark keys with bright purple signs; only the chosen
-       one fully purple */
-    html.look-dark2 .pad-op .fill-bg, html.look-small .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
-    html.look-dark2 .pad-op .fill-glyph, html.look-small .pad-op .fill-glyph{ fill:#B15CFF; }
-    html.look-dark2 .pad-op.active .fill-bg, html.look-small .pad-op.active .fill-bg{ fill:var(--bg); }
-    html.look-dark2 .pad-op.active .fill-glyph, html.look-small .pad-op.active .fill-glyph{ fill:#E4E4E4; }
-
-    /* 4. The reference on the grey page: lilac sign keys, the chosen one
-       magenta */
-    html.look-ref{ --ink-muted: rgba(0,0,0,0.35); }
-    html.look-ref .progress-dots .dot.done{ background:#E9DDF0; }
-    html.look-ref .equation{ color:#E9DDF0; }
-    html.look-ref .pad-key .fill-bg{ fill:rgba(0,0,0,0.35); }
-    html.look-ref .pad-key .digit{ fill:#E9DDF0; }
-    html.look-ref .pad-key .del-glyph{ stroke:#E9DDF0; }
-    html.look-ref .icon-btn.pad-key[data-digit="0"]{ background:rgba(0,0,0,0.35); }
-    html.look-ref .pad-op .fill-bg{ fill:#C9A0DC; }
-    html.look-ref .pad-op .fill-glyph{ fill:#2A1530; }
-    html.look-ref .pad-op.active .fill-bg{ fill:#B23CC4; }
-    html.look-ref .pad-op.active .fill-glyph{ fill:#F3E8F7; }
-    html.look-ref .controls-slider{ background:rgba(0,0,0,0.25); }
-
-    /* 5. Look 3's colours with smaller digits on the keys, like Apple's
-       calculator (about 44% of the key instead of 58%) */
-    html.look-small .pad-key .digit{ font-size:66px; }
-
-    /* w1-w8: look 3 on dark backgrounds that aren't grey or purple */
-    html.look-w1 body{ background:#14213D; } /* navy */
-    html.look-w2 body{ background:#0F3B3A; } /* deep teal */
-    html.look-w3 body{ background:#1B3022; } /* forest green */
-    html.look-w4 body{ background:#3A1220; } /* burgundy */
-    html.look-w5 body{ background:#2E2118; } /* dark brown */
-    html.look-w6 body{ background:#102E3F; } /* petrol blue */
-    html.look-w7 body{ background:#2C2F17; } /* olive */
-    html.look-w8 body{ background:#1F2533; } /* Odd One Out's dark ink */
-    html.look-w1 .pad-op .fill-bg, html.look-w2 .pad-op .fill-bg, html.look-w3 .pad-op .fill-bg, html.look-w4 .pad-op .fill-bg, html.look-w5 .pad-op .fill-bg, html.look-w6 .pad-op .fill-bg, html.look-w7 .pad-op .fill-bg, html.look-w8 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
-    html.look-w1 .pad-op .fill-glyph, html.look-w2 .pad-op .fill-glyph, html.look-w3 .pad-op .fill-glyph, html.look-w4 .pad-op .fill-glyph, html.look-w5 .pad-op .fill-glyph, html.look-w6 .pad-op .fill-glyph, html.look-w7 .pad-op .fill-glyph, html.look-w8 .pad-op .fill-glyph{ fill:#B15CFF; }
-    html.look-w1 .pad-op.active .fill-bg, html.look-w2 .pad-op.active .fill-bg, html.look-w3 .pad-op.active .fill-bg, html.look-w4 .pad-op.active .fill-bg, html.look-w5 .pad-op.active .fill-bg, html.look-w6 .pad-op.active .fill-bg, html.look-w7 .pad-op.active .fill-bg, html.look-w8 .pad-op.active .fill-bg{ fill:var(--bg); }
-    html.look-w1 .pad-op.active .fill-glyph, html.look-w2 .pad-op.active .fill-glyph, html.look-w3 .pad-op.active .fill-glyph, html.look-w4 .pad-op.active .fill-glyph, html.look-w5 .pad-op.active .fill-glyph, html.look-w6 .pad-op.active .fill-glyph, html.look-w7 .pad-op.active .fill-glyph, html.look-w8 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
-
-    /* 3a-3f: variations on look 3 */
-    /* v1: lilac signs, Math purple when chosen */
-    html.look-v1 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
-    html.look-v1 .pad-op .fill-glyph{ fill:#D3A8FF; }
-    html.look-v1 .pad-op.active .fill-bg{ fill:#8104C9; }
-    html.look-v1 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
-    /* v2: bright purple signs, lilac when chosen */
-    html.look-v2 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
-    html.look-v2 .pad-op .fill-glyph{ fill:#B15CFF; }
-    html.look-v2 .pad-op.active .fill-bg{ fill:#D3A8FF; }
-    html.look-v2 .pad-op.active .fill-glyph{ fill:#202020; }
-    /* v3: sign keys tinted purple */
-    html.look-v3 .pad-op .fill-bg{ fill:rgba(129,4,201,0.28); }
-    html.look-v3 .pad-op .fill-glyph{ fill:#C88BFF; }
-    html.look-v3 .pad-op.active .fill-bg{ fill:#8104C9; }
-    html.look-v3 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
-    /* v4: near-black page like Apple's */
-    html.look-v4 body{ background:#141414; }
-    html.look-v4 .pad-op .fill-bg{ fill:rgba(255,255,255,0.08); }
-    html.look-v4 .pad-op .fill-glyph{ fill:#B15CFF; }
-    html.look-v4 .pad-op.active .fill-bg{ fill:#8104C9; }
-    html.look-v4 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
-    html.look-v4 .pad-key:not(.pad-op) .fill-bg{ fill:rgba(255,255,255,0.08); }
-    html.look-v4 .icon-btn.pad-key[data-digit="0"]{ background:rgba(255,255,255,0.08); }
-    /* v5: plum-grey page */
-    html.look-v5 body{ background:#1E1726; }
-    html.look-v5 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
-    html.look-v5 .pad-op .fill-glyph{ fill:#B15CFF; }
-    html.look-v5 .pad-op.active .fill-bg{ fill:#8104C9; }
-    html.look-v5 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
-    /* v6: violet signs, magenta when chosen */
-    html.look-v6 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
-    html.look-v6 .pad-op .fill-glyph{ fill:#C77DFF; }
-    html.look-v6 .pad-op.active .fill-bg{ fill:#B23CC4; }
-    html.look-v6 .pad-op.active .fill-glyph{ fill:#F3E8F7; }
-  }
 </style>
 <!-- What this page is, for search engines (schema.org); nothing on screen. -->
 <script type="application/ld+json">
