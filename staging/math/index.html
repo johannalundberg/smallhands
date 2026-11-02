@@ -33,6 +33,8 @@
 <meta name="twitter:title" content="Math — Play and Learn">
 <meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
+<script>/* TEMP: colour looks to compare, ?look=light|purple|dark2|ref|small */
+(function(){ var m = /[?&]look=([\w-]+)/.exec(location.search); if (m) document.documentElement.className += ' look-' + m[1]; })();</script>
 <style>
   @font-face{
     font-family:'Spline Sans Mono';
@@ -376,9 +378,9 @@
 
   /* Computers with a mouse or trackpad: no number keys -- children type on
      the keyboard, as Math always worked there (the hard-to-leave problem
-     was the phone's keyboard, never a computer's). The sum sits on a light
-     purple band across the middle, with the usual corner icons on the
-     purple above and below it. Touch screens of any size keep the keys. */
+     was the phone's keyboard, never a computer's). The sum in light type on
+     Math's purple across the middle, as it always was, with the usual
+     corner icons above and below it. Touch screens of any size keep the keys. */
   @media (hover: hover) and (pointer: fine) and (min-width: 768px) and (min-height: 501px){
     .num-pad{ display:none; }
     .equation-row{
@@ -389,8 +391,8 @@
     }
     .equation{ font-size: calc(var(--hero-size) * var(--eq-scale, 1)); }
     body{ padding:0; background:var(--bg); }
-    .equation-row{ background:var(--band); }
-    .equation{ color:#000; }
+    .equation-row{ background:transparent; }
+    .equation{ color:var(--bright); }
     .equation-tap{ position:static; padding:0; background:none; }
     body .op-group{ display:flex; }
     .op-btn.active .fill-bg,
@@ -504,6 +506,64 @@
      two quick taps on the level buttons there zoomed the whole page in, and
      with zoom otherwise locked there was no way back out. */
   html, body, .controls-slider{ touch-action:manipulation; }
+  /* ---------- TEMP: colour looks to compare (phones/upright) ---------- */
+  @media (orientation: portrait){
+    /* 1. Light page */
+    html.look-light{ --ink-muted: rgba(32,32,32,0.4); }
+    html.look-light body{ background:#E4E4E4; }
+    html.look-light .equation{ color:#202020; }
+    html.look-light .progress-dots .dot{ background:rgba(32,32,32,0.25); }
+    html.look-light .progress-dots .dot.done{ background:#202020; }
+    html.look-light .pad-key .fill-bg{ fill:rgba(32,32,32,0.4); }
+    html.look-light .pad-key .digit{ fill:#E4E4E4; }
+    html.look-light .pad-key .del-glyph{ stroke:#E4E4E4; }
+    html.look-light .icon-btn.pad-key[data-digit="0"]{ background:rgba(32,32,32,0.4); }
+    html.look-light .pad-op .fill-bg{ fill:var(--bg); }
+    html.look-light .pad-op.active .fill-bg{ fill:#202020; }
+    html.look-light .pad-op.active .fill-glyph{ fill:#E4E4E4; }
+    html.look-light .controls-slider{ background:rgba(32,32,32,0.15); }
+    html.look-light .diff-btn.active .fill-bg{ fill:#202020; }
+
+    /* 2. Purple page (Math's own) */
+    html.look-purple{ --ink-muted: rgba(32,32,32,0.4); }
+    html.look-purple body{ background:var(--bg); }
+    html.look-purple .pad-key .fill-bg{ fill:rgba(32,32,32,0.4); }
+    html.look-purple .pad-key .digit{ fill:#CFCFCF; }
+    html.look-purple .pad-key .del-glyph{ stroke:#CFCFCF; }
+    html.look-purple .icon-btn.pad-key[data-digit="0"]{ background:rgba(32,32,32,0.4); }
+    html.look-purple .pad-op .fill-bg{ fill:#D3A8FF; }
+    html.look-purple .pad-op .fill-glyph{ fill:#202020; }
+    html.look-purple .pad-op.active .fill-bg{ fill:#E4E4E4; }
+    html.look-purple .pad-op.active .fill-glyph{ fill:var(--bg); }
+    html.look-purple .controls-slider{ background:rgba(32,32,32,0.4); }
+
+    /* 3. Dark, signs as dark keys with bright purple signs; only the chosen
+       one fully purple */
+    html.look-dark2 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
+    html.look-dark2 .pad-op .fill-glyph{ fill:#B15CFF; }
+    html.look-dark2 .pad-op.active .fill-bg{ fill:var(--bg); }
+    html.look-dark2 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
+
+    /* 4. The reference: plum-black page, lilac sign keys, the chosen one
+       magenta */
+    html.look-ref{ --ink-muted: rgba(0,0,0,0.35); }
+    html.look-ref body{ background:#1C1422; }
+    html.look-ref .progress-dots .dot.done{ background:#E9DDF0; }
+    html.look-ref .equation{ color:#E9DDF0; }
+    html.look-ref .pad-key .fill-bg{ fill:rgba(0,0,0,0.35); }
+    html.look-ref .pad-key .digit{ fill:#E9DDF0; }
+    html.look-ref .pad-key .del-glyph{ stroke:#E9DDF0; }
+    html.look-ref .icon-btn.pad-key[data-digit="0"]{ background:rgba(0,0,0,0.35); }
+    html.look-ref .pad-op .fill-bg{ fill:#C9A0DC; }
+    html.look-ref .pad-op .fill-glyph{ fill:#2A1530; }
+    html.look-ref .pad-op.active .fill-bg{ fill:#B23CC4; }
+    html.look-ref .pad-op.active .fill-glyph{ fill:#F3E8F7; }
+    html.look-ref .controls-slider{ background:rgba(0,0,0,0.25); }
+
+    /* 5. Smaller digits on the keys, like Apple's calculator (about 44% of
+       the key instead of 58%) */
+    html.look-small .pad-key .digit{ font-size:66px; }
+  }
 </style>
 <!-- What this page is, for search engines (schema.org); nothing on screen. -->
 <script type="application/ld+json">
