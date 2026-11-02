@@ -33,7 +33,7 @@
 <meta name="twitter:title" content="Math — Play and Learn">
 <meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
 <meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
-<script>/* TEMP: colour looks to compare, ?look=light|purple|dark2|ref|small */
+<script>/* TEMP: colour looks to compare, ?look=light|purple|dark2|ref|small|v1..v6 */
 (function(){ var m = /[?&]look=([\w-]+)/.exec(location.search); if (m) document.documentElement.className += ' look-' + m[1]; })();</script>
 <style>
   @font-face{
@@ -571,6 +571,42 @@
     /* 5. Look 3's colours with smaller digits on the keys, like Apple's
        calculator (about 44% of the key instead of 58%) */
     html.look-small .pad-key .digit{ font-size:66px; }
+
+    /* 3a-3f: variations on look 3 */
+    /* v1: lilac signs, Math purple when chosen */
+    html.look-v1 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
+    html.look-v1 .pad-op .fill-glyph{ fill:#D3A8FF; }
+    html.look-v1 .pad-op.active .fill-bg{ fill:#8104C9; }
+    html.look-v1 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
+    /* v2: bright purple signs, lilac when chosen */
+    html.look-v2 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
+    html.look-v2 .pad-op .fill-glyph{ fill:#B15CFF; }
+    html.look-v2 .pad-op.active .fill-bg{ fill:#D3A8FF; }
+    html.look-v2 .pad-op.active .fill-glyph{ fill:#202020; }
+    /* v3: sign keys tinted purple */
+    html.look-v3 .pad-op .fill-bg{ fill:rgba(129,4,201,0.28); }
+    html.look-v3 .pad-op .fill-glyph{ fill:#C88BFF; }
+    html.look-v3 .pad-op.active .fill-bg{ fill:#8104C9; }
+    html.look-v3 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
+    /* v4: near-black page like Apple's */
+    html.look-v4 body{ background:#141414; }
+    html.look-v4 .pad-op .fill-bg{ fill:rgba(255,255,255,0.08); }
+    html.look-v4 .pad-op .fill-glyph{ fill:#B15CFF; }
+    html.look-v4 .pad-op.active .fill-bg{ fill:#8104C9; }
+    html.look-v4 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
+    html.look-v4 .pad-key:not(.pad-op) .fill-bg{ fill:rgba(255,255,255,0.08); }
+    html.look-v4 .icon-btn.pad-key[data-digit="0"]{ background:rgba(255,255,255,0.08); }
+    /* v5: plum-grey page */
+    html.look-v5 body{ background:#1E1726; }
+    html.look-v5 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
+    html.look-v5 .pad-op .fill-glyph{ fill:#B15CFF; }
+    html.look-v5 .pad-op.active .fill-bg{ fill:#8104C9; }
+    html.look-v5 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
+    /* v6: violet signs, magenta when chosen */
+    html.look-v6 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
+    html.look-v6 .pad-op .fill-glyph{ fill:#C77DFF; }
+    html.look-v6 .pad-op.active .fill-bg{ fill:#B23CC4; }
+    html.look-v6 .pad-op.active .fill-glyph{ fill:#F3E8F7; }
   }
 </style>
 <!-- What this page is, for search engines (schema.org); nothing on screen. -->
