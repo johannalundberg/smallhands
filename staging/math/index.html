@@ -359,6 +359,22 @@
     .equation-tap{ position:fixed; top:0; bottom:0; left:50%; right:0; align-items:center; }
   }
 
+  /* iPad portrait: the keys sit as on the phone, but the sum is centred both
+     ways in the space between the top icons and the keys (the phone keeps
+     the calculator's bottom-right display). A centred sum keeps its blanks'
+     room (hidden), so it doesn't shift while it's typed. */
+  @media (orientation: portrait) and (min-width: 768px) and (min-height: 501px){
+    /* Top padding measured so the space above the sum (from the icons) and
+       below it (to the keys) come out even. */
+    .equation-row{
+      padding-top:calc(var(--unit) * 1.5 + var(--icon-size));
+      padding-right:0;
+      align-items:center;
+      justify-content:center;
+    }
+    .answer-digit.placeholder{ display:inline-block; visibility:hidden; }
+  }
+
   /* Computers with a mouse or trackpad: no number keys -- children type on
      the keyboard, as Math always worked there (the hard-to-leave problem
      was the phone's keyboard, never a computer's). The sum in light type on
