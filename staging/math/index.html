@@ -341,7 +341,10 @@
        outshine the sum. */
     .pad-key .digit{ fill:#A6A6A6; }
     .pad-key .del-glyph{ stroke:#A6A6A6; }
-    /* Pressed, the digit lights up white instead of the whole key darkening. */
+    /* Pressed, the key turns solid black with its digit lit up white,
+       instead of the whole key darkening. */
+    .pad-key:not(.pad-op).pressed .fill-bg{ fill:#000; }
+    .icon-btn.pad-key[data-digit="0"].pressed{ background:#000; }
     .pad-key.pressed .digit{ fill:var(--bright); }
     .pad-key.pressed .del-glyph{ stroke:var(--bright); }
     .icon-btn.pad-key:not(.pad-op):active{ filter:none; }
