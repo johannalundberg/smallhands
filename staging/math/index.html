@@ -345,7 +345,7 @@
      keys near the bottom in two rows so they keep the corner icons' size:
      1-5 over 6-0 like a numpad split in two, delete at the end of the
      second row, then the signs as a 2x2 block (same colours as the phone's
-     column). A centred sum keeps its blanks' room (hidden), so it doesn't
+     column), all left-aligned over the back/refresh buttons. A centred sum keeps its blanks' room (hidden), so it doesn't
      shift while it's typed. */
   @media (orientation: landscape) and (min-width: 768px) and (min-height: 501px){
     :root{
@@ -390,8 +390,17 @@
       align-items:center;
       justify-content:center;
     }
+    /* The sum smaller here (55% of the usual): the screen is short, and
+       the two rows of keys already carry a lot. */
+    .equation{ font-size: calc(var(--hero-size) * 0.55 * var(--eq-scale, 1)); }
     .answer-digit.placeholder{ display:inline-block; visibility:hidden; }
-    .equation-tap{ position:fixed; top:var(--row-top); left:0; right:0; bottom:0; align-items:flex-start; }
+    /* The keys left-aligned, straight above the back/refresh buttons. */
+    .equation-tap{
+      position:fixed; top:var(--row-top); left:0; right:0; bottom:0;
+      align-items:flex-start;
+      justify-content:flex-start;
+      padding-left:var(--unit);
+    }
   }
 
   /* iPad portrait: the keys sit as on the phone, but the sum is centred both
