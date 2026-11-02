@@ -539,10 +539,10 @@
 
     /* 3. Dark, signs as dark keys with bright purple signs; only the chosen
        one fully purple */
-    html.look-dark2 .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
-    html.look-dark2 .pad-op .fill-glyph{ fill:#B15CFF; }
-    html.look-dark2 .pad-op.active .fill-bg{ fill:var(--bg); }
-    html.look-dark2 .pad-op.active .fill-glyph{ fill:#E4E4E4; }
+    html.look-dark2 .pad-op .fill-bg, html.look-small .pad-op .fill-bg{ fill:rgba(0,0,0,0.4); }
+    html.look-dark2 .pad-op .fill-glyph, html.look-small .pad-op .fill-glyph{ fill:#B15CFF; }
+    html.look-dark2 .pad-op.active .fill-bg, html.look-small .pad-op.active .fill-bg{ fill:var(--bg); }
+    html.look-dark2 .pad-op.active .fill-glyph, html.look-small .pad-op.active .fill-glyph{ fill:#E4E4E4; }
 
     /* 4. The reference on the grey page: lilac sign keys, the chosen one
        magenta */
@@ -559,8 +559,8 @@
     html.look-ref .pad-op.active .fill-glyph{ fill:#F3E8F7; }
     html.look-ref .controls-slider{ background:rgba(0,0,0,0.25); }
 
-    /* 5. Smaller digits on the keys, like Apple's calculator (about 44% of
-       the key instead of 58%) */
+    /* 5. Look 3's colours with smaller digits on the keys, like Apple's
+       calculator (about 44% of the key instead of 58%) */
     html.look-small .pad-key .digit{ font-size:66px; }
   }
 </style>
