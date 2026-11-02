@@ -341,22 +341,40 @@
     }
   }
 
-  /* iPad landscape: side by side -- the sum centred in the left half, the
-     keys centred in the right half between the top and bottom icons. A
-     centred sum keeps its blanks' room (hidden), so it doesn't shift while
-     it's typed. */
+  /* iPad landscape: no split -- the sum centred in the upper part, the
+     digits in one long row near the bottom (1-9 then 0 like a keyboard's
+     number row, then delete), the signs back in the top-left corner (all
+     15 in one row would make every key smaller). A centred sum keeps its
+     blanks' room (hidden), so it doesn't shift while it's typed. */
   @media (orientation: landscape) and (min-width: 768px) and (min-height: 501px){
     :root{
-      --key: max(44px, min(
-        var(--icon-size),
-        calc((50vw - var(--unit) * 4) / 4.37),
-        calc((var(--app-height, 100vh) - var(--unit) * 6 - var(--icon-size) * 2) / 4.37)
-      ));
+      /* 11 keys and 10 gaps = 12.24 keys across */
+      --key: max(44px, min(var(--icon-size), calc((100vw - var(--unit) * 4) / 12.24)));
+      --row-top: calc(var(--app-height, 100vh) - var(--unit) * 3 - var(--icon-size) - var(--key));
     }
-    .equation-row{ top:0; bottom:0; left:0; right:50%; align-items:center; justify-content:center; }
-    .equation{ font-size: calc(var(--hero-size) * 0.8 * var(--eq-scale, 1)); }
+    body .op-group{ display:flex; }
+    .pad-op{ display:none; }
+    .num-pad{ grid-template-columns: repeat(11, var(--key)); }
+    .num-pad .pad-key{ grid-area:auto; }
+    .icon-btn.pad-key[data-digit="0"]{
+      grid-area:auto;
+      width:var(--key);
+      aspect-ratio:1;
+      border-radius:50%;
+      background:none;
+      justify-content:center;
+    }
+    .icon-btn.pad-key[data-digit="0"].pressed{ background:none; }
+    .pad-key[data-digit="0"] .fill-bg{ display:inline; }
+    .equation-row{
+      top:0; left:0; right:0;
+      height:var(--row-top);
+      padding-top:calc(var(--unit) + var(--icon-size));
+      align-items:center;
+      justify-content:center;
+    }
     .answer-digit.placeholder{ display:inline-block; visibility:hidden; }
-    .equation-tap{ position:fixed; top:0; bottom:0; left:50%; right:0; align-items:center; }
+    .equation-tap{ position:fixed; top:var(--row-top); left:0; right:0; bottom:0; align-items:flex-start; }
   }
 
   /* iPad portrait: the keys sit as on the phone, but the sum is centred both
