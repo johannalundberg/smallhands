@@ -48,6 +48,7 @@
     --ink-muted:rgba(32,32,32,0.4);
     --success:#04BA50;
     --incorrect:#EE3B3B;
+    --face: var(--bright); /* the happy and sad faces (purple on phones, see there) */
     /* Figma frame: 1728x1117 */
     --hero-size: clamp(2.6rem, 13.3102vw, 230px); /* 230px on the 1728-wide frame */
     --unit: 1.1574vw; /* 20px margin/gap on the 1728-wide frame */
@@ -321,7 +322,10 @@
     .diff-btn.active .fill-bg{ fill:var(--bright); }
     .op-btn.active .fill-glyph{ fill:var(--ink); }
     body, body.flash-right, body.flash-wrong{ background:#212121; }
-    :root{ --ink-muted: rgba(0,0,0,0.4); } /* Memory's buttons, which show on the grey */
+    :root{
+      --ink-muted: rgba(0,0,0,0.4); /* Memory's buttons, which show on the grey */
+      --face: var(--bg); /* the happy and sad faces in Math's purple */
+    }
     /* Right or wrong without colour: a wrong answer's digits shake their
        heads (Sudoku's wobble), a right answer pops (Memory's found-a-pair
        bounce). The page stays as it is. */
@@ -413,6 +417,12 @@
     }
     .equation{ font-size: calc(var(--hero-size) * var(--eq-scale, 1)); }
     body{ padding:0; background:var(--bg); }
+    /* Even in a window taller than it is wide: the whole screen flashes
+       green/red as it always has here, never the phones' grey, and the faces
+       stay light on the purple. */
+    body.flash-right{ background:var(--success); }
+    body.flash-wrong{ background:var(--incorrect); }
+    :root{ --face: var(--bright); }
     .equation-row{ background:transparent; }
     .equation{ color:var(--bright); }
     .equation-tap{ position:static; padding:0; background:none; }
@@ -1017,11 +1027,11 @@
   // Pixel-art smiley (Figma node 198:1809) instead of the earlier curved-path
   // one -- two round eyes and a stepped-block smile.
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
-    '<circle fill="var(--bright)" cx="65" cy="65" r="65"/>' +
-    '<circle fill="var(--bright)" cx="908" cy="65" r="65"/>' +
-    '<rect fill="var(--bright)" x="161" y="171" width="130" height="130"/>' +
-    '<rect fill="var(--bright)" x="683" y="171" width="130" height="130"/>' +
-    '<rect fill="var(--bright)" x="291" y="301" width="392" height="65"/>' +
+    '<circle fill="var(--face)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--face)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--face)" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--face)" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--face)" x="291" y="301" width="392" height="65"/>' +
     '</svg>';
 
   function showCelebration(){
@@ -1045,11 +1055,11 @@
   // show when a round is lost: the happy face's eyes, its mouth blocks
   // rearranged (bar on top, corners hanging below).
   var SAD_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
-    '<circle fill="var(--bright)" cx="65" cy="65" r="65"/>' +
-    '<circle fill="var(--bright)" cx="908" cy="65" r="65"/>' +
-    '<rect fill="var(--bright)" x="291" y="171" width="392" height="65"/>' +
-    '<rect fill="var(--bright)" x="161" y="236" width="130" height="130"/>' +
-    '<rect fill="var(--bright)" x="683" y="236" width="130" height="130"/>' +
+    '<circle fill="var(--face)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--face)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--face)" x="291" y="171" width="392" height="65"/>' +
+    '<rect fill="var(--face)" x="161" y="236" width="130" height="130"/>' +
+    '<rect fill="var(--face)" x="683" y="236" width="130" height="130"/>' +
     '</svg>';
 
   var SHOW_ANSWER_MS = 1400;
