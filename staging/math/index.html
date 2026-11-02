@@ -616,7 +616,7 @@
   </div>
 
   <div class="progress-dots" id="progressDots">
-    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
   </div>
 
   <div class="equation-tap">
@@ -661,7 +661,8 @@
   document.addEventListener('touchstart', function(){}, { passive: true });
   var TIER_MAX = { easy: 25, medium: 50, hard: 100 };
 
-  var ROUND_SIZE = 10;
+  // Sums per round: 7, like Odd One Out and Copy the Pattern.
+  var ROUND_SIZE = 7;
   var MAX_ATTEMPTS = 3;
 
   var state = {
@@ -782,14 +783,17 @@
     };
     if (state.busy) {
       data.input = '';
-      if (parseInt(state.input, 10) === state.answerValue) {
+      if (state.attempts >= MAX_ATTEMPTS) {
+        // Out of tries (red flash, or the right answer showing -- checked
+        // first, since that answer would otherwise count as correct): the
+        // round is lost, so it starts over with a new problem.
+        data.progress = 0;
+        data.nextProblem = true;
+      } else if (parseInt(state.input, 10) === state.answerValue) {
         // Correct-answer flash: count it, then a new problem. If it was the
         // round's last one, the celebration would follow and reset to 0.
         data.progress = state.progress + 1;
         if (data.progress >= ROUND_SIZE) data.progress = 0;
-        data.nextProblem = true;
-      } else if (state.attempts >= MAX_ATTEMPTS) {
-        // Wrong-answer flash on the last attempt: moves on to a new problem.
         data.nextProblem = true;
       }
     }
@@ -1002,6 +1006,41 @@
     }, 3000);
   }
 
+  // Pixel-art sad face (Figma node 198:1914), the same one the other games
+  // show when a round is lost: the happy face's eyes, its mouth blocks
+  // rearranged (bar on top, corners hanging below).
+  var SAD_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="var(--bright)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--bright)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--bright)" x="291" y="171" width="392" height="65"/>' +
+    '<rect fill="var(--bright)" x="161" y="236" width="130" height="130"/>' +
+    '<rect fill="var(--bright)" x="683" y="236" width="130" height="130"/>' +
+    '</svg>';
+
+  var SHOW_ANSWER_MS = 1400;
+
+  // Out of tries on a sum, like Odd One Out and Copy the Pattern: the right
+  // answer is filled in for a moment so it's seen, then the sad face for 3s
+  // with the 'tryagain' sound, then the round starts over from zero dots.
+  function showAnswerThenSad(){
+    state.input = String(state.answerValue);
+    render();
+    flashTimer = setTimeout(function(){
+      updateAppHeight();
+      els.celebration.innerHTML = SAD_FACE_SVG;
+      PLSound.play('tryagain');
+      els.equationTap.style.display = 'none';
+      els.celebration.style.display = 'flex';
+      flashTimer = setTimeout(function(){
+        els.celebration.style.display = 'none';
+        els.equationTap.style.display = '';
+        state.progress = 0;
+        state.busy = false;
+        newProblem();
+      }, 3000);
+    }, SHOW_ANSWER_MS);
+  }
+
   function flashIncorrect(){
     state.busy = true;
     PLSound.play('negative');
@@ -1009,10 +1048,10 @@
     document.body.classList.add('flashing', 'flash-wrong');
     flashTimer = setTimeout(function(){
       document.body.classList.remove('flashing', 'flash-right', 'flash-wrong');
-      state.busy = false;
       if (state.attempts >= MAX_ATTEMPTS) {
-        newProblem();
+        showAnswerThenSad();
       } else {
+        state.busy = false;
         state.input = '';
         render();
       }
