@@ -356,7 +356,9 @@
         calc((100vw - var(--unit) * 4) / 8.87),
         calc((var(--app-height, 100vh) - var(--unit) * 5 - var(--icon-size) * 2 - 120px) / 2.12)
       ));
-      --row-top: calc(var(--app-height, 100vh) - var(--unit) * 3 - var(--icon-size) - var(--key) * 2.12);
+      /* The keys sit one key-gap above the back/refresh buttons, the same
+         gap as between the keys, so they read as one block with them. */
+      --row-top: calc(var(--app-height, 100vh) - var(--unit) - var(--icon-size) - var(--key) * 2.2439);
     }
     .num-pad{ grid-template-columns: repeat(8, var(--key)); }
     .pad-key[data-digit="1"]{ grid-area:1 / 1; }
