@@ -205,7 +205,10 @@
     z-index:1;
     transition: background 80ms ease;
   }
-  /* A right or wrong answer turns the whole screen green/red, band included. */
+  /* A right or wrong answer turns the whole screen green/red, band included
+     (upright screens: only the sum, see there). */
+  body.flash-right{ background:var(--success); }
+  body.flash-wrong{ background:var(--incorrect); }
   body.flashing .equation-row{ background:transparent; }
   .equation{
     display:flex;
@@ -307,8 +310,11 @@
     .op-btn.active .fill-bg,
     .diff-btn.active .fill-bg{ fill:var(--bright); }
     .op-btn.active .fill-glyph{ fill:var(--ink); }
-    body{ background:#212121; }
+    body, body.flash-right, body.flash-wrong{ background:#212121; }
     :root{ --ink-muted: rgba(0,0,0,0.4); } /* Memory's buttons, which show on the grey */
+    /* A right or wrong answer turns only the sum green or red, not the page. */
+    body.flash-right .equation{ color:var(--success); }
+    body.flash-wrong .equation{ color:var(--incorrect); }
     .equation-tap{
       position:fixed;
       top:var(--band-h); left:0; right:0; bottom:0;
@@ -409,6 +415,9 @@
        actually visible. (The icons inside the tray deliberately don't grow:
        the tray itself is the thing that grows, see .controls-slider:active.) */
     .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
+    /* The number keys are the game's pieces, so they also shrink a little
+       when pressed, like Memory's tiles and Odd One Out's cards. */
+    .icon-btn.pad-key:active{ transform: translateZ(0) scale(0.96); }
     :root{
       --hero-size: clamp(2.6rem, 16.5587vw, 140px); /* 65.08px on the 393px phone frame */
       --unit: 5.089vw; /* 20px on the 393px phone frame */
@@ -508,9 +517,9 @@
   html, body, .controls-slider{ touch-action:manipulation; }
   /* ---------- TEMP: colour looks to compare (phones/upright) ---------- */
   @media (orientation: portrait){
-    /* 1. Light page */
+    /* 1. Light page, in Math's lilac */
     html.look-light{ --ink-muted: rgba(32,32,32,0.4); }
-    html.look-light body{ background:#E4E4E4; }
+    html.look-light body{ background:#D3A8FF; }
     html.look-light .equation{ color:#202020; }
     html.look-light .progress-dots .dot{ background:rgba(32,32,32,0.25); }
     html.look-light .progress-dots .dot.done{ background:#202020; }
@@ -1002,13 +1011,11 @@
     state.busy = true;
     PLSound.play('positive');
     clearTimeout(flashTimer);
-    document.body.style.background = 'var(--success)';
-    document.body.classList.add('flashing');
+    document.body.classList.add('flashing', 'flash-right');
     flashTimer = setTimeout(function(){
       state.progress += 1;
       updateProgressDots();
-      document.body.style.background = '';
-      document.body.classList.remove('flashing');
+      document.body.classList.remove('flashing', 'flash-right', 'flash-wrong');
       if (state.progress >= ROUND_SIZE) {
         showCelebration();
       } else {
@@ -1049,11 +1056,9 @@
     state.busy = true;
     PLSound.play('negative');
     clearTimeout(flashTimer);
-    document.body.style.background = 'var(--incorrect)';
-    document.body.classList.add('flashing');
+    document.body.classList.add('flashing', 'flash-wrong');
     flashTimer = setTimeout(function(){
-      document.body.style.background = '';
-      document.body.classList.remove('flashing');
+      document.body.classList.remove('flashing', 'flash-right', 'flash-wrong');
       state.busy = false;
       if (state.attempts >= MAX_ATTEMPTS) {
         newProblem();
