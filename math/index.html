@@ -280,6 +280,10 @@
   /* The signs live in the pad, not the tray. */
   body .op-group{ display:none; }
   .pad-op .fill-glyph{ fill:#B15CFF; }
+  /* The signs at 82%: thin, open shapes, so a little taller than a digit
+     (+ about 34px against the digits' 30px on a phone) reads as the same
+     size. */
+  .pad-op .fill-glyph{ transform-box:view-box; transform-origin:75px 75px; transform:scale(0.82); }
   .pad-op.active .fill-bg{ fill:var(--bg); }
   .pad-op.active .fill-glyph{ fill:var(--bright); }
   .pad-key[data-digit="7"]{ grid-area:1 / 1; }
