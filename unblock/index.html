@@ -35,13 +35,13 @@
 <style>
   :root{
     /* Figma node 392:1976 */
-    --bg:#393939;
-    --spot:#282828; /* = --ink-muted over --bg, so squares match the unselected buttons */
+    --bg:#2C2621; /* warm taupe, her pick 2026-11-04 (was #393939) */
+    --spot:#1A1714; /* = --ink-muted over --bg, so squares match the unselected buttons */
     --frame:#000000;
     --red-car:#F93134;
     --bright:#E4E4E4;
     --ink:#202020;
-    --ink-muted:rgba(32,32,32,0.68);
+    --ink-muted:rgba(0,0,0,0.4); /* see-through black (as Memory): a grey overlay vanishes on a background this dark */
     --success:#0DC754;
     --incorrect:#F2383B;
     /* Figma frame: 1728x1117 */
@@ -149,7 +149,8 @@
   .progress-dots .dot.done{ background: var(--bright); }
 
   /* ---------- the parking lot ---------- */
-  /* Figma node 392:1976: a 2px black outline around the lot, with an opening
+  /* Figma node 392:1976: a black outline around the lot (3px, up from 2px,
+     so its opening -- the exit -- reads more clearly), with an opening
      on the right of the red car's row. Sizes are fractions of the board's
      Figma width (743px) so it scales to every screen: --pad is the space
      inside the outline, --gap the space between squares, --cell one square. */
@@ -157,10 +158,10 @@
     position:relative;
     width:var(--board-size);
     height:var(--board-size);
-    border:2px solid var(--frame);
+    border:3px solid var(--frame);
     --pad: calc(var(--board-size) * 0.025536);
     --gap: calc(var(--board-size) * 0.012649);
-    --cell: calc((var(--board-size) - 4px - 2 * var(--pad) - 5 * var(--gap)) / 6);
+    --cell: calc((var(--board-size) - 6px - 2 * var(--pad) - 5 * var(--gap)) / 6);
     --step: calc(var(--cell) + var(--gap));
     --radius: calc(var(--cell) * 0.12843);
     touch-action:none;
@@ -184,7 +185,7 @@
      with the edges of the squares above and below. */
   .exit{
     position:absolute;
-    right:calc(-2px - var(--board-size) * 0.018843);
+    right:calc(-3px - var(--board-size) * 0.018843);
     top:calc(var(--pad) + var(--step) * 2 - var(--gap));
     width:calc(var(--board-size) * 0.037685);
     height:calc(var(--cell) + var(--gap) * 2);
@@ -305,7 +306,7 @@
       right:var(--unit);
       bottom:var(--unit);
       z-index:3;
-      background: rgba(32,32,32,0.4);
+      background: rgba(0,0,0,0.2); /* Memory's tray: shows on the dark taupe */
       border-radius:999px;
       overflow-x:auto;
       -webkit-overflow-scrolling:touch;
@@ -568,7 +569,7 @@
 
   // Vehicle colours, picked by Johanna. None of them is red: the red car is
   // the only red vehicle.
-  var VEHICLE_COLORS = ['#5F44FF', '#F2B238', '#21CECE', '#F362EE', '#9FEA48'];
+  var VEHICLE_COLORS = ['#5F44FF', '#F2B238', '#21CECE', '#F362EE', '#9EDE54'];
 
   // The very first visit opens on this starter board: the red car and one
   // car in its way, and the pieces show the move by themselves (see
