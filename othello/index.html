@@ -124,11 +124,15 @@
   /* First visit: the three levels light up green, yellow and red in turn
      (no growing), so it's clear there are levels to choose. Grey at rest.
      ?levelhint replays it. */
-  .diff-btn[data-tier="easy"]   { --glow:#9EDE54; }
-  .diff-btn[data-tier="medium"] { --glow:#FFE45C; }
+  .diff-btn[data-tier="easy"]   { --glow:#5CC72E; }
+  .diff-btn[data-tier="medium"] { --glow:#FFEA00; }
   .diff-btn[data-tier="hard"]   { --glow:#F93134; }
   .diff-btn.hint .fill-bg{ animation: level-glow-tier 1300ms ease-in-out; }
   @keyframes level-glow-tier{ 40%,60%{ fill:var(--glow); } }
+  /* Tapping a level flashes its colour, then it settles on the normal
+     active colour. */
+  .diff-btn.pick .fill-bg{ animation: level-pick 900ms ease-out; }
+  @keyframes level-pick{ 0%,30%{ fill:var(--glow); } }
 
   .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
 
@@ -1015,6 +1019,12 @@
       });
     }, delay || 0);
   }
+  g.addEventListener('click', function(e){
+    var b = e.target.closest('.diff-btn'); if (!b) return;
+    b.classList.remove('pick'); void b.offsetWidth; b.classList.add('pick');
+    clearTimeout(b._pickT);
+    b._pickT = setTimeout(function(){ b.classList.remove('pick'); }, 950);
+  });
   window.PLLevelHint = play;
   if (!document.currentScript.hasAttribute('data-after-first-solve')) {
     play(window.innerWidth <= 767 ? 2200 : 900);
