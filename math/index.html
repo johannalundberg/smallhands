@@ -1253,22 +1253,41 @@
 })();
 </script>
 <script>
-/* First-visit level hint (once per game), after the phone tray's own intro. */
+/* Level hint: the three levels light up green, yellow and red in turn, once
+   on the whole site. Plays on a first visit (after the phone tray's own
+   intro); in games with their own first-visit demo (Unblock, Connect the
+   Pipes) it waits for the first solved puzzle instead. ?levelhint replays. */
 (function(){
   var g = document.getElementById('diffGroup'); if (!g) return;
-  var KEY = location.pathname.split('/').filter(Boolean).pop() + '.levelHintShown';
-  var force = /[?&]levelhint\b/.test(location.search);
-  try { if (!force && localStorage.getItem(KEY)) return; } catch (e) {}
-  setTimeout(function(){
-    ['easy','medium','hard'].forEach(function(t, i){
-      setTimeout(function(){
-        var b = g.querySelector('[data-tier="' + t + '"]'); if (!b) return;
-        b.classList.remove('hint'); void b.offsetWidth; b.classList.add('hint');
-        setTimeout(function(){ b.classList.remove('hint'); }, 1350);
-      }, i * 500);
-    });
+  var KEY = 'playandlearn.levelHintShown';
+  var force = /[?&]levelhint\b/.test(location.search), played = false;
+  function shown(){
+    try {
+      if (localStorage.getItem(KEY)) return true;
+      for (var i = 0; i < localStorage.length; i++) {
+        if (/\.levelHintShown$/.test(localStorage.key(i))) return true; // seen under the old per-game keys
+      }
+    } catch (e) {}
+    return false;
+  }
+  function play(delay){
+    if (played || (!force && shown())) return;
+    played = true;
     try { localStorage.setItem(KEY, '1'); } catch (e) {}
-  }, window.innerWidth <= 767 ? 2200 : 900);
+    setTimeout(function(){
+      ['easy','medium','hard'].forEach(function(t, i){
+        setTimeout(function(){
+          var b = g.querySelector('[data-tier="' + t + '"]'); if (!b) return;
+          b.classList.remove('hint'); void b.offsetWidth; b.classList.add('hint');
+          setTimeout(function(){ b.classList.remove('hint'); }, 1350);
+        }, i * 500);
+      });
+    }, delay || 0);
+  }
+  window.PLLevelHint = play;
+  if (!document.currentScript.hasAttribute('data-after-first-solve')) {
+    play(window.innerWidth <= 767 ? 2200 : 900);
+  }
 })();
 </script>
 </body>
