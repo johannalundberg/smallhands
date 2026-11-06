@@ -116,7 +116,7 @@
      its colour; the chosen one is full strength, the others sit back.
      ?plain turns it off. */
   html:not(.plain-levels) .diff-btn[data-tier="easy"]   .fill-bg{ fill:#9EDE54; }
-  html:not(.plain-levels) .diff-btn[data-tier="medium"] .fill-bg{ fill:#F2B238; }
+  html:not(.plain-levels) .diff-btn[data-tier="medium"] .fill-bg{ fill:#FFE45C; }
   html:not(.plain-levels) .diff-btn[data-tier="hard"]   .fill-bg{ fill:#F93134; }
   html:not(.plain-levels) .diff-btn .fill-bg{ opacity:0.35; transition: fill 120ms ease, opacity 120ms ease; }
   html:not(.plain-levels) .diff-btn.active .fill-bg{ opacity:1; }
@@ -142,15 +142,15 @@
   /* ?plain&glow: grey at rest, but each level lights up in its own colour
      (green, yellow, red) while it bounces. */
   html.plain-levels.colour-glow .diff-btn[data-tier="easy"]   { --glow:#9EDE54; }
-  html.plain-levels.colour-glow .diff-btn[data-tier="medium"] { --glow:#F2B238; }
+  html.plain-levels.colour-glow .diff-btn[data-tier="medium"] { --glow:#FFE45C; }
   html.plain-levels.colour-glow .diff-btn[data-tier="hard"]   { --glow:#F93134; }
   html.plain-levels.colour-glow .diff-btn.hint .fill-bg{ animation: level-glow-tier 520ms ease-in-out; }
   html.plain-levels.colour-glow .diff-btn.nudge .fill-bg{ animation: level-glow-tier 700ms ease-in-out 2; }
   @keyframes level-glow-tier{ 40%,60%{ fill:var(--glow); } }
   /* ?still: the first-visit hint only lights up, no bouncing. */
-  html.no-grow .diff-btn.hint{ animation: level-still 700ms linear; }
+  html.no-grow .diff-btn.hint{ animation: level-still 1300ms linear; }
   @keyframes level-still{ from{ opacity:1; } to{ opacity:1; } }
-  html.plain-levels.colour-glow.no-grow .diff-btn.hint .fill-bg{ animation: level-glow-tier 700ms ease-in-out; }
+  html.plain-levels.colour-glow.no-grow .diff-btn.hint .fill-bg{ animation: level-glow-tier 1300ms ease-in-out; }
   @keyframes level-nudge{
     0%{ transform:translateZ(0) scale(1); }
     14%{ transform:translateZ(0) scale(1.25); }
@@ -1297,7 +1297,7 @@
       LEVEL_ORDER.forEach(function(tier, i){
         setTimeout(function(){
           bounceLevel(els.diffGroup.querySelector('[data-tier="' + tier + '"]'), 'hint');
-        }, i * 180);
+        }, i * (document.documentElement.classList.contains('no-grow') ? 500 : 180));
       });
       try { localStorage.setItem(KEY, '1'); } catch (e) {}
     }, delay);
