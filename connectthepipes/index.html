@@ -132,6 +132,14 @@
   .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
   .diff-btn .fill-bg{ fill:var(--ink-muted); }
   .diff-btn.active .fill-bg{ fill:var(--bright); }
+  /* First visit: the three levels light up green, yellow and red in turn
+     (no growing), so it's clear there are levels to choose. Grey at rest.
+     ?levelhint replays it. */
+  .diff-btn[data-tier="easy"]   { --glow:#9EDE54; }
+  .diff-btn[data-tier="medium"] { --glow:#FFE45C; }
+  .diff-btn[data-tier="hard"]   { --glow:#F93134; }
+  .diff-btn.hint .fill-bg{ animation: level-glow-tier 1300ms ease-in-out; }
+  @keyframes level-glow-tier{ 40%,60%{ fill:var(--glow); } }
 
   .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
 
@@ -1218,5 +1226,24 @@
 })();
 </script>
 
+<script>
+/* First-visit level hint (once per game), after the phone tray's own intro. */
+(function(){
+  var g = document.getElementById('diffGroup'); if (!g) return;
+  var KEY = location.pathname.split('/').filter(Boolean).pop() + '.levelHintShown';
+  var force = /[?&]levelhint\b/.test(location.search);
+  try { if (!force && localStorage.getItem(KEY)) return; } catch (e) {}
+  setTimeout(function(){
+    ['easy','medium','hard'].forEach(function(t, i){
+      setTimeout(function(){
+        var b = g.querySelector('[data-tier="' + t + '"]'); if (!b) return;
+        b.classList.remove('hint'); void b.offsetWidth; b.classList.add('hint');
+        setTimeout(function(){ b.classList.remove('hint'); }, 1350);
+      }, i * 500);
+    });
+    try { localStorage.setItem(KEY, '1'); } catch (e) {}
+  }, window.innerWidth <= 767 ? 2200 : 900);
+})();
+</script>
 </body>
 </html>
