@@ -112,13 +112,51 @@
   .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
   .diff-btn .fill-bg{ fill:var(--ink-muted); }
   .diff-btn.active .fill-bg{ fill:var(--bright); }
-  /* STAGING: traffic-light levels. Every level shows its colour; the
-     chosen one is full strength, the others sit back at 35%. */
-  .diff-btn[data-tier="easy"]   .fill-bg{ fill:#9EDE54; }
-  .diff-btn[data-tier="medium"] .fill-bg{ fill:#F2B238; }
-  .diff-btn[data-tier="hard"]   .fill-bg{ fill:#F93134; }
-  .diff-btn .fill-bg{ opacity:0.35; transition: fill 120ms ease, opacity 120ms ease; }
-  .diff-btn.active .fill-bg{ opacity:1; }
+  /* STAGING: traffic-light levels (green, yellow, red). Every level shows
+     its colour; the chosen one is full strength, the others sit back.
+     ?plain turns it off. */
+  html:not(.plain-levels) .diff-btn[data-tier="easy"]   .fill-bg{ fill:#9EDE54; }
+  html:not(.plain-levels) .diff-btn[data-tier="medium"] .fill-bg{ fill:#F2B238; }
+  html:not(.plain-levels) .diff-btn[data-tier="hard"]   .fill-bg{ fill:#F93134; }
+  html:not(.plain-levels) .diff-btn .fill-bg{ opacity:0.35; transition: fill 120ms ease, opacity 120ms ease; }
+  html:not(.plain-levels) .diff-btn.active .fill-bg{ opacity:1; }
+  /* STAGING: level hints, no words. First visit: the three level buttons
+     bounce once, left to right. After a win: the next level's button
+     bounces twice, inviting the step up. */
+  .diff-btn.hint{ animation: level-hint 520ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes level-hint{
+    0%{ transform:translateZ(0) scale(1); }
+    40%{ transform:translateZ(0) scale(1.22); }
+    70%{ transform:translateZ(0) scale(0.94); }
+    100%{ transform:translateZ(0) scale(1); }
+  }
+  .diff-btn.nudge{ animation: level-nudge 1400ms ease-in-out; }
+  /* Unchosen levels are dark on a dark tray, so they also light up while
+     they bounce, then settle back. (Colour version: they go full strength.) */
+  html.plain-levels .diff-btn.hint:not(.active) .fill-bg{ animation: level-glow 520ms ease-in-out; }
+  html.plain-levels .diff-btn.nudge:not(.active) .fill-bg{ animation: level-glow 700ms ease-in-out 2; }
+  @keyframes level-glow{ 0%,100%{ fill:var(--ink-muted); } 40%,60%{ fill:var(--bright); } }
+  html:not(.plain-levels) .diff-btn.hint:not(.active) .fill-bg{ animation: level-glow-colour 520ms ease-in-out; }
+  html:not(.plain-levels) .diff-btn.nudge:not(.active) .fill-bg{ animation: level-glow-colour 700ms ease-in-out 2; }
+  @keyframes level-glow-colour{ 0%,100%{ opacity:0.35; } 40%,60%{ opacity:1; } }
+  /* ?plain&glow: grey at rest, but each level lights up in its own colour
+     (green, yellow, red) while it bounces. */
+  html.plain-levels.colour-glow .diff-btn[data-tier="easy"]   { --glow:#9EDE54; }
+  html.plain-levels.colour-glow .diff-btn[data-tier="medium"] { --glow:#F2B238; }
+  html.plain-levels.colour-glow .diff-btn[data-tier="hard"]   { --glow:#F93134; }
+  html.plain-levels.colour-glow .diff-btn.hint .fill-bg{ animation: level-glow-tier 520ms ease-in-out; }
+  html.plain-levels.colour-glow .diff-btn.nudge .fill-bg{ animation: level-glow-tier 700ms ease-in-out 2; }
+  @keyframes level-glow-tier{ 40%,60%{ fill:var(--glow); } }
+  @keyframes level-nudge{
+    0%{ transform:translateZ(0) scale(1); }
+    14%{ transform:translateZ(0) scale(1.25); }
+    26%{ transform:translateZ(0) scale(0.94); }
+    36%{ transform:translateZ(0) scale(1); }
+    60%{ transform:translateZ(0) scale(1); }
+    74%{ transform:translateZ(0) scale(1.25); }
+    86%{ transform:translateZ(0) scale(0.94); }
+    100%{ transform:translateZ(0) scale(1); }
+  }
 
   .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
 
@@ -386,6 +424,8 @@
   }
 }
 </script>
+<script>if(/[?&]plain\b/.test(location.search))document.documentElement.classList.add("plain-levels");</script>
+<script>if(/[?&]glow\b/.test(location.search))document.documentElement.classList.add("colour-glow");</script>
 </head>
 <body>
 
@@ -1212,7 +1252,50 @@
       els.celebration.style.display = 'none';
       els.boardWrap.style.display = '';
       buildBoard();
+      nudgeNextLevel();
     }, 3000);
+  }
+
+  // STAGING: replay a bounce on a level button (restarts if already running).
+  function bounceLevel(btn, cls){
+    if (!btn) return;
+    btn.classList.remove(cls);
+    void btn.offsetWidth;
+    btn.classList.add(cls);
+    btn.addEventListener('animationend', function done(e){
+      if (e.target !== btn) return;
+      btn.classList.remove(cls);
+      btn.removeEventListener('animationend', done);
+    });
+  }
+  // After a win, the next level up bounces twice, so the way forward is
+  // shown right when the player is ready for it. Nothing after hard.
+  var LEVEL_ORDER = ['easy', 'medium', 'hard'];
+  function nudgeNextLevel(){
+    var next = LEVEL_ORDER[LEVEL_ORDER.indexOf(state.difficulty) + 1];
+    if (!next) return;
+    var el = els.controlsSlider;
+    if (el && window.innerWidth <= 767 && el.scrollLeft > 0) {
+      el.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+    setTimeout(function(){
+      bounceLevel(els.diffGroup.querySelector('[data-tier="' + next + '"]'), 'nudge');
+    }, 400);
+  }
+  // First visit only (or ?levelhint on staging): the three level buttons
+  // bounce one after another, left to right, after the tray's own intro.
+  function introduceLevels(delay){
+    var KEY = 'memory.levelHintShown';
+    var force = /[?&]levelhint\b/.test(location.search);
+    try { if (!force && localStorage.getItem(KEY)) return; } catch (e) {}
+    setTimeout(function(){
+      LEVEL_ORDER.forEach(function(tier, i){
+        setTimeout(function(){
+          bounceLevel(els.diffGroup.querySelector('[data-tier="' + tier + '"]'), 'hint');
+        }, i * 180);
+      });
+      try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    }, delay);
   }
 
   els.diffGroup.addEventListener('click', function(e){
@@ -1280,7 +1363,13 @@
     }
     requestAnimationFrame(step);
   }
+  var trayIntroRuns = false;
+  try {
+    trayIntroRuns = window.innerWidth <= 767 && !localStorage.getItem('memory.traySliderIntroShown') &&
+      els.controlsSlider.scrollWidth > els.controlsSlider.clientWidth;
+  } catch (e) {}
   introduceTraySlider();
+  introduceLevels(trayIntroRuns ? 2200 : 900);
 
   // Back from the rotate-block reload: continue the saved game. Otherwise (or
   // if the saved game doesn't restore cleanly) start fresh on easy.

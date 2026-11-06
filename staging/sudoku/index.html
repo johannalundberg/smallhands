@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+
+<!-- GoatCounter: counts visits without cookies or personal data -->
+<script data-goatcounter="https://playandlearn.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+<title>Sudoku for Kids: 4x4 and 6x6 Puzzles — Play and Learn</title>
+<meta name="description" content="Sudoku for kids on 4x4 and 6x6 boards: every row, column and box has each number once. Free, no ads, pop-ups or cookies. Designed by a mom and her 6-year-old.">
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<link rel="manifest" href="../../manifest.json">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://playandlearn.kids/sudoku/">
+<meta property="og:title" content="Sudoku — Play and Learn">
+<meta property="og:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta property="og:image" content="https://playandlearn.kids/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<!-- The same face with its eyes looking around and blinking: iMessage
+     plays this in the link preview; other apps show og:image. -->
+<meta property="og:video" content="https://playandlearn.kids/og-video.mp4">
+<meta property="og:video:secure_url" content="https://playandlearn.kids/og-video.mp4">
+<meta property="og:video:type" content="video/mp4">
+<meta property="og:video:width" content="1200">
+<meta property="og:video:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sudoku — Play and Learn">
+<meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
+<style>
+  /* The digits: Math's typeface. */
+  @font-face{
+    font-family:'Spline Sans Mono';
+    src: url('../../fonts/SplineSansMono.woff2') format('woff2');
+    font-weight:400;
+    font-style:normal;
+  }
+  :root{
+    /* Figma node 400:2965. The squares still to fill are dark, so they
+       stand out from the given ones (the design's #BEBAB2). */
+    --bg:#555F7B;
+    --spot:#6E6143;
+    --spot-given:#BEBAB2;
+    /* One colour per digit 1-4. Only the celebration smiley uses them now
+       (the digits themselves are black). */
+    --shape-0:#E18E00;
+    --shape-1:#8D951C;
+    --shape-2:#C955FF;
+    --shape-3:#7986FF;
+    --bright:#E4E4E4;
+    --ink:#202020;
+    --ink-muted:rgba(32,32,32,0.4);
+    --incorrect:#F2383B;
+    --success:#04BA50; /* same green as a right answer in Math */
+    --win:#0DC754; /* the solved board's wave: Othello's green */
+    /* The disc look's colours. */
+    --disc-given: #B36400;
+    --digit-given: #000;
+    --disc: #FFA226;
+    --digit: #000;
+    --empty: var(--ink-muted); /* = the icon buttons over the page */
+    --line-color: #000;
+    /* Figma frame: 1728x1117. The board may be as wide as the page between
+       the side margins (--board-w) and as tall as the room between the icon
+       rows (--board-h); the squares are sized to fit both. */
+    --board-w: calc(100vw - 2 * var(--unit));
+    --board-h: 76vmin;
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+
+  /* Tablet/desktop: size the board against the room left between the top and
+     bottom icon rows, same as Unblock, Number Puzzle and Othello. */
+  @media (min-width: 768px){
+    :root{
+      --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+      --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
+      --board-h: calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom));
+      /* Full width only on phones (her call); from tablet up, the same width
+         cap as Unblock (76vw, 743px) so it isn't oversized on an iPad. */
+      --board-w: min(76vw, 743px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+    transition: background 80ms ease;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ---------- icon buttons (difficulty / back / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 120ms ease;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ transform: translateZ(0) scale(1.035); }
+  }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+  /* STAGING: traffic-light levels (green, yellow, red). Every level shows
+     its colour; the chosen one is full strength, the others sit back.
+     ?plain turns it off. */
+  html:not(.plain-levels) .diff-btn[data-tier="easy"]   .fill-bg{ fill:#9EDE54; }
+  html:not(.plain-levels) .diff-btn[data-tier="medium"] .fill-bg{ fill:#F2B238; }
+  html:not(.plain-levels) .diff-btn[data-tier="hard"]   .fill-bg{ fill:#F93134; }
+  html:not(.plain-levels) .diff-btn .fill-bg{ opacity:0.35; transition: fill 120ms ease, opacity 120ms ease; }
+  html:not(.plain-levels) .diff-btn.active .fill-bg{ opacity:1; }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  .progress-dots{
+    position:absolute;
+    right:var(--unit);
+    bottom:var(--unit);
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap: calc(var(--icon-size) * 0.08);
+  }
+  .progress-dots .dot{
+    width: calc(var(--icon-size) * 0.25);
+    height: calc(var(--icon-size) * 0.25);
+    border-radius:50%;
+    background: var(--ink-muted);
+    transition: background 150ms ease;
+  }
+  .progress-dots .dot.done{ background: var(--bright); }
+
+  /* ---------- the board ---------- */
+  /* 4x4 squares in four 2x2 boxes (easy, medium) or 6x6 in six 2x3 boxes
+     (hard), outlined like Othello's board: square corners, and the black
+     board shows through as 2px lines between the squares (--gap) and thicker
+     4px ones between the boxes (--box-gap), plus a 2px outline. --cell is one
+     square. buildCells sets --n (squares per side) and how many small and
+     box gaps run across (--col-*) and down (--row-*); the squares are sized
+     to fit both ways (6x6 has more box gaps down than across). */
+  .board-wrap{
+    position:relative;
+    --n: 4;
+    --col-gaps: 2; --col-box-gaps: 1;
+    --row-gaps: 2; --row-box-gaps: 1;
+    --gap: 2px;
+    --box-gap: 4px;
+    --cell: min(calc((var(--board-w) - var(--col-gaps) * var(--gap) - var(--col-box-gaps) * var(--box-gap)) / var(--n)),
+                calc((var(--board-h) - var(--row-gaps) * var(--gap) - var(--row-box-gaps) * var(--box-gap)) / var(--n)));
+    width: calc(var(--cell) * var(--n) + var(--col-gaps) * var(--gap) + var(--col-box-gaps) * var(--box-gap));
+    height: calc(var(--cell) * var(--n) + var(--row-gaps) * var(--gap) + var(--row-box-gaps) * var(--box-gap));
+    background:#000;
+    box-shadow:0 0 0 2px #000;
+    touch-action:manipulation;
+  }
+  /* Whole-pixel squares: with fractional ones, Safari rounds each square's
+     edges on its own, so the 2px lines came out thinner and uneven. The
+     board shrinks by a few px to fit whole squares plus the lines. */
+  @supports (width: round(down, 10.5px, 1px)){
+    .board-wrap{
+      --cell: round(down, min(calc((var(--board-w) - var(--col-gaps) * var(--gap) - var(--col-box-gaps) * var(--box-gap)) / var(--n)),
+                              calc((var(--board-h) - var(--row-gaps) * var(--gap) - var(--row-box-gaps) * var(--box-gap)) / var(--n))), 1px);
+    }
+  }
+  .cell{
+    appearance:none;
+    -webkit-appearance:none;
+    position:absolute;
+    width:var(--cell);
+    height:var(--cell);
+    margin:0;
+    padding:0;
+    border:none;
+    background:var(--spot);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+    transition: transform 120ms ease, background 80ms ease;
+  }
+  .cell.given{ background:var(--spot-given); cursor:default; }
+  /* Press feedback, livelier than a plain shrink so a tap feels like
+     Memory's tiles: pressed in to 92% while held, then a springy bounce
+     past full size on release (Memory's pop curve). Driven by classes on
+     real pointer events (see bindPress), since :active goes stale on iOS.
+     (html ... :not(.given) so it outranks the hover grow below.) */
+  html .cell:not(.given).pressed{ transform:scale(0.92); transition:none; }
+  html .cell:not(.given).spring{ animation: press-spring 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes press-spring{
+    0%{ transform:scale(0.92); }
+    55%{ transform:scale(1.06); }
+    100%{ transform:scale(1); }
+  }
+  /* Hover (mouse only): the squares you can tap grow slightly. Gentler than
+     the site's 3.5% (icon buttons, Tic Tac Toe), which felt too much on
+     these big circles. Given ones stay still. */
+  @media (hover:hover) and (pointer:fine){
+    .cell:not(.given):hover{ transform:scale(1.02); }
+  }
+  /* Full but wrong: the wrong numbers shake their heads (see flashIncorrect). */
+  .cell.wrong .hop{ animation: digit-shake 520ms ease-in-out; }
+  @keyframes digit-shake{
+    0%, 100%{ transform:translateX(0) rotate(0); }
+    15%{ transform:translateX(-9%) rotate(-8deg); }
+    35%{ transform:translateX(8%) rotate(7deg); }
+    55%{ transform:translateX(-6%) rotate(-5deg); }
+    75%{ transform:translateX(4%) rotate(3deg); }
+  }
+
+  /* Each square holds all four shapes; data-shape picks the one that shows,
+     so a tap only swaps an attribute and never rebuilds the square. */
+  .hop{ display:block; width:100%; height:100%; }
+  .shape{ display:block; width:100%; height:100%; overflow:visible; }
+  .shape > *{ display:none; }
+  .cell[data-shape="0"] .s0,
+  .cell[data-shape="1"] .s1,
+  .cell[data-shape="2"] .s2,
+  .cell[data-shape="3"] .s3,
+  .cell[data-shape="4"] .s4,
+  .cell[data-shape="5"] .s5{ display:inline; }
+  .s0{ fill:var(--shape-0); }
+  .s1{ fill:var(--shape-1); }
+  .s2{ fill:var(--shape-2); }
+  .s3{ fill:var(--shape-3); }
+  /* Digits 1-4 (1-6 on hard) in black, set like Math's numbers. */
+  .shape .digit{
+    fill:var(--digit);
+    font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
+    font-weight:400;
+    font-size:78px;
+    font-feature-settings:"zero" 1;
+    text-anchor:middle;
+    dominant-baseline:central;
+  }
+  /* html.style-circles, the game's look: each number sits on its own disc
+     -- deep orange for the given numbers, bright orange for the player's,
+     black numbers on both. */
+  .disc{ display:none; }
+  html.style-circles .disc{ display:inline; fill:var(--disc); }
+  html.style-circles .cell.given .disc{ fill:var(--disc-given); }
+  html.style-circles .cell.given .digit{ fill:var(--digit-given); }
+  /* 47px on a phone's 4x4 board, the same as Othello's and Tic-Tac-Toe's
+     scores and Math's keys. */
+  html.style-circles .shape .digit{ font-size:53.4px; }
+  /* An empty square shows a muted circle (the unselected buttons' grey),
+     so it's clear where to tap. */
+  .empty-ring{ display:none; fill:var(--empty); }
+  html.style-circles .cell:not([data-shape]) .empty-ring{ display:inline; }
+  /* ...with no square colours, and only lines between the boxes drawn,
+     about as heavy as Labyrinth's walls but in whole pixels (--line: 3px,
+     2px on phones) so Safari draws every line the same width
+     (.box-line, built in buildCells): no outline and no lines between the
+     squares inside a box. Each disc leaves --k (4%) of its square free on
+     every side, so neighbours are 8% apart; --pad adds another 4% each side
+     of a box line, so a disc is 8% from the line too. */
+  html.style-circles .board-wrap{
+    --gap:0px;
+    --line: 3px;
+    --k: 0.04;
+    --cell: min(calc((var(--board-w) - var(--col-box-gaps) * var(--line)) / (var(--n) + var(--col-box-gaps) * 2 * var(--k))),
+                calc((var(--board-h) - var(--row-box-gaps) * var(--line)) / (var(--n) + var(--row-box-gaps) * 2 * var(--k))));
+    --pad: calc(var(--cell) * var(--k));
+    --box-gap: calc(var(--pad) * 2 + var(--line));
+    box-shadow:none;
+    background:none;
+  }
+  @supports (width: round(down, 10.5px, 1px)){
+    html.style-circles .board-wrap{
+      --cell: round(down, min(calc((var(--board-w) - var(--col-box-gaps) * var(--line)) / (var(--n) + var(--col-box-gaps) * 2 * var(--k))),
+                              calc((var(--board-h) - var(--row-box-gaps) * var(--line)) / (var(--n) + var(--row-box-gaps) * 2 * var(--k)))), 1px);
+      --pad: round(calc(var(--cell) * var(--k)), 1px);
+    }
+  }
+  html.style-circles .cell, html.style-circles .cell.given{ background:none; }
+  .box-line{ display:none; position:absolute; background:var(--line-color); pointer-events:none; }
+  html.style-circles .box-line{ display:block; }
+
+  /* A new number pops into its circle: a small dip to 75% and back (from
+     45% felt too much, especially on 6x6). */
+  .cell.pop .shape{ animation: shape-pop 220ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes shape-pop{
+    0%{ transform:scale(0.75); }
+    100%{ transform:scale(1); }
+  }
+
+  /* Solved: a green wave runs across the board from the top-left corner --
+     each disc pops and turns green in turn (--d, set by onSolved). */
+  html.style-circles .cell.win .disc,
+  html.style-circles .cell.given.win .disc{ fill:var(--win); transition: fill 120ms ease var(--d); }
+  .cell.win .shape{ animation: win-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--d) both; }
+  /* Only 6%: discs fill 92% of a 4x4 square and 90% of a 6x6 one, so
+     anything over ~8% makes neighbours touch -- 6% keeps a small gap. */
+  @keyframes win-pop{
+    0%, 100%{ transform:scale(1); }
+    45%{ transform:scale(1.06); }
+  }
+
+  @keyframes bounce-in{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(var(--final-scale)); opacity:1; }
+  }
+  .celebration{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:4;
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  @media (max-width: 767px), (max-height: 500px){
+    /* Close to Labyrinth's phone wall weight, in whole pixels. */
+    html.style-circles .board-wrap{ --line: 2px; }
+    /* 6x6 squares are small on a phone, where 4x4's 8% gaps look cramped:
+       discs of r 45 of 50 (5% free each side, 10% gaps) read about as
+       airy as the 4x4 board. */
+    html.style-circles .board-wrap[data-n="6"]{ --k: 0.05; }
+    html.style-circles .board-wrap[data-n="6"] .disc,
+    html.style-circles .board-wrap[data-n="6"] .empty-ring{ r: 45px; }
+    /* Touch has no hover, so desktop's grow-on-hover feedback never fires
+       here -- darken on tap instead, so pressing any icon button is
+       actually visible. (The icons inside the tray deliberately don't grow:
+       the tray itself is the thing that grows, see .controls-slider:active.) */
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+      /* Full width between the side margins, like Unblock's board (and the
+         tray below it): small fingers tap the squares, so every extra pixel
+         helps. The height limit leaves room for the progress dots above and
+         the tray below. */
+      --board-h: calc(var(--app-height, 100vh) - var(--unit) * 4 - var(--icon-size) * 1.25);
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      background: rgba(32,32,32,0.4);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    /* Press feedback for the tray itself, like the icons and tiles: it grows
+       slightly while touched (:active also matches while any button inside it
+       is held, so tapping an icon gives both). */
+    .controls-slider{ transition: transform 120ms ease; }
+    .controls-slider:active{ transform: scale(1.03); }
+    .diff-group, .btn-row{ display:contents; }
+    .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
+    body{
+      padding-top: calc(var(--unit) * 2 + var(--icon-size) * 0.25);
+      padding-bottom: calc(var(--unit) * 2 + var(--icon-size));
+    }
+  }
+
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    :root{
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+
+  /* No game here is designed to work in phone landscape — rather than a half-broken
+     cramped layout, block it outright with a plain "please rotate" screen. Matches
+     the same phone-landscape condition already used elsewhere (a landscape tablet has
+     enough height to stay excluded and keeps its normal, working layout). */
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:var(--incorrect);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    .rotate-block{ display:flex; }
+  }
+  /* No double-tap zoom anywhere. touch-action doesn't reach into a scrolling
+     element (the mobile tray scrolls sideways), so the tray needs its own:
+     two quick taps on the level buttons there zoomed the whole page in, and
+     with zoom otherwise locked there was no way back out. */
+  html, body, .controls-slider{ touch-action:manipulation; }
+</style>
+<script>
+  // Each number sits on its own disc (html.style-circles; the base styles
+  // without it were the earlier plain-number trial).
+  // Set here, before the page is drawn: the plain look's board is black, and
+  // set any later it flashed as a black square while sound.js loaded.
+  document.documentElement.classList.add('style-circles');
+</script>
+<!-- What this page is, for search engines (schema.org); nothing on screen. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "Sudoku",
+  "url": "https://playandlearn.kids/sudoku/",
+  "description": "Sudoku for kids on 4x4 and 6x6 boards: every row, column and box has each number once. Free, no ads, pop-ups or cookies. Designed by a mom and her 6-year-old.",
+  "genre": [
+    "Puzzle",
+    "Logic"
+  ],
+  "gamePlatform": "Web browser",
+  "applicationCategory": "Game",
+  "operatingSystem": "Any",
+  "isAccessibleForFree": true,
+  "isFamilyFriendly": true,
+  "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Play and Learn",
+    "url": "https://playandlearn.kids/"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Play and Learn",
+    "url": "https://playandlearn.kids/"
+  }
+}
+</script>
+<script>if(/[?&]plain\b/.test(location.search))document.documentElement.classList.add("plain-levels");</script>
+</head>
+<body>
+
+  <div class="rotate-block">
+    <!-- Pixel-art sad face (Figma node 198:1914), matching the site's other
+         lose-state faces, in place of the old curved-path frown. -->
+    <svg viewBox="0 0 973 366">
+      <circle fill="#202020" cx="65" cy="65" r="65"/>
+      <circle fill="#202020" cx="908" cy="65" r="65"/>
+      <rect fill="#202020" x="291" y="171" width="392" height="65"/>
+      <rect fill="#202020" x="161" y="236" width="130" height="130"/>
+      <rect fill="#202020" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
+
+  <div class="controls-slider" id="controlsSlider">
+    <div class="diff-group" id="diffGroup">
+      <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M114 75C114 53.4609 96.5391 36 75 36C53.4609 36 36 53.4609 36 75C36 96.5391 53.4609 114 75 114V150C33.5786 150 0 116.421 0 75C0 33.5786 33.5786 0 75 0C116.421 0 150 33.5786 150 75C150 116.421 116.421 150 75 150V114C96.5391 114 114 96.5391 114 75Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+        <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/></svg>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" aria-label="New puzzles">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M111.491 32.1671L112.864 53.5756L90.0895 53.5683"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M110.802 97.5619C106.102 105.702 98.8837 112.094 90.2343 115.774C81.5848 119.454 71.9735 120.223 62.8492 117.964C53.7249 115.705 45.5822 110.541 39.6485 103.251C33.7149 95.9607 30.312 86.9392 29.9527 77.5463C29.5935 68.1534 32.2974 58.8983 37.6569 51.1762C43.0164 43.454 50.7409 37.6834 59.666 34.7343C68.5911 31.7851 78.2331 31.8172 87.1383 34.8258C96.0436 37.8343 103.729 43.6563 109.037 51.4139"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="progress-dots" id="progressDots">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <div class="board-wrap" id="boardWrap"></div>
+
+  <div class="celebration" id="celebration"></div>
+
+<script src="../../sound.js?v=20261025ze"></script>
+<script>
+(function(){
+  "use strict";
+
+  // iOS Safari only applies :active styles on tap if some element on the
+  // page has a touch listener -- this is that listener (a no-op is enough).
+  document.addEventListener('touchstart', function(){}, { passive: true });
+
+  // Each level is a board read row by row: '.' is an empty square, a digit
+  // is a number the puzzle gives (which number is shuffled per board, see
+  // buildLevel). Easy and medium are 4x4 (digits 0-3), hard is 6x6 with 2x3
+  // boxes (digits 0-5). Made offline: every board has exactly one solution
+  // (checked by a second, separate solver) and can be finished one forced
+  // square at a time, no guessing. Listed easiest first: most given numbers
+  // first, then fewest steps. Easy gives 11 or 10, medium 8 down to 5 (half
+  // 8-7, half 6-5), hard 18 down to 15 of its 36.
+  var LEVELS = {
+    easy: [
+      '103232...321..03', '.0311320.2.33.0.', '01.3..0123.010.2', '.31212..2.313.20', '.1.20213.03.13.0',
+      '102.3..123100.3.', '213..01.12.3.321', '3021.20..13223..', '32.0..3210232.0.', '203.3..0021.13.2',
+      '21....211230.312', '..3..302312.2013', '.31.10.3310.0.31', '.13.231.3.21120.', '023.1.02.013.1.0',
+      '3012.1.....11230', '301..2.0012..30.', '2.1..3.2.1200.31', '..1.01.32.31.302', '.031.30231..0.1.',
+      '321..0.2.1.30.21', '.32.1...21303.12', '3.212103123.....', '230101.3.0..1.3.', '.23...21..033012',
+      '1.3.301.032...03', '12.03.21.31.2..3', '0.1..120103..30.', '01.32.103.0.10..', '.231..20201..10.'
+    ],
+    medium: [
+      '1.3.320...10.1..', '103.32.....32..1', '3..110.20...23..', '..32.....123.301', '..3..3121....201',
+      '...3.312.2..302.', '..3223.1.....023', '0...3...132..031', '3..1.103...21...', '..30...13.0.2.1.',
+      '...1.32.3.020...', '0..1..0321....1.', '1.232..1....0..2', '2031.32....3....', '10.23....32....3',
+      '103........3.21.', '..1....23..110..', '..20.013.3......', '...1120..0..2...', '....3.0.103...1.',
+      '.0..3.0.....012.', '...3.1.21.2.2...', '..2.0....3.2...1', '.02..1....1....3', '..3....10.1..2..',
+      '.1......2..3..02', '......31....32.0', '.30.2.1.0.......', '.......032..1..2', '.....02....2..13'
+    ],
+    hard: [
+      '31.50..05.2.1..0...54...24.3.0.3.41.', '....2..124.3.3.5.4451.02...0455....1', '.2.31.51....35.1....2.5.241.3.0.524.',
+      '.21.3545...213.5..5.4123....5....2.0', '..1532.2..........5.021..1340.05412.', '.2.3.0350.2..45..32..54.51.0..0....5',
+      '51420.20..5..4.5.0..512....3.2.2..4.', '104.3...50..0.34..41..0..3...4.4..50', '...53.435.1...10.3..0.4..5.402....51',
+      '4.2..1.....0243.0..1.2343.4....20.4.', '...532.53.1...5....0.1.4.2..41134.2.', '.3....4.1.35.1.5233...01.5.01.14....',
+      '4..10.5.0......24.1.40.32..4.00..51.', '3.2.505....221..4.4.5.0.0.45..1..0..', '3...4.2....5453..2...354..45..52..03',
+      '...5..1...402.5.1.3.4..25.310.0.1...', '..32..2..3.0.2...1104..24.0....12.0.', '.5..0.....41.31024.2..352.5....13...',
+      '2104..4.5...04.5..3..01....3...031..', '..1..33.0.42.04...2.5...5.3.210..3..', '2.1..53....4...401......0..543.3.120',
+      '3....5...12...3....0.532..2340...251', '.....0....230..34.2.45014..23.3..0..', '..23.153.2......3.3.01.2..35..2....3',
+      '.1.23..0..14.51.4.........340.04.3..', '...3..0....415.043403.1.5....2....0.', '....43.2350........0543..3.....14.50',
+      '.3.51..05.2...42.5..0..4.5.0..0...5.', '.53........1....5...04.2321..5.051.3', '35....1.....0.53414....25...1..0.45.'
+    ]
+  };
+
+  var TIERS = ['easy', 'medium', 'hard'];
+  var ROUND_SIZE = 5;
+  var EMPTY = -1;
+  // Squares per side for each tier. On a board of side N the numbers are
+  // 1-N (stored as 0 to N-1), and boxes are 2 rows by N/2 columns.
+  var SIZE = { easy: 4, medium: 4, hard: 6 };
+  var N = 4;
+
+  // The solved board's green wave: one diagonal of discs every WAVE_STEP_MS,
+  // each popping for WAVE_POP_MS; the board then holds green for WIN_HOLD_MS
+  // before the next one appears.
+  var WAVE_STEP_MS = 70;
+  var WAVE_POP_MS = 320;
+  var WIN_HOLD_MS = 600;
+
+  // UNITS: the lines a number may appear in only once (every row, column
+  // and box). PEERS[i]: every square sharing a row, column or box with i.
+  // Both are rebuilt for the board's size by setBoardSize.
+  var UNITS = [], PEERS = [];
+  var BOX_ROWS = 2, BOX_COLS = 2;
+  function setBoardSize(n){
+    N = n;
+    BOX_ROWS = 2;
+    BOX_COLS = n / 2;
+    UNITS = [];
+    var r, c, br, bc, u;
+    for (r = 0; r < n; r++) { u = []; for (c = 0; c < n; c++) u.push(r * n + c); UNITS.push(u); }
+    for (c = 0; c < n; c++) { u = []; for (r = 0; r < n; r++) u.push(r * n + c); UNITS.push(u); }
+    for (br = 0; br < n; br += BOX_ROWS) {
+      for (bc = 0; bc < n; bc += BOX_COLS) {
+        u = [];
+        for (r = 0; r < BOX_ROWS; r++) for (c = 0; c < BOX_COLS; c++) u.push((br + r) * n + bc + c);
+        UNITS.push(u);
+      }
+    }
+    PEERS = [];
+    for (var i = 0; i < n * n; i++) {
+      var seen = {}, list = [];
+      UNITS.forEach(function(unit){
+        if (unit.indexOf(i) === -1) return;
+        unit.forEach(function(j){
+          if (j !== i && !seen[j]) { seen[j] = true; list.push(j); }
+        });
+      });
+      PEERS.push(list);
+    }
+  }
+  setBoardSize(4);
+
+  var state = {
+    difficulty: 'easy',
+    round: [],      // level indices (into LEVELS[difficulty]) for this round
+    progress: 0,    // levels solved this round
+    perm: [],       // puzzle digit -> shape shown, shuffled per board
+    given: [],      // true for the squares the puzzle fills in
+    cells: [],      // number on each square (0 to N-1), EMPTY if none
+    busy: false,
+    flashing: false // the full-but-wrong red flash is showing
+  };
+
+  var els = {
+    boardWrap: document.getElementById('boardWrap'),
+    diffGroup: document.getElementById('diffGroup'),
+    backBtn: document.getElementById('backBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    progressDots: document.querySelectorAll('#progressDots .dot'),
+    celebration: document.getElementById('celebration'),
+    controlsSlider: document.getElementById('controlsSlider')
+  };
+  var cellEls = [];
+
+  var winTimer = null;
+  var flashTimer = null;
+  var celebrationTimer = null;
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+
+  // iOS can leave --app-height stuck at a stale reading after the tab is
+  // backgrounded (app-switched away from, screen locked) and never self-
+  // correct on return, since nothing else re-fires resize/scroll -- force a
+  // fresh reading the moment the page becomes visible again.
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') updateAppHeight();
+  });
+
+  // Rotating out of the phone-landscape rotate-block and back to portrait can
+  // leave iOS's WebKit engine (Safari, Chrome, any iOS browser — Apple requires
+  // them all to use it) rendering at the previous orientation's zoom/scale, so
+  // the layout comes back oversized and spills past the screen edge. Toggling
+  // the viewport meta wasn't enough to unstick it, so instead: reload outright
+  // the moment the device leaves that blocked landscape state. A fresh load
+  // can't inherit a stuck scale — there's nothing left to get stuck.
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
+      location.reload();
+    }
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) {
+    landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  } else if (landscapeBlockMQ.addListener) {
+    landscapeBlockMQ.addListener(onLandscapeBlockChange); // older Safari
+  }
+
+  // ---------- resume after the rotate-block reload ----------
+  // Turning the phone back from the landscape block reloads the page (see
+  // onLandscapeBlockChange). Save the game just before that reload and pick it
+  // back up on the next load, so the player continues where they left off.
+  // sessionStorage: this tab only, and only for this one reload.
+  var RESUME_KEY = 'playandlearn.resume.sudoku';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // cells/perm: null means "the last level was just solved, start the next one".
+  function snapshotGame(){
+    if (els.celebration.style.display === 'flex') return null; // round already won, a fresh round is right
+    if (!state.cells.length) return null;
+    var progress = state.progress;
+    var cells = state.cells.slice();
+    var perm = state.perm.slice();
+    if (state.busy) {
+      // Mid green flash: its timeout won't survive the reload, so count the solve
+      // here and let restore move on to the next level.
+      progress += 1;
+      if (progress >= ROUND_SIZE) return null;
+      cells = null;
+      perm = null;
+    }
+    return {
+      difficulty: state.difficulty,
+      round: state.round.slice(),
+      progress: progress,
+      perm: perm,
+      cells: cells
+    };
+  }
+
+  function isWholeNumber(v, min, max){
+    return typeof v === 'number' && Math.floor(v) === v && v >= min && v <= max;
+  }
+
+  function isShapeOrder(perm, n){
+    if (!Array.isArray(perm) || perm.length !== n) return false;
+    var seen = {};
+    for (var i = 0; i < perm.length; i++) {
+      if (!isWholeNumber(perm[i], 0, n - 1) || seen[perm[i]]) return false;
+      seen[perm[i]] = true;
+    }
+    return true;
+  }
+
+  // Everything is checked before touching state or the DOM, so bad data just
+  // falls back to a fresh round instead of leaving a half-built board.
+  function restoreGame(data){
+    if (!data || typeof data !== 'object') return false;
+    if (TIERS.indexOf(data.difficulty) === -1) return false;
+    var pool = LEVELS[data.difficulty];
+    if (!Array.isArray(data.round) || data.round.length !== ROUND_SIZE) return false;
+    for (var i = 0; i < data.round.length; i++) {
+      if (!isWholeNumber(data.round[i], 0, pool.length - 1)) return false;
+    }
+    if (!isWholeNumber(data.progress, 0, ROUND_SIZE - 1)) return false;
+    var preset = null;
+    var n = SIZE[data.difficulty];
+    if (data.cells != null) {
+      if (!isShapeOrder(data.perm, n)) return false;
+      if (!Array.isArray(data.cells) || data.cells.length !== n * n) return false;
+      var puzzle = pool[data.round[data.progress]];
+      setBoardSize(n); // rules only; buildLevel rebuilds the squares to match
+      for (var s = 0; s < n * n; s++) {
+        if (!isWholeNumber(data.cells[s], EMPTY, n - 1)) return false;
+        // The puzzle's own squares must still hold its shapes.
+        var ch = puzzle.charAt(s);
+        if (ch !== '.' && data.cells[s] !== data.perm[Number(ch)]) return false;
+      }
+      if (isSolved(data.cells)) return false; // a won board moves on, it isn't resumed
+      preset = { perm: data.perm, cells: data.cells };
+    }
+
+    state.difficulty = data.difficulty;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === data.difficulty);
+    });
+    state.round = data.round.slice();
+    state.progress = data.progress;
+    updateProgressDots();
+    buildLevel(preset); // same shapes on the same squares as before the reload
+    return true;
+  }
+
+  // ---------- rules ----------
+  // The squares that share a row, column or box with square i and hold the
+  // same shape as it. Only used to check for a win: a repeated shape gets no
+  // hint while playing, finding it is part of the puzzle.
+  function clashesWith(cells, i){
+    var v = cells[i];
+    if (v === EMPTY) return [];
+    return PEERS[i].filter(function(j){ return cells[j] === v; });
+  }
+
+  // Full and no shape twice in any row, column or box. Every puzzle here has
+  // exactly one solution, so this is the same as matching it.
+  function isSolved(cells){
+    for (var i = 0; i < cells.length; i++) {
+      if (cells[i] === EMPTY || clashesWith(cells, i).length) return false;
+    }
+    return true;
+  }
+
+  function pickRound(tier){
+    var idx = [];
+    for (var i = 0; i < LEVELS[tier].length; i++) idx.push(i);
+    shuffle(idx);
+    // Levels are listed easiest first, so sorting the pick makes each round
+    // ramp up a little from its first level to its last.
+    return idx.slice(0, ROUND_SIZE).sort(function(a, b){ return a - b; });
+  }
+
+  function shuffle(a){
+    for (var k = a.length - 1; k > 0; k--) {
+      var j = Math.floor(Math.random() * (k + 1));
+      var t = a[k]; a[k] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  // ---------- drawing ----------
+  // Where square k of a row or column starts: k squares, plus a small gap
+  // between squares in the same box and a wide one between boxes. boxSize is
+  // how many squares a box spans that way.
+  function offset(k, boxSize){
+    var boxes = Math.floor(k / boxSize);
+    return 'calc(var(--cell) * ' + k + ' + var(--gap) * ' + (k - boxes) + ' + var(--box-gap) * ' + boxes + ')';
+  }
+
+  // The digits 1-6, drawn once into every square (see .shape in the CSS;
+  // a 4x4 board only ever shows 1-4), in Math's typeface. Earlier versions
+  // used shapes (circle, egg, oval, squircle; before that circle, square,
+  // triangle, diamond) -- see git.
+  var SHAPES_SVG = '<svg class="shape" viewBox="0 0 100 100" aria-hidden="true">' +
+    [1, 2, 3, 4, 5, 6].map(function(n, k){
+      return '<g class="s' + k + '"><circle class="disc" cx="50" cy="50" r="46"/>' +
+        '<text class="digit" x="50" y="52">' + n + '</text></g>';
+    }).join('') +
+    '<circle class="empty-ring" cx="50" cy="50" r="46"/>' +
+    '</svg>';
+
+  // The squares are built once per board size and kept: a tap only changes
+  // their attributes, so a square is never replaced under a finger. Also
+  // builds the lines between boxes that the disc look draws (.box-line).
+  // Pressed in while held, a springy bounce on release (see .pressed /
+  // .spring in the CSS). Given squares can't be changed, so they stay still.
+  function bindPress(el){
+    el.addEventListener('pointerdown', function(){
+      if (el.classList.contains('given')) return;
+      el.classList.remove('spring');
+      el.classList.add('pressed');
+    });
+    function release(){
+      if (!el.classList.contains('pressed')) return;
+      el.classList.remove('pressed');
+      void el.offsetWidth; // restart the spring if the last one is still running
+      el.classList.add('spring');
+    }
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function(evt){
+      el.addEventListener(evt, release);
+    });
+    el.addEventListener('animationend', function(e){
+      if (e.target === el && e.animationName === 'press-spring') el.classList.remove('spring');
+    });
+  }
+
+  function buildCells(n){
+    setBoardSize(n);
+    cellEls.forEach(function(el){ el.remove(); });
+    cellEls = [];
+    els.boardWrap.querySelectorAll('.box-line').forEach(function(el){ el.remove(); });
+    var colBoxGaps = n / BOX_COLS - 1, rowBoxGaps = n / BOX_ROWS - 1;
+    var wrap = els.boardWrap.style;
+    wrap.setProperty('--n', n);
+    els.boardWrap.setAttribute('data-n', n);
+    wrap.setProperty('--col-box-gaps', colBoxGaps);
+    wrap.setProperty('--col-gaps', n - 1 - colBoxGaps);
+    wrap.setProperty('--row-box-gaps', rowBoxGaps);
+    wrap.setProperty('--row-gaps', n - 1 - rowBoxGaps);
+    var k, line;
+    for (k = BOX_COLS; k < n; k += BOX_COLS) {
+      line = document.createElement('div');
+      line.className = 'box-line';
+      line.style.cssText = 'left:calc(' + offset(k, BOX_COLS) + ' - var(--box-gap) + var(--pad));top:0;bottom:0;width:var(--line)';
+      els.boardWrap.appendChild(line);
+    }
+    for (k = BOX_ROWS; k < n; k += BOX_ROWS) {
+      line = document.createElement('div');
+      line.className = 'box-line';
+      line.style.cssText = 'top:calc(' + offset(k, BOX_ROWS) + ' - var(--box-gap) + var(--pad));left:0;right:0;height:var(--line)';
+      els.boardWrap.appendChild(line);
+    }
+    for (var i = 0; i < n * n; i++) {
+      var el = document.createElement('button');
+      el.className = 'cell';
+      // sound.js would click on any button tap; this page picks the one
+      // sound per tap itself (click, or positive on the solving tap).
+      el.setAttribute('data-own-sound', '');
+      el.dataset.i = i;
+      el.style.left = offset(i % n, BOX_COLS);
+      el.style.top = offset(Math.floor(i / n), BOX_ROWS);
+      el.innerHTML = '<span class="hop">' + SHAPES_SVG + '</span>';
+      bindPress(el);
+      cellEls.push(el);
+      els.boardWrap.appendChild(el);
+    }
+  }
+
+  function paintCell(i){
+    var el = cellEls[i], v = state.cells[i];
+    if (v === EMPTY) el.removeAttribute('data-shape');
+    else el.setAttribute('data-shape', v);
+  }
+
+  // Restart a one-shot animation even if it's still running from the last tap.
+  function replay(el, cls){
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+  }
+
+  var ANIM_CLASS = { 'shape-pop': 'pop', 'digit-shake': 'wrong' };
+  els.boardWrap.addEventListener('animationend', function(e){
+    var cls = ANIM_CLASS[e.animationName];
+    var el = e.target.closest && e.target.closest('.cell');
+    if (cls && el) el.classList.remove(cls);
+  });
+
+  // preset (optional): saved shape order and squares to use instead of a
+  // fresh board -- only passed when resuming after the rotate-block reload.
+  function buildLevel(preset){
+    clearTimeout(winTimer);
+    endFlash();
+    var n = SIZE[state.difficulty];
+    if (cellEls.length !== n * n) buildCells(n);
+    else setBoardSize(n);
+    var puzzle = LEVELS[state.difficulty][state.round[state.progress]];
+    // Shuffling which number stands for which digit makes each board look
+    // new even when a puzzle comes round again.
+    var order = [];
+    for (var d = 0; d < n; d++) order.push(d);
+    state.perm = preset ? preset.perm.slice() : shuffle(order);
+    state.given = [];
+    state.cells = [];
+    for (var i = 0; i < n * n; i++) {
+      var ch = puzzle.charAt(i);
+      var given = ch !== '.';
+      state.given.push(given);
+      state.cells.push(given ? state.perm[Number(ch)] : (preset ? preset.cells[i] : EMPTY));
+    }
+    state.busy = false;
+    els.celebration.style.display = 'none';
+    els.boardWrap.style.display = '';
+    cellEls.forEach(function(el, i){
+      el.classList.remove('pop', 'win');
+      el.classList.toggle('given', state.given[i]);
+      paintCell(i);
+      // Every shape on a new board pops in: a quiet "here's a new one".
+      if (state.cells[i] !== EMPTY) {
+        void el.offsetWidth;
+        el.classList.add('pop');
+      }
+    });
+  }
+
+  function updateProgressDots(){
+    els.progressDots.forEach(function(dot, i){
+      dot.classList.toggle('done', i < state.progress);
+    });
+  }
+
+  function restartRound(){
+    clearTimeout(celebrationTimer);
+    state.round = pickRound(state.difficulty);
+    state.progress = 0;
+    updateProgressDots();
+    buildLevel();
+  }
+
+  // ---------- tap to change a square ----------
+  // Exactly one sound per tap: the squares are data-own-sound, so sound.js
+  // stays quiet and this plays either the click or, on the solving tap,
+  // the positive sound instead.
+  els.boardWrap.addEventListener('click', function(e){
+    var el = e.target.closest('.cell');
+    if (!el || state.busy || state.flashing) return;
+    var i = Number(el.dataset.i);
+    if (state.given[i]) return; // given squares are static: no sound, no movement
+    clearTimeout(flashTimer); // a new tap restarts the full-board check
+    // empty -> 1 -> 2 -> ... -> N -> 1: once a square has a number it never
+    // goes back to empty.
+    var v = (state.cells[i] + 1) % N;
+    state.cells[i] = v;
+    paintCell(i);
+    replay(el, 'pop');
+    if (isSolved(state.cells)) {
+      onSolved();
+      return;
+    }
+    PLSound.play('click');
+    if (state.cells.indexOf(EMPTY) === -1) flashTimer = setTimeout(flashIncorrect, SETTLE_MS);
+  });
+
+  // ---------- full but wrong ----------
+  // Nothing is said while the board is still filling up: spotting a repeat
+  // is the puzzle. Once every square holds a number and it isn't solved,
+  // the numbers the player got wrong shake, with the wrong sound -- only
+  // those, never a given number. The check waits SETTLE_MS after the last
+  // tap, so cycling the last square through the numbers doesn't shake at
+  // each wrong one on the way to the right one.
+  var SETTLE_MS = 1000;
+  var FLASH_MS = 560; // the shake, plus a moment
+  function flashIncorrect(){
+    PLSound.play('negative');
+    state.flashing = true;
+    clearTimeout(flashTimer);
+    var answer = solution();
+    for (var i = 0; i < state.cells.length; i++) {
+      if (!state.given[i] && state.cells[i] !== answer[i]) replay(cellEls[i], 'wrong');
+    }
+    flashTimer = setTimeout(endFlash, FLASH_MS);
+  }
+  // The board's one solution, worked out from the given squares (every
+  // puzzle here has exactly one; even a 6x6 board solves instantly).
+  function solution(){
+    var b = state.cells.map(function(v, i){ return state.given[i] ? v : EMPTY; });
+    (function fill(){
+      var i = b.indexOf(EMPTY);
+      if (i === -1) return true;
+      for (var v = 0; v < N; v++) {
+        b[i] = v;
+        if (!clashesWith(b, i).length && fill()) return true;
+      }
+      b[i] = EMPTY;
+      return false;
+    })();
+    return b;
+  }
+  function endFlash(){
+    clearTimeout(flashTimer);
+    state.flashing = false;
+    document.body.style.background = '';
+    cellEls.forEach(function(el){ el.classList.remove('wrong'); });
+  }
+
+  // ---------- solved ----------
+  function onSolved(){
+    state.busy = true;
+    PLSound.play('positive');
+    // A green wave across the board, one diagonal at a time from the top
+    // left; buildLevel clears it. (Was the page flashing green like Math,
+    // which clashed with the orange discs.)
+    cellEls.forEach(function(el, i){
+      var diagonal = Math.floor(i / N) + i % N;
+      el.style.setProperty('--d', diagonal * WAVE_STEP_MS + 'ms');
+      el.classList.remove('pop');
+      el.classList.add('win');
+    });
+    winTimer = setTimeout(function(){
+      state.progress += 1;
+      updateProgressDots();
+      if (state.progress >= ROUND_SIZE) {
+        showCelebration();
+      } else {
+        buildLevel();
+      }
+    }, (2 * N - 2) * WAVE_STEP_MS + WAVE_POP_MS + WIN_HOLD_MS);
+  }
+
+  // Pixel-art smiley (Figma node 198:1809) -- two round eyes and a
+  // stepped-block smile -- in the player's bright orange (--disc), on the
+  // page's own background.
+  function celebrationFace(color){
+    return '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+      '<circle fill="' + color + '" cx="65" cy="65" r="65"/>' +
+      '<circle fill="' + color + '" cx="908" cy="65" r="65"/>' +
+      '<rect fill="' + color + '" x="161" y="171" width="130" height="130"/>' +
+      '<rect fill="' + color + '" x="683" y="171" width="130" height="130"/>' +
+      '<rect fill="' + color + '" x="291" y="301" width="392" height="65"/>' +
+      '</svg>';
+  }
+
+  function showCelebration(){
+    endFlash(); // the last board's green flash ends here
+    updateAppHeight();
+    els.celebration.innerHTML = celebrationFace('var(--disc)');
+    PLSound.play('complete');
+    els.boardWrap.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    celebrationTimer = setTimeout(restartRound, 3000);
+  }
+
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    var tier = btn.getAttribute('data-tier');
+    if (tier === state.difficulty) return; // already selected — keep the current puzzle
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.difficulty = tier;
+    restartRound();
+  });
+
+  els.refreshBtn.addEventListener('click', restartRound);
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../../index.html'); });
+
+  // First-visit only: gently peek-scroll the bottom slider tray so new users notice
+  // it scrolls (there are more icons than fit on a phone screen), then ease back to
+  // the correct resting view with the easy-difficulty icon as the leftmost icon.
+  // Jumps to the TRUE end (no partial-reveal cap -- a longer tray was never
+  // reaching its real end otherwise) immediately, before first paint, then eases
+  // back on the very next frame with no added hold -- both the jump and the
+  // start of the ease read as a glitchy stutter when delayed.
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'sudoku.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = maxScroll;
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  introduceTraySlider();
+
+  // Coming back from the rotate-block reload: continue the saved game.
+  // Otherwise (or if the save is unusable) start a fresh easy round.
+  var resumed = takeResume();
+  if (!(resumed && restoreGame(resumed))) {
+    els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    restartRound();
+  }
+})();
+</script>
+
+</body>
+</html>
