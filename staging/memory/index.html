@@ -147,6 +147,10 @@
   html.plain-levels.colour-glow .diff-btn.hint .fill-bg{ animation: level-glow-tier 520ms ease-in-out; }
   html.plain-levels.colour-glow .diff-btn.nudge .fill-bg{ animation: level-glow-tier 700ms ease-in-out 2; }
   @keyframes level-glow-tier{ 40%,60%{ fill:var(--glow); } }
+  /* ?still: the first-visit hint only lights up, no bouncing. */
+  html.no-grow .diff-btn.hint{ animation: level-still 700ms linear; }
+  @keyframes level-still{ from{ opacity:1; } to{ opacity:1; } }
+  html.plain-levels.colour-glow.no-grow .diff-btn.hint .fill-bg{ animation: level-glow-tier 700ms ease-in-out; }
   @keyframes level-nudge{
     0%{ transform:translateZ(0) scale(1); }
     14%{ transform:translateZ(0) scale(1.25); }
@@ -426,6 +430,7 @@
 </script>
 <script>if(/[?&]plain\b/.test(location.search))document.documentElement.classList.add("plain-levels");</script>
 <script>if(/[?&]glow\b/.test(location.search))document.documentElement.classList.add("colour-glow");</script>
+<script>if(/[?&]still\b/.test(location.search))document.documentElement.classList.add("no-grow");</script>
 </head>
 <body>
 
