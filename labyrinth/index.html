@@ -981,6 +981,7 @@
     var btn = e.target.closest('.diff-btn');
     if (!btn) return;
     state.difficulty = btn.dataset.tier;
+    saveProgress();
     els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
     startGame();
@@ -1024,11 +1025,41 @@
   }
   introduceTraySlider();
 
+  // Remember the chosen level between visits: leaving the game,
+  // playing another one or coming back another day keeps them.
+  var SAVE_KEY = 'playandlearn.saved.labyrinth';
+  function saveProgress(){
+    if (!SAVE_KEY) return; // not set up yet (nothing loaded to overwrite)
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ difficulty: state.difficulty }));
+    } catch (e) {}
+  }
+  function loadProgress(){
+    try {
+      var d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+      if (!d || ['easy', 'medium', 'hard'].indexOf(d.difficulty) === -1) return null;
+      return d;
+    } catch (e) { return null; }
+  }
+  var saved = loadProgress();
+  function applySaved(){
+    if (!saved) return;
+    state.difficulty = saved.difficulty;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === state.difficulty);
+    });
+  }
+  window.addEventListener('pagehide', saveProgress);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') saveProgress();
+  });
+
   var resumed = takeResume();
   if (resumed && restoreGame(resumed)) {
     els.diffGroup.querySelector('[data-tier="' + state.difficulty + '"]').classList.add('active');
   } else {
     els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    applySaved();
     startGame();
   }
 })();

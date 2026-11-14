@@ -901,6 +901,7 @@
   }
 
   function updateProgressDots(){
+    saveProgress();
     els.progressDots.forEach(function(dot, i){
       dot.classList.toggle('done', i < state.progress);
     });
@@ -910,7 +911,8 @@
     clearTimeout(celebrationTimer);
     leaveStarter(); // refresh or a level button skips the starter board
     state.round = pickRound(state.difficulty);
-    state.progress = 0;
+    // Refresh and level switches keep the dots; only a finished round starts over.
+    if (state.progress >= ROUND_SIZE) state.progress = 0;
     updateProgressDots();
     buildLevel();
   }
@@ -946,7 +948,10 @@
       max: range.max,
       stepPx: stepPx(),
       offset: 0,
-      moved: false
+      moved: false,
+      // Red car with a clear road: it can be pulled right out past the exit
+      // instead of stopping in the last two squares.
+      free: c === 0 && range.max === EXIT_POS
     };
     try { el.setPointerCapture(e.pointerId); } catch (err) {}
     el.addEventListener('pointermove', onCarMove);
@@ -970,7 +975,7 @@
     var hi = (drag.max - drag.startPos) * drag.stepPx;
     var give = drag.stepPx * 0.12;
     if (along < lo) along = lo - Math.min((lo - along) * 0.2, give);
-    else if (along > hi) along = hi + Math.min((along - hi) * 0.2, give);
+    else if (along > hi && !drag.free) along = hi + Math.min((along - hi) * 0.2, give);
     drag.offset = along;
     drag.el.style.transform = car.h ? 'translate(' + along + 'px,0)' : 'translate(0,' + along + 'px)';
   }
@@ -980,6 +985,13 @@
     var d = drag;
     var car = state.cars[d.c];
     var target = d.startPos;
+    // Let go anywhere from about half a square short of the exit and beyond:
+    // it drives out from right where it was dropped.
+    if (d.free && d.moved && d.startPos + d.offset / d.stepPx >= EXIT_POS - 0.5) {
+      endDragAtExit();
+      onSolved(true);
+      return;
+    }
     if (d.moved) {
       target = d.startPos + Math.round(d.offset / d.stepPx);
     } else {
@@ -1020,6 +1032,22 @@
     d.el.style.transform = '';
   }
 
+  // The red car dropped at or past the exit: it now belongs on the exit
+  // square, but stays visually where the finger left it (no snap back in).
+  function endDragAtExit(){
+    var d = drag;
+    drag = null;
+    d.el.removeEventListener('pointermove', onCarMove);
+    d.el.removeEventListener('pointerup', onCarUp);
+    d.el.removeEventListener('pointercancel', onCarUp);
+    try { d.el.releasePointerCapture(d.pointerId); } catch (err) {}
+    var rest = d.offset - (EXIT_POS - d.startPos) * d.stepPx;
+    state.pos[0] = EXIT_POS;
+    placeCar(0);
+    d.el.classList.remove('dragging');
+    d.el.style.transform = 'translate(' + rest + 'px,0)';
+  }
+
   // A drag that never got its pointerup (an OS gesture stole the touch, the
   // tab was hidden, the board was rebuilt): put the car back where it was.
   function forceEndDrag(){
@@ -1045,7 +1073,9 @@
   }
 
   // ---------- solved ----------
-  function onSolved(){
+  // dropped: the car was let go at or past the exit, so it drives straight
+  // on from there instead of first settling into the last square.
+  function onSolved(dropped){
     state.busy = true;
     PLSound.play('positive');
     var red = state.cars[0].el;
@@ -1053,8 +1083,11 @@
     winTimer = setTimeout(function(){
       red.classList.remove('snap');
       red.classList.add('driving');
-      // Far enough that its back end clears the right edge of the screen.
-      var away = window.innerWidth - red.getBoundingClientRect().left + 20;
+      // Far enough that its back end clears the right edge of the screen,
+      // counting from its square (it may already be partway out).
+      var now = 0;
+      try { now = new DOMMatrix(getComputedStyle(red).transform).m41 || 0; } catch (err) {}
+      var away = window.innerWidth - red.getBoundingClientRect().left + now + 20;
       red.style.transform = 'translate(' + away + 'px,0)';
       winTimer = setTimeout(function(){
         if (state.starter) {
@@ -1073,7 +1106,7 @@
         // First solved puzzle: now's the moment to show there are levels.
         if (window.PLLevelHint) PLLevelHint(state.progress >= ROUND_SIZE ? 3600 : 700);
       }, 1100);
-    }, 180);
+    }, dropped ? 0 : 180);
   }
 
   // ---------- first-visit starter board ----------
@@ -1191,10 +1224,42 @@
   // Coming back from the rotate-block reload: continue the saved game.
   // Otherwise (or if the save is unusable) start fresh as usual -- on the
   // starter board the very first time.
+  // Remember the chosen level and the progress dots between visits: leaving the game,
+  // playing another one or coming back another day keeps them.
+  var SAVE_KEY = 'playandlearn.saved.unblock';
+  function saveProgress(){
+    if (!SAVE_KEY) return; // not set up yet (nothing loaded to overwrite)
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ difficulty: state.difficulty, progress: state.progress || 0 }));
+    } catch (e) {}
+  }
+  function loadProgress(){
+    try {
+      var d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+      if (!d || ['easy', 'medium', 'hard'].indexOf(d.difficulty) === -1) return null;
+      if (typeof d.progress !== 'number' || d.progress % 1 !== 0 || d.progress < 0 || d.progress >= ROUND_SIZE) d.progress = 0;
+      return d;
+    } catch (e) { return null; }
+  }
+  var saved = loadProgress();
+  function applySaved(){
+    if (!saved) return;
+    state.difficulty = saved.difficulty;
+    state.progress = saved.progress;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === state.difficulty);
+    });
+  }
+  window.addEventListener('pagehide', saveProgress);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') saveProgress();
+  });
+
   var resumed = takeResume();
   if (!(resumed && restoreGame(resumed))) {
     els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-    if (starterShown()) {
+    applySaved();
+    if (starterShown() || saved) {
       restartRound();
     } else {
       state.round = pickRound('easy');

@@ -942,6 +942,7 @@
   }
 
   function updateProgressDots(){
+    saveProgress();
     els.progressDots.forEach(function(dot, i){
       var done = i < state.progress;
       // A dot that's just been filled pops in (see .dot.pop).
@@ -955,7 +956,8 @@
   }
 
   function restartRound(){
-    state.progress = 0;
+    // Refresh keeps the dots; only a finished round starts over.
+    if (state.progress >= ROUND_SIZE) state.progress = 0;
     updateProgressDots();
     newProblem();
   }
@@ -1251,8 +1253,42 @@
   introduceTraySlider();
 
   // Pick up a game saved just before a rotate-block reload; otherwise a fresh start.
+  // Remember the chosen level and the progress dots between visits: leaving the game,
+  // playing another one or coming back another day keeps them.
+  var SAVE_KEY = 'playandlearn.saved.math';
+  function saveProgress(){
+    if (!SAVE_KEY) return; // not set up yet (nothing loaded to overwrite)
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ difficulty: state.difficulty, progress: state.progress || 0, op: state.activeOp }));
+    } catch (e) {}
+  }
+  function loadProgress(){
+    try {
+      var d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+      if (!d || ['easy', 'medium', 'hard'].indexOf(d.difficulty) === -1) return null;
+      if (typeof d.progress !== 'number' || d.progress % 1 !== 0 || d.progress < 0 || d.progress >= ROUND_SIZE) d.progress = 0;
+      if (['add', 'sub', 'mul', 'div'].indexOf(d.op) === -1) d.op = null;
+      return d;
+    } catch (e) { return null; }
+  }
+  var saved = loadProgress();
+  function applySaved(){
+    if (!saved) return;
+    state.difficulty = saved.difficulty;
+    state.progress = saved.progress;
+    if (saved.op) state.activeOp = saved.op;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === state.difficulty);
+    });
+  }
+  window.addEventListener('pagehide', saveProgress);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') saveProgress();
+  });
+
   var resumed = takeResume();
   if (!resumed || !restoreGame(resumed)) {
+    applySaved();
     newProblem();
   }
 })();

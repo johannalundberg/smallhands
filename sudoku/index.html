@@ -997,6 +997,7 @@
   }
 
   function updateProgressDots(){
+    saveProgress();
     els.progressDots.forEach(function(dot, i){
       dot.classList.toggle('done', i < state.progress);
     });
@@ -1005,7 +1006,8 @@
   function restartRound(){
     clearTimeout(celebrationTimer);
     state.round = pickRound(state.difficulty);
-    state.progress = 0;
+    // Refresh and level switches keep the dots; only a finished round starts over.
+    if (state.progress >= ROUND_SIZE) state.progress = 0;
     updateProgressDots();
     buildLevel();
   }
@@ -1175,9 +1177,41 @@
 
   // Coming back from the rotate-block reload: continue the saved game.
   // Otherwise (or if the save is unusable) start a fresh easy round.
+  // Remember the chosen level and the progress dots between visits: leaving the game,
+  // playing another one or coming back another day keeps them.
+  var SAVE_KEY = 'playandlearn.saved.sudoku';
+  function saveProgress(){
+    if (!SAVE_KEY) return; // not set up yet (nothing loaded to overwrite)
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ difficulty: state.difficulty, progress: state.progress || 0 }));
+    } catch (e) {}
+  }
+  function loadProgress(){
+    try {
+      var d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+      if (!d || ['easy', 'medium', 'hard'].indexOf(d.difficulty) === -1) return null;
+      if (typeof d.progress !== 'number' || d.progress % 1 !== 0 || d.progress < 0 || d.progress >= ROUND_SIZE) d.progress = 0;
+      return d;
+    } catch (e) { return null; }
+  }
+  var saved = loadProgress();
+  function applySaved(){
+    if (!saved) return;
+    state.difficulty = saved.difficulty;
+    state.progress = saved.progress;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === state.difficulty);
+    });
+  }
+  window.addEventListener('pagehide', saveProgress);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') saveProgress();
+  });
+
   var resumed = takeResume();
   if (!(resumed && restoreGame(resumed))) {
     els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
+    applySaved();
     restartRound();
   }
 })();

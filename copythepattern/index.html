@@ -610,6 +610,7 @@
   }
 
   function updateProgressDots(){
+    saveProgress();
     els.progressDots.forEach(function(dot, i){
       dot.classList.toggle('done', i < state.progress);
     });
@@ -644,7 +645,9 @@
   // before, since the page has been tapped by then.
   // resume: a saved round from restoreGame -- keeps its pattern, round count
   // and mistakes instead of starting a new pattern.
-  function startGame(waitForTap, resume){
+  // keepProgress: refresh, a level switch or a return visit -- a new pattern,
+  // but as long as the dots already earned.
+  function startGame(waitForTap, resume, keepProgress){
     state.gen += 1;
     state.awaitingStart = !!waitForTap;
     els.padGrid.classList.toggle('await-start', state.awaitingStart);
@@ -658,9 +661,10 @@
       state.roundAttempts = resume.roundAttempts;
     } else {
       var cfg = tierConfig();
+      var kept = keepProgress && state.progress < ROUND_SIZE ? state.progress : 0;
       state.sequence = [];
-      for (var i = 0; i < cfg.startLen; i++) state.sequence.push(Math.floor(Math.random() * PAD_COUNT));
-      state.progress = 0;
+      for (var i = 0; i < cfg.startLen + kept; i++) state.sequence.push(Math.floor(Math.random() * PAD_COUNT));
+      state.progress = kept;
       state.roundAttempts = 0;
     }
     state.inputIndex = 0;
@@ -832,9 +836,9 @@
     state.difficulty = btn.dataset.tier;
     els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
-    startGame();
+    startGame(false, null, true);
   });
-  els.refreshBtn.addEventListener('click', function(){ startGame(); });
+  els.refreshBtn.addEventListener('click', function(){ startGame(false, null, true); });
   els.backBtn.addEventListener('click', function(){ PLSound.go('../'); });
 
   // First-visit only: gently peek-scroll the bottom slider tray so new users notice
@@ -871,10 +875,42 @@
   introduceTraySlider();
 
   // A saved game from the rotate-block reload continues; otherwise a fresh start.
+  // Remember the chosen level and the progress dots between visits: leaving the game,
+  // playing another one or coming back another day keeps them.
+  var SAVE_KEY = 'playandlearn.saved.copythepattern';
+  function saveProgress(){
+    if (!SAVE_KEY) return; // not set up yet (nothing loaded to overwrite)
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ difficulty: state.difficulty, progress: state.progress || 0 }));
+    } catch (e) {}
+  }
+  function loadProgress(){
+    try {
+      var d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+      if (!d || ['easy', 'medium', 'hard'].indexOf(d.difficulty) === -1) return null;
+      if (typeof d.progress !== 'number' || d.progress % 1 !== 0 || d.progress < 0 || d.progress >= ROUND_SIZE) d.progress = 0;
+      return d;
+    } catch (e) { return null; }
+  }
+  var saved = loadProgress();
+  function applySaved(){
+    if (!saved) return;
+    state.difficulty = saved.difficulty;
+    state.progress = saved.progress;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === state.difficulty);
+    });
+  }
+  window.addEventListener('pagehide', saveProgress);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') saveProgress();
+  });
+
   var resumed = takeResume();
   if (!(resumed && restoreGame(resumed))) {
     els.diffGroup.querySelector('[data-tier="easy"]').classList.add('active');
-    startGame(true);
+    applySaved();
+    startGame(true, null, true);
   }
 })();
 </script>
