@@ -465,9 +465,11 @@
     2: ['#4848A8', 'rgba(0,0,0,0.35)', '#2A2420'],        // darker grid
     3: ['#4848A8', 'rgba(255,255,255,0.14)', '#2A2420'],  // light grid
     4: ['#4848A8', 'rgba(0,0,0,0.35)', '#E4E4E4'],        // darker grid, light piece instead of brown
-    5: ['#363685', 'rgba(0,0,0,0.35)', '#E4E4E4']         // deeper blue too
+    5: ['#363685', 'rgba(0,0,0,0.35)', '#E4E4E4'],        // deeper blue too
+    6: ['#4848A8', 'rgba(0,0,0,0.35)', '#101010'],        // 2 with the hub tiles' almost black
+    7: ['#4848A8', 'rgba(0,0,0,0.28)', '#101010']         // same, a slightly lighter grid
   };
-  var RED_TRIAL = (/[?&]look=([1-5])\b/.exec(location.search) || [])[1];
+  var RED_TRIAL = (/[?&]look=([1-7])\b/.exec(location.search) || [])[1];
   if (RED_TRIAL) {
     var __o = LOOK_TRIAL_OPTIONS[RED_TRIAL], __r = document.documentElement.style;
     __r.setProperty('--bg', __o[0]); __r.setProperty('--sq-empty', __o[1]); __r.setProperty('--face', __o[2]);
