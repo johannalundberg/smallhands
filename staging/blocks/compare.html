@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Blocks: red trial</title>
+<style>
+  /* Trial page (not part of the site): calmer versions of Blocks' red,
+     side by side at phone size on the same sample board. Nothing saves. */
+  html, body{ margin:0; min-height:100%; background:#141414; }
+  body{
+    display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:center; gap:28px 16px; padding:20px; box-sizing:border-box;
+    font:13px/1.3 -apple-system, system-ui, sans-serif; color:#9a9a9a;
+  }
+  figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  figcaption{ max-width:calc(390px * var(--k)); text-align:center; }
+  figcaption span{ display:block; color:#777; }
+  .frame{
+    width:calc(390px * var(--k)); height:calc(844px * var(--k));
+    border-radius:calc(36px * var(--k)); overflow:hidden; box-shadow:0 0 0 2px #333;
+  }
+  iframe{ width:390px; height:844px; border:0; display:block; transform:scale(var(--k)); transform-origin:0 0; }
+  :root{ --k: 0.5; }
+  b{ color:#ddd; font-weight:600; }
+</style>
+</head>
+<body>
+  <figure><div class="frame"><iframe data-src="./?red=1"></iframe></div><figcaption><b>1 Now</b><span>#CB4A45</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?red=2"></iframe></div><figcaption><b>2 A touch darker</b><span>#C24742</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?red=3"></iframe></div><figcaption><b>3 Darker</b><span>#B8433E</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?red=4"></iframe></div><figcaption><b>4 Darker still</b><span>#AD3F3B</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?red=5"></iframe></div><figcaption><b>5 Darkest</b><span>#A33B37</span></figcaption></figure>
+<script>
+  // Fit all frames in one row if the window allows, and load them one by one.
+  (function(){
+    var frames = Array.prototype.slice.call(document.querySelectorAll('iframe[data-src]'));
+    var n = frames.length;
+    function fit(){
+      // Pick the number of rows that makes the frames biggest.
+      var best = 0.2;
+      for (var rows = 1; rows <= 3; rows++) {
+        var cols = Math.ceil(n / rows);
+        var k = Math.min(1, (window.innerHeight - 40 - 90 * rows) / (844 * rows), (window.innerWidth - 16 * (cols + 1) - 40) / (390 * cols));
+        if (k > best) best = k;
+      }
+      document.documentElement.style.setProperty('--k', best);
+    }
+    fit();
+    window.addEventListener('resize', fit);
+    function next(i){
+      if (i >= n) return;
+      var f = frames[i], done = false;
+      function go(){ if (!done) { done = true; next(i + 1); } }
+      f.addEventListener('load', go);
+      setTimeout(go, 4000);
+      f.src = f.getAttribute('data-src');
+    }
+    next(0);
+  })();
+</script>
+</body>
+</html>
