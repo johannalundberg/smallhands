@@ -461,8 +461,14 @@
   // yellow car #F2B238 (brown stays). ?look=1 launched, ?look=2 Unblock;
   // compare.html shows them side by side on a fixed sample board; trial
   // views never save.
-  var LOOK_TRIAL_OPTIONS = { 1:['#D94441', '#2A2420', '#E87C4C'], 2:['#F93134', '#2A2420', '#F2B238'] };
-  var RED_TRIAL = (/[?&]look=([1-2])\b/.exec(location.search) || [])[1];
+  var LOOK_TRIAL_OPTIONS = {
+    1:['#D94441', '#2A2420', '#E87C4C'],  // launched
+    2:['#F93134', '#2A2420', '#F2B238'],  // Unblock red + Unblock yellow
+    3:['#F93134', '#2A2420', '#F37745'],  // Unblock red + Memory/Othello orange
+    4:['#F93134', '#2A2420', '#FF7235'],  // Unblock red + Memory's brighter orange
+    5:['#F93134', '#2A2420', '#FD6427']   // Unblock red + Copy the Pattern orange
+  };
+  var RED_TRIAL = (/[?&]look=([1-5])\b/.exec(location.search) || [])[1];
 </script>
 </head>
 <body>
