@@ -459,8 +459,8 @@
   // Background trial: toned-down versions of the blue (she found #5F44FF
   // too poppy next to the other games). ?bg=1..7, compare.html shows them
   // side by side on a fixed sample board; trial views never save.
-  var BG_TRIAL_OPTIONS = { 1:'#5F44FF', 2:'#5841E6', 3:'#5643CC', 4:'#5A4FB8', 5:'#4F45A8', 6:'#4A4296', 7:'#5C5A9E' };
-  var BG_TRIAL = (/[?&]bg=([1-7])\b/.exec(location.search) || [])[1];
+  var BG_TRIAL_OPTIONS = { 1:'#5F44FF', 2:'#5841E6', 3:'#5643CC', 4:'#5A4FB8', 5:'#4F45A8', 6:'#4A4296', 7:'#5C5A9E', 8:'#5248A8' };
+  var BG_TRIAL = (/[?&]bg=([1-8])\b/.exec(location.search) || [])[1];
   if (BG_TRIAL) document.documentElement.style.setProperty('--bg', BG_TRIAL_OPTIONS[BG_TRIAL]);
 </script>
 </head>
