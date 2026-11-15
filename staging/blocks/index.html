@@ -461,15 +461,14 @@
   // Orange stays #FF6B4A. compare.html shows them side by side; trial views
   // never save. Same order as the real colours (blue, pink, yellow, teal,
   // orange) so a saved game shows each piece in its closest match.
-  //   ?look=sunset       cream, hot pink, gold, espresso, orange
-  //   ?look=sunset-aqua  cream, hot pink, gold, aqua, orange
-  //   ?look=warm         cream, peach, gold, espresso, orange
+  //   ?look=sunset  cream, light pink, gold, espresso, orange (the hot pink
+  //                 #FF5C8A sat too close to the orange, her call)
+  //   ?look=warm    cream, peach, gold, espresso, orange
   var BLOCKS_LOOKS = {
-    'sunset':      { bg: '#5F44FF', colors: ['#FFF0D1', '#FF5C8A', '#FFC23D', '#2A2420', '#FF6B4A'] },
-    'sunset-aqua': { bg: '#5F44FF', colors: ['#FFF0D1', '#FF5C8A', '#FFC23D', '#2EE6D6', '#FF6B4A'] },
-    'warm':        { bg: '#5F44FF', colors: ['#FFF0D1', '#FFAE85', '#FFC23D', '#2A2420', '#FF6B4A'] }
+    'sunset': { bg: '#5F44FF', colors: ['#FFF0D1', '#FFB8D6', '#FFC23D', '#2A2420', '#FF6B4A'] },
+    'warm':   { bg: '#5F44FF', colors: ['#FFF0D1', '#FFAE85', '#FFC23D', '#2A2420', '#FF6B4A'] }
   };
-  var BLOCKS_LOOK = (/[?&]look=(sunset-aqua|sunset|warm)\b/.exec(location.search) || [])[1] || '';
+  var BLOCKS_LOOK = (/[?&]look=(sunset|warm)\b/.exec(location.search) || [])[1] || '';
   if (BLOCKS_LOOK) {
     var L = BLOCKS_LOOKS[BLOCKS_LOOK];
     if (L.bg) document.documentElement.style.setProperty('--bg', L.bg);
