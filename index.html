@@ -359,36 +359,32 @@
      row-clear pop; back (hidden by its piece) for the next round. */
   @keyframes bl-row-lit{
     0%, 17.9%{ fill:var(--c); }
-    18%, 39%{ fill:#0DC754; }
-    39.5%, 100%{ fill:var(--c); }
+    18%, 35%{ fill:#0DC754; }
+    35.5%, 100%{ fill:var(--c); }
   }
   @keyframes bl-row-pop{
-    0%, 30%{ transform:scale(1); }
-    33%{ transform:scale(1.08); animation-timing-function:ease-in; }
-    39%, 71%{ transform:scale(0); }
+    0%, 30%{ transform:scale(1); animation-timing-function:ease-in; }
+    35%, 71%{ transform:scale(0); }
     72%, 100%{ transform:scale(1); }
   }
   /* The row's empty slots pop away with it and are back right after. */
   @keyframes bl-slot-pop{
-    0%, 30%{ transform:scale(1); }
-    33%{ transform:scale(1.08); animation-timing-function:ease-in; }
-    39%{ transform:scale(0); }
-    39.5%, 100%{ transform:scale(1); }
+    0%, 30%{ transform:scale(1); animation-timing-function:ease-in; }
+    35%{ transform:scale(0); }
+    35.5%, 100%{ transform:scale(1); }
   }
   /* The leftovers (red bottom-left, orange top-right) pop away. */
   @keyframes bl-left-pop{
-    0%, 52%{ transform:scale(1); }
-    55%{ transform:scale(1.08); animation-timing-function:ease-in; }
-    60%, 71%{ transform:scale(0); }
+    0%, 52%{ transform:scale(1); animation-timing-function:ease-in; }
+    57%, 71%{ transform:scale(0); }
     72%, 100%{ transform:scale(1); }
   }
   /* The empty slots behind the leftovers pop away with them (like the
      row's) and are back right after. */
   @keyframes bl-left-slot-pop{
-    0%, 52%{ transform:scale(1); }
-    55%{ transform:scale(1.08); animation-timing-function:ease-in; }
-    60%{ transform:scale(0); }
-    60.5%, 100%{ transform:scale(1); }
+    0%, 52%{ transform:scale(1); animation-timing-function:ease-in; }
+    57%{ transform:scale(0); }
+    57.5%, 100%{ transform:scale(1); }
   }
 
   .sdk-badge{ position:relative; width:62.057%; height:62.057%; }

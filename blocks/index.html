@@ -110,7 +110,7 @@
     touch-action:manipulation;
   }
   @media (prefers-reduced-motion: reduce){
-    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+    *, *::after{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
   }
 
   .num{
@@ -226,11 +226,15 @@
      means a correct row, so no piece is green). */
   .sq.lit{ background:var(--correct); }
   .sq.ghost.lit{ opacity:1; }
-  .sq.clearing{ animation: sq-clear 380ms ease-in both; }
-  @keyframes sq-clear{
-    0%{ transform:scale(1); background:var(--correct); }
-    30%{ transform:scale(1.08); background:var(--correct); }
-    100%{ transform:scale(0); background:var(--correct); }
+  /* A full line: the whole square, green, shrinks away -- its empty slot
+     goes with it and is back right after, like the hub tile (her call,
+     2026-11-15). No grow first: at 108% neighbours overlapped (gap 3px, a
+     square grows ~3.6px), leaving thin hard lines between them. 240ms:
+     380 felt slow without the grow. */
+  .sq.clearing{ background:var(--correct); animation: sq-out 240ms ease-in both; }
+  @keyframes sq-out{
+    0%{ transform:scale(1); }
+    100%{ transform:scale(0); }
   }
 
   .sq.drop{ animation: sq-drop 260ms cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -315,15 +319,10 @@
   }
   /* ...then every block on the board and every piece left on the mat pop
      and disappear, all at once. */
-  /* The same pop as a full row clearing (her call): 108% at 30%, then
-     shrink away, 380ms ease-in -- but in the block's own colour, not green. */
-  .sq.wave-out{ animation: sq-out 380ms ease-in both; }
-  @keyframes sq-out{
-    0%{ transform:scale(1); }
-    30%{ transform:scale(1.08); }
-    100%{ transform:scale(0); }
-  }
-  .slot.gone .piece{ animation: sq-out 380ms ease-in both; }
+  /* The same as a full row clearing (her call): the square shrinks away,
+     240ms ease-in -- but in the block's own colour, not green. */
+  .sq.wave-out{ animation: sq-out 240ms ease-in both; }
+  .slot.gone .piece{ animation: sq-out 240ms ease-in both; }
 
   /* The piece being dragged, at full board size. */
   .floater{
@@ -1035,19 +1034,16 @@
     });
     if (cleared.length) {
       PLSound.play('positive');
-      // The clear ripples out from where the piece landed.
-      var cr = r + dims(p.cells).h / 2, cc = c + dims(p.cells).w / 2;
+      // The whole line pops at once (her call, 2026-11-15: the ripple read
+      // as a hard stepped gradient; nothing else on the site staggers).
       cleared.forEach(function(i){
         state.board[i] = -1;
         var el = sqEls[i];
-        var dist = Math.abs(Math.floor(i / N) + 0.5 - cr) + Math.abs(i % N + 0.5 - cc);
-        el.style.animationDelay = Math.round(dist * 28) + 'ms';
         el.classList.remove('drop');
         el.classList.add('clearing');
         setTimeout(function(){
-          el.style.animationDelay = '';
           if (el.classList.contains('clearing')) renderSq(i);
-        }, 380 + Math.round(dist * 28) + 20);
+        }, 260);
       });
     }
     renderScore(true);
@@ -1094,7 +1090,7 @@
   function quietEnd(){
     sqEls.forEach(function(el){ if (el.classList.contains('filled')) el.classList.add('wave-out'); });
     els.slots.forEach(function(s){ if (!s.classList.contains('empty')) s.classList.add('gone'); });
-    celebrationTimer = setTimeout(startGame, 520);
+    celebrationTimer = setTimeout(startGame, 380);
   }
 
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
