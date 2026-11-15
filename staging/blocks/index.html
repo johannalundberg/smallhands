@@ -51,11 +51,11 @@
     --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
     --gap: 3px;
     --round: 12%; /* slightly rounded squares */
-    /* Board + gap + piece tray stack to 1.42 board widths tall (gap 0.06,
+    /* Board + gap + piece tray stack to 1.46 board widths tall (gap 0.06,
        tray 0.36), between the top and bottom button rows. */
     --tray-gap-k: 0.06;
-    --tray-k: 0.36;
-    --board-fit-rows: min(calc(100vw - 2 * var(--unit)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / 1.42));
+    --tray-k: 0.40;
+    --board-fit-rows: min(calc(100vw - 2 * var(--unit)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / 1.46));
     --board-w: min(var(--board-fit-rows), 720px);
   }
 
@@ -66,8 +66,8 @@
   @media (min-width: 1024px) and (min-height: 501px){
     :root{
       --tray-gap-k: 0.03;
-      --tray-k: 0.32;
-      --board-w: min(calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--unit)) / 1.35), calc(100vw - 2 * (2.1 * var(--icon-size) + 3 * var(--unit))), 720px);
+      --tray-k: 0.38;
+      --board-w: min(calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--unit)) / 1.41), calc(100vw - 2 * (2.1 * var(--icon-size) + 3 * var(--unit))), 720px);
     }
     body{
       padding-top: var(--v-reserve-top);
@@ -238,9 +238,17 @@
     height:calc(var(--board-w) * var(--tray-k));
     display:grid;
     grid-template-columns:repeat(3, minmax(0, 1fr));
-    /* Tray pieces are half the board's square size. */
-    --pc: calc((var(--board-w) - 7 * var(--gap)) / 16);
-    --pg: calc(var(--gap) / 2);
+    --cell-full: calc((var(--board-w) - 7 * var(--gap)) / 8);
+  }
+  /* Each tray piece is as big as its third of the tray allows, up to the
+     board's own square size (her call): small pieces show full size, wide
+     or tall ones shrink to fit. Room per piece, in board squares: 2.35
+     across (a third of 8, minus space between pieces), and the tray's
+     height minus a little. */
+  .tray .piece{
+    --s: min(1, calc(2.35 / var(--w)), calc((var(--tray-k) * 8 - 0.3) / var(--h)));
+    --pc: calc(var(--cell-full) * var(--s));
+    --pg: calc(var(--gap) * var(--s));
   }
   .slot{
     display:flex;
