@@ -455,6 +455,14 @@
   }
 }
 </script>
+<script>
+  // Background trial: toned-down versions of the blue (she found #5F44FF
+  // too poppy next to the other games). ?bg=1..7, compare.html shows them
+  // side by side on a fixed sample board; trial views never save.
+  var BG_TRIAL_OPTIONS = { 1:'#5F44FF', 2:'#5841E6', 3:'#5643CC', 4:'#5A4FB8', 5:'#4F45A8', 6:'#4A4296', 7:'#5C5A9E' };
+  var BG_TRIAL = (/[?&]bg=([1-7])\b/.exec(location.search) || [])[1];
+  if (BG_TRIAL) document.documentElement.style.setProperty('--bg', BG_TRIAL_OPTIONS[BG_TRIAL]);
+</script>
 </head>
 <body>
 
@@ -1569,7 +1577,36 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = 'playandlearn.saved.blocks';
+  SAVE_KEY = BG_TRIAL ? null : 'playandlearn.saved.blocks'; // trial views don't save
+  if (BG_TRIAL) {
+    // Background trial: the same sample board in every frame.
+    markActive();
+    startGame();
+    var SAMPLE = [
+      '........',
+      '........',
+      '........',
+      '.....2..',
+      '0...122.',
+      '00.21100',
+      '1110..00',
+      '11..2.22'
+    ];
+    for (var sr = 0; sr < N; sr++) for (var sc = 0; sc < N; sc++) {
+      var ch = SAMPLE[sr].charAt(sc);
+      state.board[sr * N + sc] = ch === '.' ? -1 : Number(ch);
+    }
+    state.score = 0;
+    state.tray = [
+      { cells: [[0, 0], [0, 1], [0, 2]], color: 2 },
+      { cells: [[0, 0], [1, 1]], color: 0 },
+      { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], color: 1 }
+    ];
+    renderBoard();
+    renderScore(false);
+    renderTray(true);
+    return;
+  }
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
@@ -1578,7 +1615,7 @@
     if (saved) state.difficulty = saved.difficulty;
     markActive();
     var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!saved && !starterShown() && !reduced) { startStarter(); return; }
+    if (!saved && !starterShown() && !reduced && !BG_TRIAL) { startStarter(); return; }
     startGame();
   }
   // No demo this time: the level hint plays as on every other game.
