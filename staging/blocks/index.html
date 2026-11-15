@@ -472,6 +472,10 @@
   // Background trial for the brighter pieces: ?bg=1..6 (staging colours on
   // a calmer blue), same sample board, never saves.
   LOOK_TRIAL_OPTIONS[6] = ['#F93134', '#2A2420', '#FF7235'];
+  // Calmer red car (shared with the Unblock staging copy): ?red=1..5.
+  var RED_CAR_OPTIONS = { 1:'#F93134', 2:'#F53B3C', 3:'#F04142', 4:'#EB4648', 5:'#E63C3D' };
+  var RED_CAR_TRIAL = (/[?&]red=([1-5])\b/.exec(location.search) || [])[1];
+  if (RED_CAR_TRIAL) { LOOK_TRIAL_OPTIONS[7] = [RED_CAR_OPTIONS[RED_CAR_TRIAL], '#2A2420', '#FF7235']; RED_TRIAL = '7'; }
   var BG_TRIAL_OPTIONS = { 1:'#4848A8', 2:'#5557A3', 3:'#5F639E', 4:'#676C99', 5:'#4D4F8C', 6:'#525680' };
   var BG_TRIAL = (/[?&]bg=([1-6])\b/.exec(location.search) || [])[1];
   if (BG_TRIAL) { RED_TRIAL = '6'; document.documentElement.style.setProperty('--bg', BG_TRIAL_OPTIONS[BG_TRIAL]); }
@@ -546,7 +550,7 @@
   // / orange, so saved games keep their pattern.
   // Her Figma red, dark grey and orange (her pick, option B, 2026-11-15;
   // pink #EE65EA before it, same slot).
-  var COLORS = ['#F93134', '#2A2420', '#FF7235']; // STAGING TRIAL: Unblock's red car, espresso brown, Memory's bright orange (live blocks/ keeps #D94441 / #E87C4C)
+  var COLORS = ['#F53B3C', '#2A2420', '#FF7235']; // STAGING: the calmer red car (#F93134 a touch calmer), espresso brown, Memory's bright orange (live blocks/ keeps #D94441 / #E87C4C)
   if (RED_TRIAL) COLORS = LOOK_TRIAL_OPTIONS[RED_TRIAL].slice();
   var COLORS_VERSION = 5;
   // Older saves, upgraded step by step:

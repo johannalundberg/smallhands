@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Blocks: background trial</title>
+<title>Red car trial: Blocks and Unblock</title>
 <style>
   /* Trial page (not part of the site): calmer versions of Blocks' red,
      side by side at phone size on the same sample board. Nothing saves. */
@@ -23,15 +23,21 @@
   iframe{ width:390px; height:844px; border:0; display:block; transform:scale(var(--k)); transform-origin:0 0; }
   :root{ --k: 0.5; }
   b{ color:#ddd; font-weight:600; }
+  /* One row per game: Blocks on top, Unblock below, same red in each column. */
+  body{ display:grid; grid-template-columns:repeat(5, max-content); }
 </style>
 </head>
 <body>
-  <figure><div class="frame"><iframe data-src="./?bg=1"></iframe></div><figcaption><b>Now</b><span>#4848A8</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?bg=2"></iframe></div><figcaption><b>Calmer</b><span>#5557A3</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?bg=3"></iframe></div><figcaption><b>Calmer still</b><span>#5F639E</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?bg=4"></iframe></div><figcaption><b>Dusty</b><span>#676C99</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?bg=5"></iframe></div><figcaption><b>Calmer, darker</b><span>#4D4F8C</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?bg=6"></iframe></div><figcaption><b>Deep and dusty</b><span>#525680</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?red=1"></iframe></div><figcaption><b>1 Now</b><span>Blocks · #F93134</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?red=2"></iframe></div><figcaption><b>2 A touch calmer</b><span>Blocks · #F53B3C</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?red=3"></iframe></div><figcaption><b>3 Calmer</b><span>Blocks · #F04142</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?red=4"></iframe></div><figcaption><b>4 Calmer still</b><span>Blocks · #EB4648</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?red=5"></iframe></div><figcaption><b>5 Calmer, deeper</b><span>Blocks · #E63C3D</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="../unblock/?red=1"></iframe></div><figcaption><b>1 Now</b><span>Unblock · #F93134</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="../unblock/?red=2"></iframe></div><figcaption><b>2 A touch calmer</b><span>Unblock · #F53B3C</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="../unblock/?red=3"></iframe></div><figcaption><b>3 Calmer</b><span>Unblock · #F04142</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="../unblock/?red=4"></iframe></div><figcaption><b>4 Calmer still</b><span>Unblock · #EB4648</span></figcaption></figure>
+  <figure><div class="frame"><iframe data-src="../unblock/?red=5"></iframe></div><figcaption><b>5 Calmer, deeper</b><span>Unblock · #E63C3D</span></figcaption></figure>
 <script>
   // Fit all frames in one row if the window allows, and load them one by one.
   (function(){
@@ -40,7 +46,7 @@
     function fit(){
       // Pick the number of rows that makes the frames biggest.
       var best = 0.2;
-      for (var rows = 1; rows <= 3; rows++) {
+      for (var rows = 2; rows <= 2; rows++) {
         var cols = Math.ceil(n / rows);
         var k = Math.min(1, (window.innerHeight - 40 - 90 * rows) / (844 * rows), (window.innerWidth - 16 * (cols + 1) - 40) / (390 * cols));
         if (k > best) best = k;
