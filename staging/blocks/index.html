@@ -306,9 +306,9 @@
     55%{ transform:translateX(calc(var(--pc) * -0.14)) rotate(-3deg); }
     75%{ transform:translateX(calc(var(--pc) * 0.09)) rotate(2deg); }
   }
-  /* ...then the board empties in a wave from the top-left, one diagonal at
-     a time (Sudoku's rhythm), and the pieces left on the mat go with it. */
-  .sq.wave-out{ animation: sq-out 300ms ease-in both; animation-delay:var(--wd, 0ms); }
+  /* ...then every block on the board and every piece left on the mat pop
+     and disappear, all at once. */
+  .sq.wave-out{ animation: sq-out 300ms ease-in both; }
   @keyframes sq-out{
     0%{ transform:scale(1); }
     30%{ transform:scale(1.06); }
@@ -1040,21 +1040,13 @@
     }, delay);
   }
 
-  // Out of room without beating the best: no face, no sound. The board
-  // empties in a wave from the top-left (the final score still showing),
-  // then the new set pops in.
-  var WAVE_STEP_MS = 70;
+  // Out of room without beating the best: no face, no sound. Every block
+  // on the board and the pieces left on the mat pop and disappear together
+  // (her call: no wave), then the new set pops in.
   function quietEnd(){
-    sqEls.forEach(function(el, i){
-      if (!el.classList.contains('filled')) return;
-      el.style.setProperty('--wd', (Math.floor(i / N) + i % N) * WAVE_STEP_MS + 'ms');
-      el.classList.add('wave-out');
-    });
-    var waveMs = (2 * N - 2) * WAVE_STEP_MS + 300;
-    overTimer = setTimeout(function(){
-      els.slots.forEach(function(s){ if (!s.classList.contains('empty')) s.classList.add('gone'); });
-    }, Math.max(0, waveMs - 400));
-    celebrationTimer = setTimeout(startGame, waveMs + 150);
+    sqEls.forEach(function(el){ if (el.classList.contains('filled')) el.classList.add('wave-out'); });
+    els.slots.forEach(function(s){ if (!s.classList.contains('empty')) s.classList.add('gone'); });
+    celebrationTimer = setTimeout(startGame, 450);
   }
 
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
