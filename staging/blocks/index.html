@@ -225,16 +225,12 @@
      means a correct row, so no piece is green). */
   .sq.lit{ background:var(--correct); }
   .sq.ghost.lit{ opacity:1; }
-  /* A full line: the green pops and shrinks away ON its empty square --
-     the square itself stays put (her call, 2026-11-15: shrinking the
-     square too left a bright stripe with hard edges across the board). */
-  .sq.clearing, .sq.wave-out{ background:var(--sq-empty); }
-  .sq.clearing::after, .sq.wave-out::after{
-    content:''; position:absolute; inset:0; border-radius:inherit;
-  }
-  .sq.clearing::after{ background:var(--correct); animation: sq-out 240ms ease-in both; } /* 380ms felt slow without the grow (her note) */
-  /* No grow first (her call, 2026-11-15): at 108% neighbours overlapped
-     (gap 3px, a square grows ~3.6px), leaving thin hard lines between them. */
+  /* A full line: the whole square, green, shrinks away -- its empty slot
+     goes with it and is back right after, like the hub tile (her call,
+     2026-11-15). No grow first: at 108% neighbours overlapped (gap 3px, a
+     square grows ~3.6px), leaving thin hard lines between them. 240ms:
+     380 felt slow without the grow. */
+  .sq.clearing{ background:var(--correct); animation: sq-out 240ms ease-in both; }
   @keyframes sq-out{
     0%{ transform:scale(1); }
     100%{ transform:scale(0); }
@@ -322,9 +318,9 @@
   }
   /* ...then every block on the board and every piece left on the mat pop
      and disappear, all at once. */
-  /* The same as a full row clearing (her call): shrink away on the empty
-     square, 240ms ease-in -- but in the block's own colour, not green. */
-  .sq.wave-out::after{ background:var(--c); animation: sq-out 240ms ease-in both; }
+  /* The same as a full row clearing (her call): the square shrinks away,
+     240ms ease-in -- but in the block's own colour, not green. */
+  .sq.wave-out{ animation: sq-out 240ms ease-in both; }
   .slot.gone .piece{ animation: sq-out 240ms ease-in both; }
 
   /* The piece being dragged, at full board size. */
