@@ -1133,15 +1133,26 @@
   document.addEventListener('visibilitychange', function(){ if (document.hidden) cancelDrag(); });
 
   // ---------- buttons ----------
+  // A game left unfinished (refresh or another level) still counts toward
+  // that level's best -- quietly, no smiley. A game left by going back or
+  // closing the page is saved and carries on next visit instead.
+  function keepBest(){
+    if (state.over) return; // already counted at game over
+    if (state.score > (state.best[state.difficulty] || 0)) {
+      state.best[state.difficulty] = state.score;
+      saveProgress();
+    }
+  }
   els.diffGroup.addEventListener('click', function(e){
     var btn = e.target.closest('.diff-btn');
     if (!btn) return;
+    keepBest();
     state.difficulty = btn.dataset.tier;
     els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
     startGame();
   });
-  els.refreshBtn.addEventListener('click', startGame);
+  els.refreshBtn.addEventListener('click', function(){ keepBest(); startGame(); });
   els.backBtn.addEventListener('click', function(){ PLSound.go('../../'); });
 
   function introduceTraySlider(){
