@@ -42,6 +42,7 @@
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
+    --sq-empty:var(--ink-muted); /* the board's empty squares */
     --face:#313333; /* smiley: the dark piece colour (her call; was amber #FFA226) */
     --correct:#0DC754; /* full rows/columns: Othello's green (her call); was her Figma #AFCE67 */
     --best-ink:rgba(228,228,228,0.45); /* best score: the light ink, greyed */
@@ -212,7 +213,7 @@
     gap:var(--gap);
   }
   .sq{
-    background:var(--ink-muted);
+    background:var(--sq-empty);
     position:relative;
     border-radius:var(--round);
   }
@@ -463,6 +464,19 @@
     10:'#4F59B8', 11:'#424B99', 12:'#3641A8', 13:'#5B63A8', 14:'#485CA8', 15:'#4848A8', 16:'#3E56B2', 17:'#4C5299' };
   var BG_TRIAL = (/[?&]bg=(1[0-7]|[1-9])\b/.exec(location.search) || [])[1];
   if (BG_TRIAL) document.documentElement.style.setProperty('--bg', BG_TRIAL_OPTIONS[BG_TRIAL]);
+  // Piece-colour trial on #4848A8: ?pc=1..4 = [red, dark, empty-square shade].
+  var PC_TRIAL_OPTIONS = {
+    1: ['#BA4844', '#313333', 'rgba(0,0,0,0.28)'],
+    2: ['#E5453F', '#1E1E1E', 'rgba(0,0,0,0.28)'],
+    3: ['#E5453F', '#1E1E1E', 'rgba(0,0,0,0.15)'],
+    4: ['#D93A3A', '#2A2420', 'rgba(0,0,0,0.15)']
+  };
+  var PC_TRIAL = (/[?&]pc=([1-4])\b/.exec(location.search) || [])[1];
+  if (PC_TRIAL) {
+    if (!BG_TRIAL) BG_TRIAL = '15';
+    document.documentElement.style.setProperty('--sq-empty', PC_TRIAL_OPTIONS[PC_TRIAL][2]);
+    document.documentElement.style.setProperty('--face', PC_TRIAL_OPTIONS[PC_TRIAL][1]);
+  }
 </script>
 </head>
 <body>
@@ -535,6 +549,7 @@
   // Her Figma red, dark grey and orange (her pick, option B, 2026-11-15;
   // pink #EE65EA before it, same slot).
   var COLORS = ['#BA4844', '#313333', '#E87C4C'];
+  if (PC_TRIAL) COLORS = [PC_TRIAL_OPTIONS[PC_TRIAL][0], PC_TRIAL_OPTIONS[PC_TRIAL][1], COLORS[2]];
   var COLORS_VERSION = 5;
   // Older saves, upgraded step by step:
   // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest
