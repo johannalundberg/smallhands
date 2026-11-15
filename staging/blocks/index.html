@@ -456,13 +456,6 @@
   }
 }
 </script>
-<script>
-  // Red trial: between the brighter #D93A3A and #CB4A45. ?red=1..6,
-  // compare.html shows them side by side on a fixed sample board; trial
-  // views never save.
-  var RED_TRIAL_OPTIONS = { 1:'#D93A3A', 2:'#D94441', 3:'#D64845', 4:'#D4443F', 5:'#D14945', 6:'#CB4A45' };
-  var RED_TRIAL = (/[?&]red=([1-6])\b/.exec(location.search) || [])[1];
-</script>
 </head>
 <body>
 
@@ -533,8 +526,7 @@
   // / orange, so saved games keep their pattern.
   // Her Figma red, dark grey and orange (her pick, option B, 2026-11-15;
   // pink #EE65EA before it, same slot).
-  var COLORS = ['#CB4A45', '#2A2420', '#E87C4C']; // red, espresso brown, orange (her pick, 2026-11-15; red is #D93A3A a touch less saturated, same darkness)
-  if (RED_TRIAL) COLORS[0] = RED_TRIAL_OPTIONS[RED_TRIAL];
+  var COLORS = ['#D94441', '#2A2420', '#E87C4C']; // red, espresso brown, orange (her pick, 2026-11-15; red is #D93A3A a touch calmer, same brightness)
   var COLORS_VERSION = 5;
   // Older saves, upgraded step by step:
   // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest
@@ -1578,36 +1570,7 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = RED_TRIAL ? null : 'playandlearn.saved.blocks'; // trial views don't save
-  if (RED_TRIAL) {
-    // Red trial: the same sample board in every frame.
-    markActive();
-    startGame();
-    var SAMPLE = [
-      '........',
-      '........',
-      '........',
-      '.....2..',
-      '0...122.',
-      '00.21100',
-      '1110..00',
-      '11..2.22'
-    ];
-    for (var sr = 0; sr < N; sr++) for (var sc = 0; sc < N; sc++) {
-      var ch = SAMPLE[sr].charAt(sc);
-      state.board[sr * N + sc] = ch === '.' ? -1 : Number(ch);
-    }
-    state.score = 0;
-    state.tray = [
-      { cells: [[0, 0], [0, 1], [0, 2]], color: 2 },
-      { cells: [[0, 0], [1, 1]], color: 0 },
-      { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], color: 1 }
-    ];
-    renderBoard();
-    renderScore(false);
-    renderTray(true);
-    return;
-  }
+  SAVE_KEY = 'playandlearn.saved.blocks';
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
@@ -1616,7 +1579,7 @@
     if (saved) state.difficulty = saved.difficulty;
     markActive();
     var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!saved && !starterShown() && !reduced && !RED_TRIAL) { startStarter(); return; }
+    if (!saved && !starterShown() && !reduced) { startStarter(); return; }
     startGame();
   }
   // No demo this time: the level hint plays as on every other game.
