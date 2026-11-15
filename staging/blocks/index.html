@@ -456,16 +456,20 @@
 }
 </script>
 <script>
-  // Look trial (compare.html shows them side by side; trial views never save):
-  //   ?look=earthy       indigo, toned-down earthy pieces, lime full rows
-  //   ?look=earthy-blue  the same pieces on Unblock's blue #5F44FF
-  //   ?look=unblock      Unblock's blue with its amber/cyan/pink/lime (no red)
+  // Look trial on Unblock's blue #5F44FF (her pick for the background); the
+  // orange stays #FF6B4A in all of them (her call). compare.html shows them
+  // side by side; trial views never save.
+  //   ?look=blue-earthy  sand, mustard, orange, blush, sage teal
+  //   ?look=blue-warm    cream, sun, orange, pink, mint
+  //   ?look=blue-dark    cream, sun, orange, sage teal + a dark espresso
+  //   ?look=unblock      Unblock's amber/cyan/pink/lime (no red); white rows
   var BLOCKS_LOOKS = {
-    'earthy':      { colors: ['#D9A93B', '#D2704A', '#E39AA6', '#EAD3A8', '#5FB3A9'] },
-    'earthy-blue': { bg: '#5F44FF', colors: ['#D9A93B', '#D2704A', '#E39AA6', '#EAD3A8', '#5FB3A9'] },
+    'blue-earthy': { bg: '#5F44FF', colors: ['#EED6A6', '#E9B949', '#FF6B4A', '#F2A7BB', '#86D3C3'] },
+    'blue-warm':   { bg: '#5F44FF', colors: ['#FFF1D6', '#FFD24D', '#FF6B4A', '#FF9FC4', '#7DF0DA'] },
+    'blue-dark':   { bg: '#5F44FF', colors: ['#FFF1D6', '#FFD24D', '#FF6B4A', '#86D3C3', '#2A2420'] },
     'unblock':     { bg: '#5F44FF', correct: '#FFFFFF', colors: ['#F2B238', '#21CECE', '#F362EE', '#9EDE54'] }
   };
-  var BLOCKS_LOOK = (/[?&]look=(earthy-blue|earthy|unblock)\b/.exec(location.search) || [])[1] || '';
+  var BLOCKS_LOOK = (/[?&]look=(blue-earthy|blue-warm|blue-dark|unblock)\b/.exec(location.search) || [])[1] || '';
   if (BLOCKS_LOOK) {
     var L = BLOCKS_LOOKS[BLOCKS_LOOK];
     if (L.bg) document.documentElement.style.setProperty('--bg', L.bg);
