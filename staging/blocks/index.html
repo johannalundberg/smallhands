@@ -313,15 +313,15 @@
   }
   /* ...then every block on the board and every piece left on the mat pop
      and disappear, all at once. */
-  /* A quick pop like the rest of the site (she found 0.6s too slow): swell
-     to 112% (6% was too small to notice), then shrink away, 0.3s. */
-  .sq.wave-out{ animation: sq-out 300ms both; }
+  /* The same pop as a full row clearing (her call): 108% at 30%, then
+     shrink away, 380ms ease-in -- but in the block's own colour, not green. */
+  .sq.wave-out{ animation: sq-out 380ms ease-in both; }
   @keyframes sq-out{
-    0%{ transform:scale(1); animation-timing-function:ease-out; }
-    35%{ transform:scale(1.12); animation-timing-function:ease-in; }
+    0%{ transform:scale(1); }
+    30%{ transform:scale(1.08); }
     100%{ transform:scale(0); }
   }
-  .slot.gone .piece{ animation: sq-out 300ms both; }
+  .slot.gone .piece{ animation: sq-out 380ms ease-in both; }
 
   /* The piece being dragged, at full board size. */
   .floater{
@@ -1090,7 +1090,7 @@
   function quietEnd(){
     sqEls.forEach(function(el){ if (el.classList.contains('filled')) el.classList.add('wave-out'); });
     els.slots.forEach(function(s){ if (!s.classList.contains('empty')) s.classList.add('gone'); });
-    celebrationTimer = setTimeout(startGame, 450);
+    celebrationTimer = setTimeout(startGame, 520);
   }
 
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
