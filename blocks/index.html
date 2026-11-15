@@ -4,17 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#F2383B">
-<meta name="robots" content="noindex">
+<!-- GoatCounter: counts visits without cookies or personal data -->
+<script data-goatcounter="https://playandlearn.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 <title>Blocks: Block Puzzle for Kids — Play and Learn</title>
-<link rel="canonical" href="https://playandlearn.kids/staging/blocks/">
+<link rel="canonical" href="https://playandlearn.kids/blocks/">
 <meta name="description" content="Drag blocks onto the board and fill rows and columns to clear them. Free, no ads, pop-ups or cookies. Designed by a mom and her 6-year-old.">
-<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
-<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
-<link rel="manifest" href="../../manifest.json">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="manifest" href="../manifest.json">
 
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://playandlearn.kids/staging/blocks/">
+<meta property="og:url" content="https://playandlearn.kids/blocks/">
 <meta property="og:title" content="Blocks — Play and Learn">
 <meta property="og:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
 <meta property="og:image" content="https://playandlearn.kids/og-image.png">
@@ -32,7 +33,7 @@
 <style>
   @font-face{
     font-family:'Spline Sans Mono';
-    src: url('../../fonts/SplineSansMono.woff2') format('woff2');
+    src: url('../fonts/SplineSansMono.woff2') format('woff2');
     font-weight:400;
     font-style:normal;
   }
@@ -425,7 +426,7 @@
   "@context": "https://schema.org",
   "@type": "VideoGame",
   "name": "Blocks",
-  "url": "https://playandlearn.kids/staging/blocks/",
+  "url": "https://playandlearn.kids/blocks/",
   "description": "Drag blocks onto the board and fill rows and columns to clear them. Free, no ads, pop-ups or cookies. Designed by a mom and her 6-year-old.",
   "genre": [
     "Puzzle"
@@ -511,7 +512,7 @@
   <div class="floater" id="floater"></div>
   <div class="celebration" id="celebration"></div>
 
-<script src="../../sound.js?v=20261025ze"></script>
+<script src="../sound.js?v=20261025ze"></script>
 <script>
 (function(){
   "use strict";
@@ -1432,7 +1433,7 @@
     startGame();
   });
   els.refreshBtn.addEventListener('click', function(){ keepBest(); startGame(); });
-  els.backBtn.addEventListener('click', function(){ PLSound.go('../../'); });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../'); });
 
   function introduceTraySlider(){
     var el = els.controlsSlider;
