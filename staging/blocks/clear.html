@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Blocks: line clear trial</title>
+<style>
+  /* Trial page (not part of the site): ways for a full line to leave,
+     looping on a slice of the Blocks board in the game's colours. */
+  :root{
+    --bg:#4848A8; --sq-empty:rgba(0,0,0,0.18); --correct:#0DC754;
+    --red:#F53B3C; --brown:#2A2420; --orange:#FF7235;
+    --sq:38px; --gap:4px; --round:4.5px;
+  }
+  html, body{ margin:0; min-height:100%; background:#141414; }
+  body{
+    display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start;
+    gap:28px; padding:28px 16px; box-sizing:border-box;
+    font:13px/1.35 -apple-system, system-ui, sans-serif; color:#9a9a9a;
+  }
+  figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  figcaption{ max-width:360px; text-align:center; }
+  figcaption b{ color:#ddd; font-weight:600; display:block; }
+  .board{
+    background:var(--bg); padding:16px; border-radius:20px;
+    display:grid; grid-template-columns:repeat(8, var(--sq)); gap:var(--gap);
+  }
+  .sq{ width:var(--sq); height:var(--sq); border-radius:var(--round); background:var(--sq-empty); position:relative; }
+  .sq.f{ background:var(--c); }
+  .r{ --c:var(--red); } .b{ --c:var(--brown); } .o{ --c:var(--orange); }
+
+  /* The line that clears: its pieces sit in the middle row; a loop of
+     3.2s: full (0-25%), green (25-40%), leaves, empty, refills. */
+  .line .fill{
+    position:absolute; inset:0; border-radius:inherit; background:var(--c);
+    animation: var(--anim) 3.2s linear infinite;
+  }
+
+  /* A: now -- pop to 108%, then shrink all the way to nothing; the empty
+     square goes with it and comes back after. */
+  .a .line{ animation: a-slot 3.2s linear infinite; }
+  @keyframes a-slot{ 0%, 51.9%{ transform:scale(1); } 52%{ transform:scale(0); } 52.5%, 100%{ transform:scale(1); } }
+  .a .fill{ --anim: a-fill; }
+  @keyframes a-fill{
+    0%, 24.9%{ background:var(--c); transform:scale(1); opacity:1; }
+    25%, 40%{ background:var(--correct); transform:scale(1); animation-timing-function:ease-out; }
+    43.5%{ background:var(--correct); transform:scale(1.08); animation-timing-function:ease-in; }
+    52%{ background:var(--correct); transform:scale(0); opacity:1; }
+    52.1%, 84.9%{ opacity:0; transform:scale(0); }
+    85%{ opacity:1; transform:scale(0); background:var(--c); animation-timing-function:cubic-bezier(0.34, 1.56, 0.64, 1); }
+    92%, 100%{ opacity:1; transform:scale(1); background:var(--c); }
+  }
+
+  /* B: like Memory's matched pair -- a springy pop up (108%, not Memory's 118%: more makes neighbours touch), then it fades out
+     while shrinking only a little (to 80%), leaving the empty square. */
+  .b-opt .fill{ --anim: b-fill; }
+  @keyframes b-fill{
+    0%, 24.9%{ background:var(--c); transform:scale(1); opacity:1; }
+    25%, 40%{ background:var(--correct); transform:scale(1); animation-timing-function:cubic-bezier(0.34, 1.56, 0.64, 1); }
+    47%{ background:var(--correct); transform:scale(1.08); opacity:1; animation-timing-function:ease; } /* 1.12 like Memory made neighbours touch */
+    56.5%{ background:var(--correct); transform:scale(0.8); opacity:0; }
+    56.6%, 84.9%{ opacity:0; transform:scale(0); }
+    85%{ opacity:1; transform:scale(0); background:var(--c); animation-timing-function:cubic-bezier(0.34, 1.56, 0.64, 1); }
+    92%, 100%{ opacity:1; transform:scale(1); background:var(--c); }
+  }
+
+  /* C: a small pop, then the green simply fades into the empty square at
+     full size -- no shrinking at all. */
+  .c .fill{ --anim: c-fill; }
+  @keyframes c-fill{
+    0%, 24.9%{ background:var(--c); transform:scale(1); opacity:1; }
+    25%, 40%{ background:var(--correct); transform:scale(1); animation-timing-function:ease-out; }
+    43.5%{ background:var(--correct); transform:scale(1.08); opacity:1; animation-timing-function:ease-in; }
+    47%{ background:var(--correct); transform:scale(1); opacity:1; animation-timing-function:ease; }
+    56.5%{ background:var(--correct); transform:scale(1); opacity:0; }
+    56.6%, 84.9%{ opacity:0; transform:scale(0); }
+    85%{ opacity:1; transform:scale(0); background:var(--c); animation-timing-function:cubic-bezier(0.34, 1.56, 0.64, 1); }
+    92%, 100%{ opacity:1; transform:scale(1); background:var(--c); }
+  }
+</style>
+</head>
+<body>
+</body>
+<script>
+  // Three copies of the same board slice: rows above and below stay put,
+  // the middle row fills, turns green and leaves.
+  var opts = [
+    ['a', 'A: now', 'Pops to 108%, then shrinks to nothing; the empty square goes with it.'],
+    ['b-opt', 'B: like Memory', 'Springy pop, then fades out while shrinking a little (to 80%), onto the empty square.'],
+    ['c', 'C: pop and fade', 'Small pop, then the green fades away at full size, onto the empty square.']
+  ];
+  var above = '..b..or.', below = 'r..bb..o';
+  var line = 'rbooobrr';
+  var cls = { r:'r', b:'b', o:'o' };
+  function row(pattern, isLine){
+    return pattern.split('').map(function(ch){
+      if (isLine) return '<div class="sq line ' + cls[ch] + '"><div class="fill"></div></div>';
+      return ch === '.' ? '<div class="sq"></div>' : '<div class="sq f ' + cls[ch] + '"></div>';
+    }).join('');
+  }
+  opts.forEach(function(o){
+    var fig = document.createElement('figure');
+    fig.className = o[0];
+    fig.innerHTML = '<div class="board">' + row(above) + row(line, true) + row(below) + '</div>' +
+      '<figcaption><b>' + o[1] + '</b>' + o[2] + '</figcaption>';
+    document.body.appendChild(fig);
+  });
+</script>
+</html>
