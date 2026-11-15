@@ -457,11 +457,11 @@
 }
 </script>
 <script>
-  // Red trial: darker versions of #CB4A45 at the same saturation. ?red=1..5,
+  // Red trial: between the brighter #D93A3A and #CB4A45. ?red=1..6,
   // compare.html shows them side by side on a fixed sample board; trial
   // views never save.
-  var RED_TRIAL_OPTIONS = { 1:'#CB4A45', 2:'#C84944', 3:'#C54843', 4:'#C24742' };
-  var RED_TRIAL = (/[?&]red=([1-4])\b/.exec(location.search) || [])[1];
+  var RED_TRIAL_OPTIONS = { 1:'#D93A3A', 2:'#D94441', 3:'#D64845', 4:'#D4443F', 5:'#D14945', 6:'#CB4A45' };
+  var RED_TRIAL = (/[?&]red=([1-6])\b/.exec(location.search) || [])[1];
 </script>
 </head>
 <body>
