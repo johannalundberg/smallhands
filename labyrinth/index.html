@@ -758,10 +758,14 @@
     // being capped at 720 itself and falling short of the square tiers.
     var cell;
     if (mobile) {
-      var trayRect = els.controlsSlider.getBoundingClientRect();
+      // The tray's side inset from its CSS (left: var(--unit)), not its
+      // on-screen box: the tray grows to 103% while pressed (refresh, a
+      // level), and measuring it then made the maze wider with a smaller
+      // margin (her note, 2026-11-15).
+      var trayInset = parseFloat(getComputedStyle(els.controlsSlider).left) || 0;
       var bodyStyle = getComputedStyle(document.body);
       var reserveV = parseFloat(bodyStyle.paddingTop) + parseFloat(bodyStyle.paddingBottom);
-      widthBudget = Math.min(window.innerWidth - trayRect.left * 2, 720);
+      widthBudget = Math.min(window.innerWidth - trayInset * 2, 720);
       heightBudget = vh - reserveV;
       // Cell size comes from width alone: mobile's filled axis is width, so
       // every tier renders at the same board width regardless of row count.
