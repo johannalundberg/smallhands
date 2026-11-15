@@ -43,8 +43,8 @@
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
-    --sq-empty:rgba(0,0,0,0.18); /* the board's empty squares: lighter than the buttons so the brown pieces stand out */
-    --face:#2A2420; /* smiley: the dark piece colour (her call; was amber #FFA226) */
+    --sq-empty:rgba(0,0,0,0.28); /* the board's empty squares: darker for more contrast (her pick 2026-11-15, was 18%), still light enough for the almost-black pieces */
+    --face:#101010; /* smiley: the dark piece colour (her call; was brown #2A2420, amber #FFA226) */
     --correct:#0DC754; /* full rows/columns: Othello's green (her call); was her Figma #AFCE67 */
     --best-ink:rgba(228,228,228,0.45); /* best score: the light ink, greyed */
     --incorrect:#F2383B;
@@ -526,7 +526,7 @@
   // / orange, so saved games keep their pattern.
   // Her Figma red, dark grey and orange (her pick, option B, 2026-11-15;
   // pink #EE65EA before it, same slot).
-  var COLORS = ['#F53B3C', '#2A2420', '#FF7235']; // red car (shared with Unblock), espresso brown, Memory's bright orange (her pick, 2026-11-15; was #D94441 / #E87C4C)
+  var COLORS = ['#F53B3C', '#101010', '#FF7235']; // red car (shared with Unblock), the hub tiles' almost black (was brown #2A2420), Memory's bright orange (her picks, 2026-11-15)
   var COLORS_VERSION = 5;
   // Older saves, upgraded step by step:
   // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest
