@@ -499,9 +499,21 @@
 
   var N = 8; // 8x8 board; matches --n in the CSS
   var TAP_SLOP = 6;
-  // No green: green is kept for full rows (her call). The purple took green's
-  // place in the list, so saved games keep their colours otherwise.
-  var COLORS = ['#FFA226', '#A55CFF', '#707EFF', '#E570E1', '#FFD60A', '#3CC8C8', '#FF6B4A'];
+  // No green: green is kept for full rows (her call). No amber either: it
+  // sat too close to the yellow and the orange (her call). Six colours.
+  var COLORS = ['#A55CFF', '#707EFF', '#E570E1', '#FFD60A', '#3CC8C8', '#FF6B4A'];
+  var COLORS_VERSION = 2;
+  // Games saved with the old seven colours (amber first): amber becomes the
+  // orange, the rest move up one.
+  var OLD_COLOR = [5, 0, 1, 2, 3, 4, 5];
+  function upgradeColors(data){
+    if (!data || data.cv === COLORS_VERSION) return data;
+    function map(v){ return (v >= 0 && v < OLD_COLOR.length && v % 1 === 0) ? OLD_COLOR[v] : v; }
+    if (Array.isArray(data.board)) data.board = data.board.map(function(v){ return v === -1 ? -1 : map(v); });
+    if (Array.isArray(data.tray)) data.tray = data.tray.map(function(p){ return p && typeof p === 'object' ? { cells: p.cells, color: map(p.color) } : p; });
+    data.cv = COLORS_VERSION;
+    return data;
+  }
 
   // ---------- shapes ----------
   // Every shape is on every level; the level only changes how often the
@@ -1323,6 +1335,7 @@
   function snapshotGame(){
     if (state.over) return null;
     return {
+      cv: COLORS_VERSION,
       difficulty: state.difficulty,
       board: state.board.slice(),
       tray: state.tray.map(function(p){ return p ? { cells: p.cells, color: p.color } : null; }),
@@ -1339,6 +1352,7 @@
 
   function restoreGame(data){
     if (!data || typeof data !== 'object') return false;
+    data = upgradeColors(data);
     if (['easy', 'medium', 'hard'].indexOf(data.difficulty) === -1) return false;
     if (!Array.isArray(data.board) || data.board.length !== N * N) return false;
     for (var i = 0; i < data.board.length; i++) {
