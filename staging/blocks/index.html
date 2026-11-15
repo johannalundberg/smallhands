@@ -43,7 +43,7 @@
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
     --face:#FFA226;
-    --correct:#0DC754; /* full rows/columns: the site's green, so no piece is green */
+    --correct:#9AE62E; /* full rows/columns: lime (her call -- the site green #0DC754 looked dull on indigo); no piece is green */
     --best-ink:rgba(228,228,228,0.45); /* best score: the light ink, greyed */
     --incorrect:#F2383B;
     --unit: 1.1574vw;
@@ -192,10 +192,6 @@
 
   /* ---------- board ---------- */
   .game{
-    transition: opacity 350ms ease;
-  }
-  .game.fade{ opacity:0; transition-duration:600ms; }
-  .game{
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -300,8 +296,25 @@
     0%{ transform:scale(0); }
     100%{ transform:scale(1); }
   }
-  /* Out of room: the pieces that don't fit fade back. */
-  .slot.dead .piece{ opacity:0.3; }
+  /* Out of room: the pieces that don't fit shake their heads once (the
+     site's wrong-answer shake, as in Sudoku and Math)... */
+  .slot.shake .piece{ animation: piece-shake 520ms ease-in-out; }
+  @keyframes piece-shake{
+    0%, 100%{ transform:translateX(0) rotate(0); }
+    15%{ transform:translateX(calc(var(--pc) * -0.22)) rotate(-5deg); }
+    35%{ transform:translateX(calc(var(--pc) * 0.2)) rotate(4deg); }
+    55%{ transform:translateX(calc(var(--pc) * -0.14)) rotate(-3deg); }
+    75%{ transform:translateX(calc(var(--pc) * 0.09)) rotate(2deg); }
+  }
+  /* ...then the board empties in a wave from the top-left, one diagonal at
+     a time (Sudoku's rhythm), and the pieces left on the mat go with it. */
+  .sq.wave-out{ animation: sq-out 300ms ease-in both; animation-delay:var(--wd, 0ms); }
+  @keyframes sq-out{
+    0%{ transform:scale(1); }
+    30%{ transform:scale(1.06); }
+    100%{ transform:scale(0); }
+  }
+  .slot.gone .piece{ animation: sq-out 300ms ease-in both; }
 
   /* The piece being dragged, at full board size. */
   .floater{
@@ -892,7 +905,7 @@
     state.tray.forEach(function(p, k){
       var slot = els.slots[k];
       slot.innerHTML = '';
-      slot.classList.remove('lifted', 'pressed', 'spring', 'dead', 'pop');
+      slot.classList.remove('lifted', 'pressed', 'spring', 'shake', 'gone', 'pop');
       slot.classList.toggle('empty', !p);
       if (!p) return;
       slot.appendChild(pieceEl(p));
@@ -940,7 +953,6 @@
     els.floater.innerHTML = '';
     els.celebration.style.display = 'none';
     els.game.style.display = '';
-    els.game.classList.remove('fade');
     state.board = new Array(N * N).fill(-1);
     state.score = 0;
     state.over = false;
@@ -1019,19 +1031,30 @@
     if (newBest) state.best[state.difficulty] = state.score;
     saveProgress();
     overTimer = setTimeout(function(){
-      els.slots.forEach(function(s){ if (!s.classList.contains('empty')) s.classList.add('dead'); });
-      overTimer = setTimeout(newBest ? showCelebration : quietEnd, 1300);
+      // The pieces that don't fit shake their heads.
+      els.slots.forEach(function(s){
+        if (s.classList.contains('empty')) return;
+        s.classList.remove('shake', 'pop', 'spring'); void s.offsetWidth; s.classList.add('shake');
+      });
+      overTimer = setTimeout(newBest ? showCelebration : quietEnd, 900);
     }, delay);
   }
 
   // Out of room without beating the best: no face, no sound. The board
-  // fades away with the final score still showing, then a fresh one.
+  // empties in a wave from the top-left (the final score still showing),
+  // then the new set pops in.
+  var WAVE_STEP_MS = 70;
   function quietEnd(){
-    els.game.classList.add('fade');
+    sqEls.forEach(function(el, i){
+      if (!el.classList.contains('filled')) return;
+      el.style.setProperty('--wd', (Math.floor(i / N) + i % N) * WAVE_STEP_MS + 'ms');
+      el.classList.add('wave-out');
+    });
+    var waveMs = (2 * N - 2) * WAVE_STEP_MS + 300;
     overTimer = setTimeout(function(){
-      startGame();
-      // startGame removed .fade, so the new board fades back in.
-    }, 900);
+      els.slots.forEach(function(s){ if (!s.classList.contains('empty')) s.classList.add('gone'); });
+    }, Math.max(0, waveMs - 400));
+    celebrationTimer = setTimeout(startGame, waveMs + 150);
   }
 
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
