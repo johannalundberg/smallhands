@@ -51,10 +51,10 @@
     --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
     --gap: 3px;
     --round: 12%; /* slightly rounded squares */
-    /* Board (7 rows, her pick over 8x8 on 2026-11-15), one empty row, then
-       the mat of blank tiles (5 rows) the pieces wait on: 13 rows in all,
-       between the top and bottom button rows. */
-    --n: 7; /* board and mat width in squares (must match N in the script) */
+    /* Board (8 rows; she tried 7x7 and went back to 8x8), one empty row,
+       then the mat of blank tiles (5 rows) the pieces wait on: 14 rows in
+       all, between the top and bottom button rows. */
+    --n: 8; /* board and mat width in squares (must match N in the script) */
     --stack: calc((var(--n) + 6.1) / var(--n));
     --board-fit-rows: min(calc(100vw - 2 * var(--unit)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / var(--stack)));
     --board-w: min(var(--board-fit-rows), 720px);
@@ -336,7 +336,9 @@
     :root{
       --unit: 5.089vw;
       --icon-size: clamp(52px, 20.5344vw, 100px);
-      --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+      /* Only the score sits up top on phones (the buttons are in the tray
+         below), so the board may come up to one unit under its digits. */
+      --v-reserve-top: calc(var(--icon-size) * 0.45 + 2 * var(--unit));
       --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
       --gap: 2px;
     }
@@ -490,7 +492,7 @@
 
   document.addEventListener('touchstart', function(){}, { passive: true });
 
-  var N = 7; // 7x7 board (her pick over 8x8); matches --n in the CSS
+  var N = 8; // 8x8 board; matches --n in the CSS
   var TAP_SLOP = 6;
   var COLORS = ['#FFA226', '#0DC754', '#707EFF', '#E570E1', '#FFD60A', '#3CC8C8', '#FF6B4A'];
 
@@ -1315,14 +1317,11 @@
   }
   function loadProgress(){
     try {
-      // A save from the 7x7 trial (its own key) carries over once.
-      var trial = localStorage.getItem('playandlearn.saved.blocks7');
-      if (trial) localStorage.removeItem('playandlearn.saved.blocks7');
-      var d = JSON.parse(trial || localStorage.getItem('playandlearn.saved.blocks') || 'null');
+      var d = JSON.parse(localStorage.getItem('playandlearn.saved.blocks') || 'null');
       if (!d || ['easy', 'medium', 'hard'].indexOf(d.difficulty) === -1) return null;
-      // From the 8x8 board: keep the level, but its game can't continue on
-      // 7x7 and its bests (longer games) would be out of reach.
-      if (!trial && d.n !== N) { d.game = null; d.best = null; }
+      // Saved on a different board size (the 7x7 days): keep the level, but
+      // that game can't continue here and its bests don't compare.
+      if (d.n !== N) { d.game = null; d.best = null; }
       return d;
     } catch (e) { return null; }
   }
