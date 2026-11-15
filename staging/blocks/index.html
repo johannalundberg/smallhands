@@ -38,7 +38,7 @@
   }
 
   :root{
-    --bg:#3D3A8F; /* indigo (2026-11-15); before: brick #8A2F2A. Look trial below. */
+    --bg:#5F44FF; /* Unblock's blue (her pick, 2026-11-15); before: indigo #3D3A8F, brick #8A2F2A */
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
@@ -455,26 +455,6 @@
   }
 }
 </script>
-<script>
-  // Look trial on Unblock's blue #5F44FF: strong colours that belong
-  // together (a warm family against the blue), not a rainbow -- her brief.
-  // Orange stays #FF6B4A. compare.html shows them side by side; trial views
-  // never save. Same order as the real colours (blue, pink, yellow, teal,
-  // orange) so a saved game shows each piece in its closest match.
-  //   ?look=sunset  cream, light pink, gold, espresso, orange (the hot pink
-  //                 #FF5C8A sat too close to the orange, her call)
-  //   ?look=warm    cream, peach, gold, espresso, orange
-  var BLOCKS_LOOKS = {
-    'sunset': { bg: '#5F44FF', colors: ['#FFF0D1', '#FFB8D6', '#FFC23D', '#2A2420', '#FF6B4A'] },
-    'warm':   { bg: '#5F44FF', colors: ['#FFF0D1', '#FFAE85', '#FFC23D', '#2A2420', '#FF6B4A'] }
-  };
-  var BLOCKS_LOOK = (/[?&]look=(sunset|warm)\b/.exec(location.search) || [])[1] || '';
-  if (BLOCKS_LOOK) {
-    var L = BLOCKS_LOOKS[BLOCKS_LOOK];
-    if (L.bg) document.documentElement.style.setProperty('--bg', L.bg);
-    if (L.correct) document.documentElement.style.setProperty('--correct', L.correct);
-  }
-</script>
 </head>
 <body>
 
@@ -539,19 +519,19 @@
 
   var N = 8; // 8x8 board; matches --n in the CSS
   var TAP_SLOP = 6;
-  // No green: green is kept for full rows (her call). No amber either: it
-  // sat too close to the yellow and the orange (her call). Six colours.
-  // Five fully saturated colours that pop on the indigo (her calls: no
-  // green -- that's for full rows; no amber; one pink only, so the purple
-  // that read as a second pink is gone): blue, pink, yellow, teal, orange.
-  var COLORS = ['#00B2FF', '#FF4FB8', '#FFD60A', '#14D9C4', '#FF6B4A'];
-  if (BLOCKS_LOOK) COLORS = BLOCKS_LOOKS[BLOCKS_LOOK].colors; // look trial
-  var COLORS_VERSION = 3;
+  // Three colours on Unblock's blue (her call, 2026-11-15, after many
+  // rounds: strong colours that belong together, not a rainbow): almost
+  // white, dark brown, orange. Each set of three is one of each. No green
+  // anywhere -- lime is kept for full rows.
+  var COLORS = ['#FFF0D1', '#2A2420', '#FF6B4A'];
+  var COLORS_VERSION = 4;
   // Older saves, upgraded step by step:
   // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest
   // move up one. v2 (purple, blue, pink, yellow, teal, orange) -> v3:
-  // purple becomes pink, the rest move up one.
-  var UPGRADE = { 1: [5, 0, 1, 2, 3, 4, 5], 2: [1, 0, 1, 2, 3, 4] };
+  // purple becomes pink, the rest move up one. v3 (blue, pink, yellow,
+  // teal, orange) -> v4 (cream, dark brown, orange): blue and yellow become
+  // cream, pink becomes orange, teal becomes dark brown.
+  var UPGRADE = { 1: [5, 0, 1, 2, 3, 4, 5], 2: [1, 0, 1, 2, 3, 4], 3: [0, 2, 0, 1, 2] };
   function upgradeColors(data){
     if (!data) return data;
     var cv = data.cv || 1;
@@ -1369,9 +1349,9 @@
     startGame();
     for (var c = 0; c < N; c++) if (c !== 3 && c !== 4) state.board[(N - 1) * N + c] = c % COLORS.length;
     state.tray = [
-      { cells: [[0, 0], [0, 1]], color: 4 % COLORS.length },
+      { cells: [[0, 0], [0, 1]], color: 2 },               // the orange domino
       { cells: [[0, 0], [1, 0], [1, 1]], color: 1 },
-      { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], color: 2 }
+      { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], color: 0 }
     ];
     renderBoard();
     renderTray(true);
@@ -1586,7 +1566,7 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = BLOCKS_LOOK ? null : 'playandlearn.saved.blocks'; // trial views don't save
+  SAVE_KEY = 'playandlearn.saved.blocks';
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
@@ -1595,7 +1575,7 @@
     if (saved) state.difficulty = saved.difficulty;
     markActive();
     var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!saved && !starterShown() && !reduced && !BLOCKS_LOOK) { startStarter(); return; }
+    if (!saved && !starterShown() && !reduced) { startStarter(); return; }
     startGame();
   }
   // No demo this time: the level hint plays as on every other game.
