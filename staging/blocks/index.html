@@ -160,14 +160,9 @@
 
   .controls-slider{ display:contents; }
 
-  /* ---------- score: a plain number top left (no circle), plus this
-     level's best score, smaller and grey. Trial of how to show the best:
-     ?best=crown  under the score, a pixel crown before it (default)
-     ?best=paren  12 (200)      after the score, in brackets
-     ?best=slash  12 / 200      after the score, like a target
-     ?best=under  the grey number alone under the score
-     ?best=bar    under the score, a bar filling up toward the best
-     The best is the same size as the score in all of them (her call). ---------- */
+  /* ---------- score: a plain number top left (no circle), then this
+     level's best score in grey after a slash, "45 / 200" -- same size as
+     the score (her pick of five styles, 2026-11-15). ---------- */
   .score-box{
     position:absolute;
     left:var(--unit);
@@ -178,55 +173,21 @@
     font-size:calc(var(--icon-size) * 0.58);
     line-height:1;
     pointer-events:none;
+    display:flex;
+    align-items:baseline;
+    gap:0.22em;
+    white-space:nowrap;
   }
   .score, .best{
+    display:inline-block;
     transform-origin:left center;
     transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  .score{ display:block; color:var(--bright); }
-  .best{
-    display:flex;
-    align-items:center;
-    gap:0.3em;
-    margin-top:0.14em;
-    color:var(--best-ink);
-  }
+  .score{ color:var(--bright); }
+  .best{ color:var(--best-ink); }
   .best[hidden]{ display:none; }
-  .best .bar, .best .crown{ display:none; }
-  :root[data-best="crown"] .best .crown{ display:block; height:0.74em; width:auto; fill:currentColor; flex:none; }
+  .best-num::before{ content:'/'; margin-right:0.18em; }
   .score.bump, .best.bump{ transform:scale(1.12); }
-
-  /* Brackets / slash: on the score's line, sharing its baseline. */
-  :root[data-best="paren"] .score-box,
-  :root[data-best="slash"] .score-box{ display:flex; align-items:baseline; gap:0.22em; white-space:nowrap; }
-  :root[data-best="paren"] .best,
-  :root[data-best="slash"] .best{ display:inline-block; margin-top:0; }
-  :root[data-best="paren"] .best[hidden],
-  :root[data-best="slash"] .best[hidden]{ display:none; }
-  :root[data-best="paren"] .best-num::before{ content:'('; }
-  :root[data-best="paren"] .best-num::after{ content:')'; }
-  :root[data-best="slash"] .best-num::before{ content:'/'; margin-right:0.18em; }
-
-  /* Bar: a track in the grey, filling with the light colour as the score
-     climbs toward the best; full = level with the best. */
-  :root[data-best="bar"] .best{ gap:0.25em; }
-  :root[data-best="bar"] .best .bar{
-    display:block;
-    position:relative;
-    width:1.6em;
-    height:0.2em;
-    border-radius:999px;
-    background:var(--best-ink);
-    overflow:hidden;
-  }
-  :root[data-best="bar"] .best .bar i{
-    position:absolute;
-    left:0; top:0; bottom:0;
-    width:calc(var(--p, 0) * 100%);
-    background:var(--bright);
-    border-radius:999px;
-    transition: width 300ms ease;
-  }
   .best.new{ color:var(--bright); transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), color 300ms ease; }
 
   /* ---------- board ---------- */
@@ -456,13 +417,6 @@
   }
 }
 </script>
-<script>
-  // Best-score style trial: ?best=crown|paren|slash|under|bar (crown when not given).
-  (function(){
-    var m = /[?&]best=(crown|paren|slash|under|bar)\b/.exec(location.search);
-    document.documentElement.setAttribute('data-best', m ? m[1] : 'crown');
-  })();
-</script>
 </head>
 <body>
 
@@ -502,9 +456,6 @@
   <div class="score-box">
     <span class="score num" id="score">0</span>
     <div class="best" id="best" hidden>
-      <!-- pixel crown: three points over a band -->
-      <svg class="crown" viewBox="0 0 7 6" aria-hidden="true"><path d="M0 0h1v2h1v1h1v-3h1v3h1v-1h1v-2h1v6h-7z"/></svg>
-      <span class="bar" id="bestBar"><i></i></span>
       <span class="num best-num" id="bestVal">0</span>
     </div>
   </div>
@@ -615,7 +566,6 @@
     score: document.getElementById('score'),
     best: document.getElementById('best'),
     bestVal: document.getElementById('bestVal'),
-    bestBar: document.getElementById('bestBar'),
     celebration: document.getElementById('celebration'),
     diffGroup: document.getElementById('diffGroup'),
     backBtn: document.getElementById('backBtn'),
@@ -824,13 +774,8 @@
     clearTimeout(el._bumpT);
     el._bumpT = setTimeout(function(){ el.classList.remove('bump'); }, 200);
   }
-  function renderBar(){
-    var b = state.best[state.difficulty] || 0;
-    els.bestBar.style.setProperty('--p', b ? Math.min(state.score / b, 1) : 0);
-  }
   function renderScore(bump){
     els.score.textContent = state.score;
-    renderBar();
     if (bump) bumpEl(els.score);
   }
   // The level's best, hidden until there is one.
@@ -839,7 +784,6 @@
     els.bestVal.textContent = b;
     els.best.hidden = !b;
     els.best.classList.remove('new');
-    renderBar();
   }
 
   // ---------- game flow ----------
