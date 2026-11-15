@@ -51,30 +51,26 @@
     --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
     --gap: 3px;
     --round: 12%; /* slightly rounded squares */
-    /* Board + gap + piece tray stack to 1.46 board widths tall (gap 0.06,
-       tray 0.36), between the top and bottom button rows. */
-    --tray-gap-k: 0.06;
-    --tray-k: 0.40;
-    --board-fit-rows: min(calc(100vw - 2 * var(--unit)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / 1.46));
+    /* Board (8 rows), one empty row, then the mat of blank tiles (5 rows)
+       the pieces wait on: 14 rows in all, about 1.76 board widths tall,
+       between the top and bottom button rows. */
+    --board-fit-rows: min(calc(100vw - 2 * var(--unit)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / 1.76));
     --board-w: min(var(--board-fit-rows), 720px);
+    --cell-full: calc((var(--board-w) - 7 * var(--gap)) / 8);
+    --mat-sq: rgba(0,0,0,0.11); /* the mat's blank tiles, fainter than the board's */
   }
 
-  /* Desktop (her pick of three, 2026-11-15): the board starts below the
-     level buttons, the pieces sit close under it, and the tray reaches down
-     beside back and refresh (they're in the corner), with every piece's
-     bottom edge on the same line as those buttons' bottom edge. */
+  /* Desktop (her pick, 2026-11-15): the board starts below the level
+     buttons and the mat reaches down beside back and refresh (they're in
+     the corner), its bottom on the same line as their bottom edge. */
   @media (min-width: 1024px) and (min-height: 501px){
     :root{
-      --tray-gap-k: 0.03;
-      --tray-k: 0.38;
-      --board-w: min(calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--unit)) / 1.41), calc(100vw - 2 * (2.1 * var(--icon-size) + 3 * var(--unit))), 720px);
+      --board-w: min(calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--unit)) / 1.76), calc(100vw - 2 * (2.1 * var(--icon-size) + 3 * var(--unit))), 720px);
     }
     body{
       padding-top: var(--v-reserve-top);
       padding-bottom: var(--unit);
     }
-    .tray .slot{ align-items:flex-end; }
-    .tray .piece{ transform-origin:50% 100%; }
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
@@ -199,7 +195,8 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:calc(var(--board-w) * var(--tray-gap-k));
+    /* One empty row between the board and the mat. */
+    gap:calc(var(--cell-full) + 2 * var(--gap));
   }
   .board{
     width:var(--board-w);
@@ -232,28 +229,32 @@
     100%{ transform:scale(1); }
   }
 
-  /* ---------- piece tray (three pieces under the board) ---------- */
+  /* ---------- the mat: 8 x 5 blank tiles under the board, the three
+     pieces lying on it at full size (her idea, so they don't float) ---------- */
   .tray{
+    position:relative;
     width:var(--board-w);
-    height:calc(var(--board-w) * var(--tray-k));
+    height:calc(5 * var(--cell-full) + 4 * var(--gap));
+  }
+  .mat-grid{
+    position:absolute;
+    inset:0;
     display:grid;
-    grid-template-columns:repeat(3, minmax(0, 1fr));
-    --cell-full: calc((var(--board-w) - 7 * var(--gap)) / 8);
+    grid-template-columns:repeat(8, minmax(0, 1fr));
+    grid-template-rows:repeat(5, minmax(0, 1fr));
+    gap:var(--gap);
   }
-  /* The three pieces of a set share one size (her call): as big as the
-     set's widest and tallest piece allow, up to the board's own square
-     size. Room per piece, in board squares: 2.35 across (a third of 8,
-     minus space between pieces) and the tray's height minus a little.
-     --set-w / --set-h (the set's biggest piece) are set from JS. */
+  .mat-grid i{ background:var(--mat-sq); border-radius:var(--round); }
   .tray .piece{
-    --s: min(1, calc(2.35 / var(--set-w, 5)), calc((var(--tray-k) * 8 - 0.3) / var(--set-h, 5)));
-    --pc: calc(var(--cell-full) * var(--s));
-    --pg: calc(var(--gap) * var(--s));
+    --pc: var(--cell-full);
+    --pg: var(--gap);
   }
+  /* Each piece's spot on the mat, in tiles (--col / --row set from JS). */
   .slot{
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    position:absolute;
+    left:calc((var(--cell-full) + var(--gap)) * var(--col, 0));
+    top:calc((var(--cell-full) + var(--gap)) * var(--row, 0));
+    display:block;
     touch-action:none;
     cursor:grab;
   }
@@ -686,14 +687,25 @@
     else cls = 'big';
     return pick(pick(SHAPES[cls]));
   }
+  // The three pieces lie side by side on the 8-wide mat, so a set's widths
+  // must add up to 8 or less (a line of 5 lying flat only comes with small
+  // pieces, and never with a 3x3).
+  var MAT_COLS = 8, MAT_ROWS = 5;
+  function setWidth(set){
+    return set.reduce(function(sum, p){ return sum + (p ? dims(p.cells).w : 0); }, 0);
+  }
   function randomSet(){
-    var colors = COLORS.map(function(_, i){ return i; });
-    var set = [];
-    for (var k = 0; k < 3; k++) {
-      var ci = colors.splice(Math.floor(Math.random() * colors.length), 1)[0];
-      set.push({ cells: randomCells(), color: ci });
+    var set;
+    for (var t = 0; t < 200; t++) {
+      var colors = COLORS.map(function(_, i){ return i; });
+      set = [];
+      for (var k = 0; k < 3; k++) {
+        var ci = colors.splice(Math.floor(Math.random() * colors.length), 1)[0];
+        set.push({ cells: randomCells(), color: ci });
+      }
+      if (setWidth(set) <= MAT_COLS) return set;
     }
-    return set;
+    return set.map(function(p){ return { cells: [[0,0]], color: p.color }; }); // never expected
   }
   // Easy: all three fit (in some order). Medium: at least one fits.
   // Hard: whatever comes.
@@ -753,19 +765,39 @@
     });
     return el;
   }
+  // Spots on the mat for a new set: side by side, the spare columns shared
+  // out as gaps (between pieces first, then the edges), each piece in the
+  // middle rows. A placed piece's spot stays empty until the next set.
+  function layoutTray(){
+    var present = [];
+    state.tray.forEach(function(p, k){ if (p) present.push(k); });
+    var n = present.length;
+    var spare = MAT_COLS - setWidth(state.tray);
+    var gaps = [];
+    for (var i = 0; i <= n; i++) gaps.push(Math.floor(spare / (n + 1)));
+    var rest = spare - gaps.reduce(function(a, b){ return a + b; }, 0);
+    var order = [];
+    for (var j = 1; j < n; j++) order.push(j);
+    order.push(0, n);
+    for (var o = 0; rest > 0; o = (o + 1) % order.length, rest--) gaps[order[o]]++;
+    var col = gaps[0];
+    present.forEach(function(k, idx){
+      var d = dims(state.tray[k].cells);
+      var slot = els.slots[k];
+      slot.style.setProperty('--col', col);
+      slot.style.setProperty('--row', Math.floor((MAT_ROWS - d.h) / 2));
+      col += d.w + gaps[idx + 1];
+    });
+  }
+  function buildMat(){
+    var grid = document.createElement('div');
+    grid.className = 'mat-grid';
+    for (var i = 0; i < MAT_COLS * MAT_ROWS; i++) grid.appendChild(document.createElement('i'));
+    els.tray.insertBefore(grid, els.tray.firstChild);
+  }
+  buildMat();
   function renderTray(pop){
-    // A new set (or a restored one): its biggest piece sets the size for
-    // all three, kept until the next set.
-    if (pop) {
-      var mw = 1, mh = 1;
-      state.tray.forEach(function(p){
-        if (!p) return;
-        var d = dims(p.cells);
-        mw = Math.max(mw, d.w); mh = Math.max(mh, d.h);
-      });
-      els.tray.style.setProperty('--set-w', mw);
-      els.tray.style.setProperty('--set-h', mh);
-    }
+    if (pop) layoutTray();
     state.tray.forEach(function(p, k){
       var slot = els.slots[k];
       slot.innerHTML = '';
@@ -991,13 +1023,12 @@
     d.started = true;
     var pe = d.slot.querySelector('.piece');
     d.slot.classList.remove('pressed', 'spring', 'pop');
-    // Layout size, not the on-screen box: a piece grabbed while it is still
-    // popping in (or pressed) is scaled down on screen.
+    // The slot's own box (its layout size): a piece grabbed while it is
+    // still popping in (or pressed) is scaled down on screen.
     var sr = d.slot.getBoundingClientRect();
-    var bottomAligned = getComputedStyle(d.slot).alignItems === 'flex-end'; // desktop
     var rect = {
       left: sr.left + (sr.width - pe.offsetWidth) / 2,
-      top: sr.top + (sr.height - pe.offsetHeight) * (bottomAligned ? 1 : 0.5),
+      top: sr.top + (sr.height - pe.offsetHeight) / 2,
       width: pe.offsetWidth
     };
     var g = boardGeom();
@@ -1258,7 +1289,7 @@
     state.difficulty = data.difficulty;
     state.board = data.board.slice();
     state.tray = data.tray.map(function(p){ return p ? { cells: normalize(p.cells), color: p.color } : null; });
-    if (state.tray.every(function(p){ return !p; })) state.tray = dealSet();
+    if (state.tray.every(function(p){ return !p; }) || setWidth(state.tray) > MAT_COLS) state.tray = dealSet();
     state.score = Math.floor(data.score);
     state.over = false;
     state.placing = false;
