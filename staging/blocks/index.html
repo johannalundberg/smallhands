@@ -43,7 +43,7 @@
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
     --face:#FFA226;
-    --correct:#9AE62E; /* full rows/columns: lime (her call -- the site green #0DC754 looked dull on indigo); no piece is green */
+    --correct:#AFCE67; /* full rows/columns: her green (Figma tile) */
     --best-ink:rgba(228,228,228,0.45); /* best score: the light ink, greyed */
     --incorrect:#F2383B;
     --unit: 1.1574vw;
@@ -519,11 +519,11 @@
 
   var N = 8; // 8x8 board; matches --n in the CSS
   var TAP_SLOP = 6;
-  // Three colours on Unblock's blue (her call, 2026-11-15, after many
-  // rounds: strong colours that belong together, not a rainbow): almost
-  // white, dark brown, orange. Each set of three is one of each. No green
-  // anywhere -- lime is kept for full rows.
-  var COLORS = ['#FFF0D1', '#2A2420', '#FF6B4A'];
+  // Three colours on Unblock's blue, from her own Figma tiles (2026-11-15):
+  // red, dark grey, orange. Each set of three is one of each. Green is kept
+  // for full rows (--correct). Same slots as the earlier cream / dark brown
+  // / orange, so saved games keep their pattern.
+  var COLORS = ['#BA4844', '#313333', '#E87C4C'];
   var COLORS_VERSION = 4;
   // Older saves, upgraded step by step:
   // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest
