@@ -38,7 +38,7 @@
   }
 
   :root{
-    --bg:#5F44FF; /* Unblock's blue (her pick, 2026-11-15); before: indigo #3D3A8F, brick #8A2F2A */
+    --bg:#5643CC; /* toned-down Unblock blue (her pick, 2026-11-15; #5F44FF felt too poppy); before: indigo #3D3A8F, brick #8A2F2A */
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
@@ -459,8 +459,9 @@
   // Background trial: toned-down versions of the blue (she found #5F44FF
   // too poppy next to the other games). ?bg=1..7, compare.html shows them
   // side by side on a fixed sample board; trial views never save.
-  var BG_TRIAL_OPTIONS = { 1:'#5F44FF', 2:'#5841E6', 3:'#5643CC', 4:'#5A4FB8', 5:'#4F45A8', 6:'#4A4296', 7:'#5C5A9E', 8:'#5248A8', 9:'#4852A8' };
-  var BG_TRIAL = (/[?&]bg=([1-9])\b/.exec(location.search) || [])[1];
+  var BG_TRIAL_OPTIONS = { 1:'#5F44FF', 2:'#5841E6', 3:'#5643CC', 4:'#5A4FB8', 5:'#4F45A8', 6:'#4A4296', 7:'#5C5A9E', 8:'#5248A8', 9:'#4852A8',
+    10:'#4F59B8', 11:'#424B99', 12:'#3641A8', 13:'#5B63A8', 14:'#485CA8', 15:'#4848A8', 16:'#3E56B2', 17:'#4C5299' };
+  var BG_TRIAL = (/[?&]bg=(1[0-7]|[1-9])\b/.exec(location.search) || [])[1];
   if (BG_TRIAL) document.documentElement.style.setProperty('--bg', BG_TRIAL_OPTIONS[BG_TRIAL]);
 </script>
 </head>
