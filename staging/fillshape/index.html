@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+<meta name="robots" content="noindex">
+
+<title>Fill the Shape: Block Puzzle for Kids — Play and Learn</title>
+<link rel="canonical" href="https://playandlearn.kids/staging/fillshape/">
+<meta name="description" content="Drag the blocks into the shape until every square is filled. Free, no ads, pop-ups or cookies. Designed by a mom and her 6-year-old.">
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<link rel="manifest" href="../../manifest.json">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://playandlearn.kids/staging/fillshape/">
+<meta property="og:title" content="Fill the Shape — Play and Learn">
+<meta property="og:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta property="og:image" content="https://playandlearn.kids/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:video" content="https://playandlearn.kids/og-video.mp4">
+<meta property="og:video:secure_url" content="https://playandlearn.kids/og-video.mp4">
+<meta property="og:video:type" content="video/mp4">
+<meta property="og:video:width" content="1200">
+<meta property="og:video:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Fill the Shape — Play and Learn">
+<meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
+<style>
+  :root{
+    --bg:#283347;
+    --bright:#E4E4E4;
+    --ink:#202020;
+    --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
+    --face:#FFA226;
+    --win:#0DC754; /* the solved board's wave: Othello's green */
+    --incorrect:#F2383B;
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+    --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+    --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
+    --gap: 3px;
+    --round: 12%; /* slightly rounded squares */
+    --cell: 60px; /* one square, board and tray alike; fitLayout sets it */
+  }
+
+  /* The board and tray are sized by fitLayout to fit inside the body's
+     padding box: here (tablet) between the top and bottom button rows. */
+  body{
+    padding: var(--v-reserve-top) var(--unit) var(--v-reserve-bottom);
+  }
+
+  /* Desktop: the board starts below the level buttons and the tray may
+     reach down beside back and refresh (they're in the corner), as in Blocks. */
+  @media (min-width: 1024px) and (min-height: 501px){
+    body{
+      padding: var(--v-reserve-top) calc(2.1 * var(--icon-size) + 3 * var(--unit)) var(--unit);
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ---------- icon buttons (difficulty / back / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 120ms ease;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ transform: translateZ(0) scale(1.035); }
+  }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+  .diff-btn[data-tier="easy"]   { --glow:#5CC72E; }
+  .diff-btn[data-tier="medium"] { --glow:#FFEA00; }
+  .diff-btn[data-tier="hard"]   { --glow:#F93134; }
+  .diff-btn.hint .fill-bg{ animation: level-glow-tier 1300ms ease-in-out; }
+  @keyframes level-glow-tier{ 40%,60%{ fill:var(--glow); } }
+  .diff-btn.pick .fill-bg{ animation: level-pick 900ms ease-out; }
+  @keyframes level-pick{ 0%,30%{ fill:var(--glow); } }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  /* ---------- progress dots: five boards make a round ---------- */
+  .progress-dots{
+    position:absolute;
+    right:var(--unit);
+    bottom:var(--unit);
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap: calc(var(--icon-size) * 0.08);
+  }
+  .progress-dots .dot{
+    width: calc(var(--icon-size) * 0.25);
+    height: calc(var(--icon-size) * 0.25);
+    border-radius:50%;
+    background: var(--ink-muted);
+    transition: background 150ms ease;
+  }
+  .progress-dots .dot.done{ background: var(--bright); }
+
+  /* ---------- board ---------- */
+  .game{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    flex:none;
+  }
+  .board{
+    display:grid;
+    gap:var(--gap);
+    touch-action:none;
+  }
+  .sq{
+    width:var(--cell);
+    height:var(--cell);
+    background:var(--ink-muted);
+    position:relative;
+    border-radius:var(--round);
+  }
+  /* Squares outside the shape keep their grid spot but aren't shown. */
+  .sq.off{ visibility:hidden; }
+  .sq.filled{ background:var(--c); cursor:grab; }
+  /* Where the dragged piece will land. */
+  .sq.ghost{ background:var(--c); opacity:0.45; }
+  .sq.drop{ animation: sq-drop 260ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes sq-drop{
+    0%{ transform:scale(0.86); }
+    100%{ transform:scale(1); }
+  }
+  html .sq.pressed{ transform:scale(0.92); }
+  html .sq.spring{ animation: press-spring 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  /* Solved: a green wave runs across the board from the top-left corner --
+     each square pops and turns green in turn (--d, set by onSolved). */
+  .sq.win{
+    background:var(--win);
+    transition: background 120ms ease var(--d);
+    animation: win-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) var(--d) both;
+  }
+  @keyframes win-pop{
+    0%, 100%{ transform:scale(1); }
+    45%{ transform:scale(1.06); }
+  }
+
+  /* ---------- piece tray (every piece, under the board) ----------
+     fitLayout places each spot; a piece's spot stays put (empty) while
+     the piece is on the board, so the tray never shuffles about. */
+  .tray{ position:relative; }
+  .slot{
+    position:absolute;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:none;
+    cursor:grab;
+  }
+  .slot.placed{ cursor:default; }
+  .piece{
+    position:relative;
+    flex:none;
+    width:calc(var(--cell) * var(--w) + var(--gap) * (var(--w) - 1));
+    height:calc(var(--cell) * var(--h) + var(--gap) * (var(--h) - 1));
+  }
+  .piece i{
+    position:absolute;
+    width:var(--cell);
+    height:var(--cell);
+    left:calc((var(--cell) + var(--gap)) * var(--x));
+    top:calc((var(--cell) + var(--gap)) * var(--y));
+    background:var(--c);
+    border-radius:var(--round);
+  }
+  .slot .piece{ transition: transform 120ms ease; }
+  .slot.lifted .piece, .slot.placed .piece{ visibility:hidden; }
+  /* Press and spring, like the other games' pieces. */
+  html .slot.pressed .piece{ transform:scale(0.92); transition:none; }
+  html .slot.spring .piece{ animation: press-spring 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes press-spring{
+    0%{ transform:scale(0.92); }
+    55%{ transform:scale(1.06); }
+    100%{ transform:scale(1); }
+  }
+  /* Hard: a tap turns the piece a quarter turn, with the same spring. */
+  html .slot.turn .piece{ animation: piece-turn 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes piece-turn{
+    0%{ transform:rotate(-90deg) scale(0.92); }
+    100%{ transform:rotate(0deg) scale(1); }
+  }
+  @media (hover:hover) and (pointer:fine){
+    .slot:not(.placed):hover .piece{ transform:scale(1.035); }
+  }
+  .slot.pop .piece{ animation: piece-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both; animation-delay:var(--d, 0ms); }
+  @keyframes piece-pop{
+    0%{ transform:scale(0); }
+    100%{ transform:scale(1); }
+  }
+
+  /* The piece being dragged. */
+  .floater{
+    position:fixed;
+    left:0; top:0;
+    z-index:5;
+    pointer-events:none;
+    transform-origin:0 0;
+    display:none;
+  }
+  .floater.on{ display:block; }
+  .floater.lifting{ transition: transform 140ms ease-out; }
+  .floater.placing{ transition: transform 90ms ease-out; }
+  .floater.returning{ transition: transform 220ms cubic-bezier(0.34, 1.2, 0.64, 1); }
+
+  @keyframes bounce-in{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(var(--final-scale)); opacity:1; }
+  }
+  .celebration{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:4;
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  @media (max-width: 767px), (max-height: 500px){
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+      --gap: 2px;
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      background: rgba(32,32,32,0.4);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      --ink-muted: rgba(0,0,0,0.45);
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    .controls-slider{ transition: transform 120ms ease; }
+    .controls-slider:active{ transform: scale(1.03); }
+    .diff-group, .btn-row{ display:contents; }
+    .progress-dots{ left:var(--unit); top:var(--unit); right:auto; bottom:auto; }
+    /* Between the dots above and the tray of buttons below. */
+    body{
+      padding: calc(var(--unit) * 2 + var(--icon-size) * 0.25) var(--unit) calc(var(--unit) * 2 + var(--icon-size));
+    }
+  }
+
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    :root{
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:var(--incorrect);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    .rotate-block{ display:flex; }
+  }
+  html, body, .controls-slider{ touch-action:manipulation; }
+  .slot, .board{ touch-action:none; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "Fill the Shape",
+  "url": "https://playandlearn.kids/staging/fillshape/",
+  "description": "Drag the blocks into the shape until every square is filled. Free, no ads, pop-ups or cookies. Designed by a mom and her 6-year-old.",
+  "genre": [
+    "Puzzle"
+  ],
+  "gamePlatform": "Web browser",
+  "applicationCategory": "Game",
+  "operatingSystem": "Any",
+  "isAccessibleForFree": true,
+  "isFamilyFriendly": true,
+  "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Play and Learn",
+    "url": "https://playandlearn.kids/"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Play and Learn",
+    "url": "https://playandlearn.kids/"
+  }
+}
+</script>
+</head>
+<body>
+
+  <div class="rotate-block">
+    <svg viewBox="0 0 973 366">
+      <circle fill="var(--ink)" cx="65" cy="65" r="65"/>
+      <circle fill="var(--ink)" cx="908" cy="65" r="65"/>
+      <rect fill="var(--ink)" x="291" y="171" width="392" height="65"/>
+      <rect fill="var(--ink)" x="161" y="236" width="130" height="130"/>
+      <rect fill="var(--ink)" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
+  <div class="controls-slider" id="controlsSlider">
+    <div class="diff-group" id="diffGroup">
+      <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M114 75C114 53.4609 96.5391 36 75 36C53.4609 36 36 53.4609 36 75C36 96.5391 53.4609 114 75 114V150C33.5786 150 0 116.421 0 75C0 33.5786 33.5786 0 75 0C116.421 0 150 33.5786 150 75C150 116.421 116.421 150 75 150V114C96.5391 114 114 96.5391 114 75Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+        <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/></svg>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" aria-label="New game">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M111.491 32.1671L112.864 53.5756L90.0895 53.5683"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M110.802 97.5619C106.102 105.702 98.8837 112.094 90.2343 115.774C81.5848 119.454 71.9735 120.223 62.8492 117.964C53.7249 115.705 45.5822 110.541 39.6485 103.251C33.7149 95.9607 30.312 86.9392 29.9527 77.5463C29.5935 68.1534 32.2974 58.8983 37.6569 51.1762C43.0164 43.454 50.7409 37.6834 59.666 34.7343C68.5911 31.7851 78.2331 31.8172 87.1383 34.8258C96.0436 37.8343 103.729 43.6563 109.037 51.4139"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="progress-dots" id="progressDots">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  </div>
+
+  <div class="game" id="game">
+    <div class="board" id="board"></div>
+    <div class="tray" id="tray"></div>
+  </div>
+
+  <div class="floater" id="floater"></div>
+  <div class="celebration" id="celebration"></div>
+
+<script src="../../sound.js?v=20261025ze"></script>
+<script>
+(function(){
+  "use strict";
+
+  document.addEventListener('touchstart', function(){}, { passive: true });
+
+  var TIERS = ['easy', 'medium', 'hard'];
+  var TAP_SLOP = 6;
+  var COLORS = ['#FFA226', '#0DC754', '#707EFF', '#E570E1', '#FFD60A', '#3CC8C8', '#FF6B4A'];
+  var ROUND_SIZE = 5;
+  // The solved board's green wave: one diagonal of squares every
+  // WAVE_STEP_MS, each popping for WAVE_POP_MS; the board then holds green
+  // for WIN_HOLD_MS before the next one appears.
+  var WAVE_STEP_MS = 70;
+  var WAVE_POP_MS = 320;
+  var WIN_HOLD_MS = 600;
+  // Square size limits (px) for fitLayout.
+  var MAX_CELL = 90;
+  var MIN_CELL = 12;
+
+  // ---- generator start ----
+  // ---------- puzzles ----------
+  // A board is a shape cut into pieces: '#' is part of the shape, '.' is
+  // empty space. Medium and hard take turns: a square, then an outline.
+  var MEDIUM_OUTLINES = [
+    ['##...', '##...', '##...', '#####', '#####'],                    // L, 16
+    ['#####', '#####', '.###.', '.###.', '.###.'],                    // T, 19
+    ['..##..', '..##..', '######', '######', '..##..', '..##..'],     // plus, 20
+    ['##...', '###..', '####.', '#####', '#####'],                    // steps, 19
+    ['##.##', '##.##', '#####', '#####']                              // U, 18
+  ];
+  var HARD_OUTLINES = [
+    ['###...', '###...', '###...', '######', '######', '######'],     // L, 27
+    ['######', '######', '######', '..##..', '..##..', '..##..'],     // T, 24
+    ['.####.', '.####.', '######', '######', '.####.', '.####.'],     // plus, 28
+    ['##....', '###...', '####..', '#####.', '######', '######'],     // steps, 26
+    ['##..##', '##..##', '##..##', '######', '######']                // U, 24
+  ];
+  // pieces: how many, size: squares per piece, turn: pieces start turned
+  // and a tap turns them.
+  var LEVELS = {
+    easy:   { square: 4, outlines: [],              pieces: [4, 4], size: [3, 5], turn: false },
+    medium: { square: 5, outlines: MEDIUM_OUTLINES, pieces: [5, 6], size: [2, 5], turn: false },
+    hard:   { square: 6, outlines: HARD_OUTLINES,   pieces: [6, 8], size: [2, 5], turn: true }
+  };
+  var MAX_SAME = 2; // at most this many pieces of one shape (same way round)
+
+  function rand(n){ return Math.floor(Math.random() * n); }
+  function pick(arr){ return arr[rand(arr.length)]; }
+  function shuffle(arr){
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = rand(i + 1), t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+  function range(n){ var a = []; for (var i = 0; i < n; i++) a.push(i); return a; }
+  function isInt(v, lo, hi){ return typeof v === 'number' && v % 1 === 0 && v >= lo && v <= hi; }
+
+  function normalize(cells){
+    var minR = Infinity, minC = Infinity;
+    cells.forEach(function(p){ minR = Math.min(minR, p[0]); minC = Math.min(minC, p[1]); });
+    return cells.map(function(p){ return [p[0] - minR, p[1] - minC]; })
+      .sort(function(a, b){ return a[0] - b[0] || a[1] - b[1]; });
+  }
+  function keyOf(cells){ return cells.map(function(p){ return p.join(','); }).join(';'); }
+  function dims(cells){
+    var h = 0, w = 0;
+    cells.forEach(function(p){ h = Math.max(h, p[0] + 1); w = Math.max(w, p[1] + 1); });
+    return { h: h, w: w };
+  }
+  // The cells turned k quarter turns clockwise.
+  function turnCells(cells, k){
+    var cur = cells;
+    for (var i = 0; i < ((k % 4) + 4) % 4; i++) cur = cur.map(function(p){ return [p[1], -p[0]]; });
+    return normalize(cur);
+  }
+  function connected(cells){
+    var set = {};
+    cells.forEach(function(p){ set[p[0] + ',' + p[1]] = 1; });
+    if (Object.keys(set).length !== cells.length) return false; // no repeats
+    var seen = {}, todo = [cells[0]], n = 0;
+    seen[cells[0][0] + ',' + cells[0][1]] = 1;
+    while (todo.length) {
+      var p = todo.pop(); n++;
+      [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){
+        var k = (p[0] + d[0]) + ',' + (p[1] + d[1]);
+        if (set[k] && !seen[k]) { seen[k] = 1; todo.push([p[0] + d[0], p[1] + d[1]]); }
+      });
+    }
+    return n === cells.length;
+  }
+
+  function squareRows(n){ var r = []; for (var i = 0; i < n; i++) r.push(new Array(n + 1).join('#')); return r; }
+  function maskFromRows(rows){
+    var R = rows.length, C = 0, on = [];
+    rows.forEach(function(r){ C = Math.max(C, r.length); });
+    for (var r = 0; r < R; r++) for (var c = 0; c < C; c++) on.push(rows[r].charAt(c) === '#' ? 1 : 0);
+    return { rows: R, cols: C, on: on };
+  }
+  function neighbours(i, R, C){
+    var r = Math.floor(i / C), c = i % C, out = [];
+    if (r > 0) out.push(i - C);
+    if (r < R - 1) out.push(i + C);
+    if (c > 0) out.push(i - 1);
+    if (c < C - 1) out.push(i + 1);
+    return out;
+  }
+
+  // Cut the shape into pieces: each grows from the tightest free corner,
+  // one random neighbour at a time, so no lone squares get left behind.
+  // Returns null when a try goes wrong; the caller just tries again.
+  function partition(mask, L){
+    var R = mask.rows, C = mask.cols, total = 0, i;
+    for (i = 0; i < mask.on.length; i++) total += mask.on[i];
+    var nMin = Math.max(L.pieces[0], Math.ceil(total / L.size[1]));
+    var nMax = Math.min(L.pieces[1], Math.floor(total / L.size[0]));
+    if (nMin > nMax) return null;
+    var n = nMin + rand(nMax - nMin + 1);
+    var sizes = [];
+    for (i = 0; i < n; i++) sizes.push(L.size[0]);
+    var extra = total - n * L.size[0];
+    while (extra > 0) {
+      var j = rand(n);
+      if (sizes[j] < L.size[1]) { sizes[j]++; extra--; }
+    }
+    var owner = mask.on.map(function(v){ return v ? -1 : -2; }); // -1 free, -2 not in the shape
+    function freeAround(i){
+      return neighbours(i, R, C).filter(function(j){ return owner[j] === -1; }).length;
+    }
+    function tightest(list){
+      var best = [], bestN = 9;
+      list.forEach(function(i){
+        var f = freeAround(i);
+        if (f < bestN) { bestN = f; best = [i]; } else if (f === bestN) best.push(i);
+      });
+      return pick(best);
+    }
+    var pieces = [];
+    for (var k = 0; k < n; k++) {
+      var free = [];
+      for (i = 0; i < owner.length; i++) if (owner[i] === -1) free.push(i);
+      var seed = tightest(free);
+      owner[seed] = k;
+      var cells = [seed];
+      while (cells.length < sizes[k]) {
+        var front = [], seen = {};
+        cells.forEach(function(c){
+          neighbours(c, R, C).forEach(function(j){
+            if (owner[j] === -1 && !seen[j]) { seen[j] = 1; front.push(j); }
+          });
+        });
+        if (!front.length) return null;
+        var next = Math.random() < 0.6 ? tightest(front) : pick(front);
+        owner[next] = k;
+        cells.push(next);
+      }
+      pieces.push(cells);
+      if (!freeAreasOk(owner, R, C, L.size[0])) return null;
+    }
+    return { owner: owner, pieces: pieces };
+  }
+  // Every patch of free squares must still hold at least one piece.
+  function freeAreasOk(owner, R, C, minSize){
+    var seen = {};
+    for (var i = 0; i < owner.length; i++) {
+      if (owner[i] !== -1 || seen[i]) continue;
+      var todo = [i], n = 0;
+      seen[i] = 1;
+      while (todo.length) {
+        var x = todo.pop(); n++;
+        neighbours(x, R, C).forEach(function(j){
+          if (owner[j] === -1 && !seen[j]) { seen[j] = 1; todo.push(j); }
+        });
+      }
+      if (n < minSize) return false;
+    }
+    return true;
+  }
+
+  function tooAlike(pieces, C){
+    var count = {};
+    return pieces.some(function(list){
+      var key = keyOf(normalize(list.map(function(i){ return [Math.floor(i / C), i % C]; })));
+      count[key] = (count[key] || 0) + 1;
+      return count[key] > MAX_SAME;
+    });
+  }
+
+  // A different colour for every piece; with more pieces than colours, a
+  // colour comes back only on pieces that don't touch.
+  function colourPieces(pieces, owner, mask){
+    var R = mask.rows, C = mask.cols, n = pieces.length;
+    var adj = pieces.map(function(){ return {}; });
+    owner.forEach(function(a, i){
+      if (a < 0) return;
+      neighbours(i, R, C).forEach(function(j){
+        var b = owner[j];
+        if (b >= 0 && b !== a) { adj[a][b] = 1; adj[b][a] = 1; }
+      });
+    });
+    var cols;
+    for (var t = 0; t < 50; t++) {
+      cols = pieces.map(function(){ return -1; });
+      var palette = shuffle(range(COLORS.length)), used = {};
+      shuffle(range(n)).forEach(function(k){
+        var near = {};
+        Object.keys(adj[k]).forEach(function(j){ if (cols[j] >= 0) near[cols[j]] = 1; });
+        var choice = -1;
+        palette.forEach(function(c){ if (choice < 0 && !used[c] && !near[c]) choice = c; });
+        if (choice < 0) {
+          palette.forEach(function(c){
+            if (!near[c] && (choice < 0 || (used[c] || 0) < (used[choice] || 0))) choice = c;
+          });
+        }
+        if (choice < 0) choice = palette[0];
+        cols[k] = choice;
+        used[choice] = (used[choice] || 0) + 1;
+      });
+      var clash = false;
+      for (var a = 0; a < n; a++) for (var b in adj[a]) if (cols[a] === cols[b]) clash = true;
+      if (!clash) break;
+    }
+    pieces.forEach(function(p, k){ p.color = cols[k]; });
+  }
+
+  // Hard: about half the pieces start turned (only ones that look different
+  // turned), so they have to be turned back.
+  function turnSome(pieces){
+    var can = pieces.filter(function(p){ return keyOf(turnCells(p.cells, 1)) !== keyOf(p.cells); });
+    shuffle(can).slice(0, Math.round(pieces.length / 2)).forEach(function(p){
+      p.rot = pick([1, 2, 3].filter(function(k){ return keyOf(turnCells(p.cells, k)) !== keyOf(p.cells); }));
+    });
+  }
+
+  // A puzzle: the shape (rows, cols, on) and its pieces in tray order. Each
+  // piece keeps its cells as they sit in the answer, where they sit (home),
+  // and how far it is turned now (rot, quarter turns clockwise).
+  function makePuzzle(level, rows){
+    var L = LEVELS[level], mask = maskFromRows(rows);
+    for (var t = 0; t < 5000; t++) {
+      var part = partition(mask, L);
+      if (!part || tooAlike(part.pieces, mask.cols)) continue;
+      var pieces = part.pieces.map(function(list){
+        var rc = list.map(function(i){ return [Math.floor(i / mask.cols), i % mask.cols]; });
+        var minR = Infinity, minC = Infinity;
+        rc.forEach(function(p){ minR = Math.min(minR, p[0]); minC = Math.min(minC, p[1]); });
+        return { cells: normalize(rc), home: [minR, minC], color: 0, rot: 0, at: null };
+      });
+      colourPieces(pieces, part.owner, mask);
+      if (L.turn) turnSome(pieces);
+      return { rows: mask.rows, cols: mask.cols, on: mask.on, turn: !!L.turn, pieces: shuffle(pieces) };
+    }
+    return null;
+  }
+
+  // Which shape the n-th board of a level uses: squares and outlines take turns.
+  function maskRowsFor(level, n, last){
+    var L = LEVELS[level];
+    if (!L.outlines.length || n % 2 === 0) return { rows: squareRows(L.square), outline: -1 };
+    var opts = range(L.outlines.length).filter(function(i){ return i !== last; });
+    var o = pick(opts);
+    return { rows: L.outlines[o], outline: o };
+  }
+
+  // Checks a saved puzzle: real pieces, and their answer spots fill the
+  // shape exactly (so it can always be solved).
+  function validatePuzzle(pz){
+    if (!pz || typeof pz !== 'object') return false;
+    var R = pz.rows, C = pz.cols;
+    if (!isInt(R, 1, 8) || !isInt(C, 1, 8)) return false;
+    if (!Array.isArray(pz.on) || pz.on.length !== R * C) return false;
+    if (!Array.isArray(pz.pieces) || !pz.pieces.length || pz.pieces.length > 12) return false;
+    var total = 0, cover = [], i;
+    for (i = 0; i < pz.on.length; i++) {
+      if (pz.on[i] !== 0 && pz.on[i] !== 1) return false;
+      total += pz.on[i];
+      cover.push(-1);
+    }
+    var covered = 0;
+    for (var k = 0; k < pz.pieces.length; k++) {
+      var p = pz.pieces[k];
+      if (!p || typeof p !== 'object' || !Array.isArray(p.cells)) return false;
+      if (p.cells.length < 2 || p.cells.length > 5) return false;
+      if (!p.cells.every(function(q){ return Array.isArray(q) && q.length === 2 && isInt(q[0], 0, 4) && isInt(q[1], 0, 4); })) return false;
+      if (keyOf(normalize(p.cells)) !== keyOf(p.cells) || !connected(p.cells)) return false;
+      if (!isInt(p.color, 0, COLORS.length - 1) || !isInt(p.rot, 0, 3)) return false;
+      if (!Array.isArray(p.home) || !isInt(p.home[0], 0, R - 1) || !isInt(p.home[1], 0, C - 1)) return false;
+      for (var j = 0; j < p.cells.length; j++) {
+        var r = p.home[0] + p.cells[j][0], c = p.home[1] + p.cells[j][1];
+        if (r >= R || c >= C) return false;
+        var x = r * C + c;
+        if (!pz.on[x] || cover[x] !== -1) return false;
+        cover[x] = k;
+        covered++;
+      }
+    }
+    return covered === total;
+  }
+  // ---- generator end ----
+
+  var state = {
+    difficulty: 'easy',
+    progress: 0,      // boards solved this round
+    mask: null,       // { rows, cols, on }
+    turn: false,      // hard: pieces turn
+    pieces: [],       // tray order; { cells, home, color, rot, at: null or {r, c} }
+    occ: [],          // per board square: the piece on it, or -1
+    busy: false,      // a piece landing, or the solved wave
+    solved: false,
+    count: { easy: 0, medium: 0, hard: 0 },       // boards so far per level
+    lastOutline: { easy: -1, medium: -1, hard: -1 }
+  };
+
+  var els = {
+    board: document.getElementById('board'),
+    tray: document.getElementById('tray'),
+    game: document.getElementById('game'),
+    floater: document.getElementById('floater'),
+    progressDots: document.querySelectorAll('#progressDots .dot'),
+    celebration: document.getElementById('celebration'),
+    diffGroup: document.getElementById('diffGroup'),
+    backBtn: document.getElementById('backBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    controlsSlider: document.getElementById('controlsSlider')
+  };
+  var sqEls = [], slotEls = [];
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  function onViewportChange(){ updateAppHeight(); scheduleFit(); }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', onViewportChange);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  }
+  window.addEventListener('resize', onViewportChange);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') onViewportChange();
+  });
+
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
+      location.reload();
+    }
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) {
+    landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  } else if (landscapeBlockMQ.addListener) {
+    landscapeBlockMQ.addListener(onLandscapeBlockChange);
+  }
+
+  // ---------- rules ----------
+  function curCells(p){ return turnCells(p.cells, p.rot); }
+  function fitsAt(cells, r, c){
+    var m = state.mask;
+    for (var i = 0; i < cells.length; i++) {
+      var rr = r + cells[i][0], cc = c + cells[i][1];
+      if (rr < 0 || rr >= m.rows || cc < 0 || cc >= m.cols) return false;
+      var x = rr * m.cols + cc;
+      if (!m.on[x] || state.occ[x] !== -1) return false;
+    }
+    return true;
+  }
+  function squaresOf(cells, r, c){
+    return cells.map(function(q){ return (r + q[0]) * state.mask.cols + c + q[1]; });
+  }
+  function isFull(){
+    for (var i = 0; i < state.mask.on.length; i++) {
+      if (state.mask.on[i] && state.occ[i] === -1) return false;
+    }
+    return true;
+  }
+
+  // ---------- rendering ----------
+  function buildBoardDom(){
+    var m = state.mask;
+    els.board.innerHTML = '';
+    els.board.style.gridTemplateColumns = 'repeat(' + m.cols + ', var(--cell))';
+    els.board.style.gridTemplateRows = 'repeat(' + m.rows + ', var(--cell))';
+    sqEls = [];
+    for (var i = 0; i < m.rows * m.cols; i++) {
+      var sq = document.createElement('div');
+      sq.className = m.on[i] ? 'sq' : 'sq off';
+      els.board.appendChild(sq);
+      sqEls.push(sq);
+    }
+  }
+  function renderSq(i){
+    var el = sqEls[i], k = state.occ[i];
+    el.classList.remove('ghost', 'win', 'pressed', 'spring');
+    if (k === -1) {
+      el.classList.remove('filled');
+      el.style.removeProperty('--c');
+    } else {
+      el.classList.add('filled');
+      el.style.setProperty('--c', COLORS[state.pieces[k].color]);
+    }
+  }
+  function renderBoard(){ for (var i = 0; i < sqEls.length; i++) renderSq(i); }
+  els.board.addEventListener('animationend', function(e){
+    var el = e.target;
+    if (e.animationName === 'sq-drop') el.classList.remove('drop');
+    if (e.animationName === 'press-spring') el.classList.remove('spring');
+  });
+
+  function pieceEl(cells, color){
+    var d = dims(cells);
+    var el = document.createElement('div');
+    el.className = 'piece';
+    el.style.setProperty('--w', d.w);
+    el.style.setProperty('--h', d.h);
+    el.style.setProperty('--c', COLORS[color]);
+    cells.forEach(function(q){
+      var b = document.createElement('i');
+      b.style.setProperty('--x', q[1]);
+      b.style.setProperty('--y', q[0]);
+      el.appendChild(b);
+    });
+    return el;
+  }
+  function renderTray(pop){
+    els.tray.innerHTML = '';
+    slotEls = state.pieces.map(function(p, k){
+      var slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.appendChild(pieceEl(curCells(p), p.color));
+      if (p.at) slot.classList.add('placed');
+      slot.addEventListener('pointerdown', function(e){ onSlotDown(e, k); });
+      slot.addEventListener('animationend', function(e){
+        if (e.animationName === 'piece-pop') slot.classList.remove('pop');
+        if (e.animationName === 'press-spring') slot.classList.remove('spring');
+        if (e.animationName === 'piece-turn') slot.classList.remove('turn');
+      });
+      if (pop && !p.at) {
+        slot.style.setProperty('--d', (k * 50) + 'ms');
+        slot.classList.add('pop');
+      }
+      els.tray.appendChild(slot);
+      return slot;
+    });
+  }
+
+  // ---------- layout ----------
+  // Tray spots, in squares: the piece's own size, or on hard (where pieces
+  // turn) a square that fits it either way round, so turning never moves
+  // the other pieces.
+  function slotDims(p){
+    var d = dims(p.cells);
+    if (state.turn) { var m = Math.max(d.w, d.h); return { w: m, h: m }; }
+    return d;
+  }
+  // Lay the spots out in centred rows, wrapping at maxW, half a square apart.
+  function packTray(sizes, cell, gap, maxW){
+    var sgap = Math.round(cell * 0.5);
+    var rows = [], row = null;
+    sizes.forEach(function(s, k){
+      var w = s.w * cell + (s.w - 1) * gap, h = s.h * cell + (s.h - 1) * gap;
+      if (row && row.w + sgap + w <= maxW) {
+        row.items.push({ k: k, w: w, h: h });
+        row.w += sgap + w;
+        row.h = Math.max(row.h, h);
+      } else {
+        row = { items: [{ k: k, w: w, h: h }], w: w, h: h };
+        rows.push(row);
+      }
+    });
+    var W = 0, H = 0, boxes = [];
+    rows.forEach(function(r){ W = Math.max(W, r.w); });
+    rows.forEach(function(r, ri){
+      if (ri) H += sgap;
+      var x = (W - r.w) / 2;
+      r.items.forEach(function(it){
+        boxes[it.k] = { left: x, top: H + (r.h - it.h) / 2, w: it.w, h: it.h };
+        x += it.w + sgap;
+      });
+      H += r.h;
+    });
+    return { w: W, h: H, boxes: boxes };
+  }
+  function trayGapFor(cell){ return Math.round(cell * 0.6); }
+
+  // Picks the square size: starts big and shrinks until the board, the gap
+  // and the tray all fit inside the body's padding box (between the button
+  // rows; on desktop the tray may reach down beside back and refresh).
+  var lastFit = '';
+  function fitLayout(force){
+    if (!state.mask || !slotEls.length) return;
+    var b = document.body, cs = getComputedStyle(b);
+    var availW = b.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var availH = b.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 3;
+    var R = state.mask.rows, C = state.mask.cols;
+    var sizes = state.pieces.map(slotDims);
+    var cell, tray;
+    for (cell = MAX_CELL; ; cell--) {
+      tray = packTray(sizes, cell, gap, availW);
+      var bw = C * cell + (C - 1) * gap, bh = R * cell + (R - 1) * gap;
+      if (cell <= MIN_CELL) break;
+      if (bw <= availW && tray.w <= availW && bh + trayGapFor(cell) + tray.h <= availH) break;
+    }
+    var key = availW + 'x' + availH + ':' + cell + ':' + gap;
+    if (!force && key === lastFit) return;
+    lastFit = key;
+    // A drag can't carry on through a new size: the piece goes home.
+    if (!force) { cancelDrag(); finishFly(); }
+    document.documentElement.style.setProperty('--cell', cell + 'px');
+    els.game.style.gap = trayGapFor(cell) + 'px';
+    els.tray.style.width = tray.w + 'px';
+    els.tray.style.height = tray.h + 'px';
+    slotEls.forEach(function(slot, k){
+      var bx = tray.boxes[k];
+      slot.style.left = bx.left + 'px';
+      slot.style.top = bx.top + 'px';
+      slot.style.width = bx.w + 'px';
+      slot.style.height = bx.h + 'px';
+    });
+  }
+  var fitQueued = false;
+  function scheduleFit(){
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(function(){ fitQueued = false; fitLayout(false); });
+  }
+
+  // ---------- game flow ----------
+  var celebrationTimer = null, winTimer = null, boardToken = 0;
+
+  function updateProgressDots(){
+    saveProgress();
+    els.progressDots.forEach(function(dot, i){
+      dot.classList.toggle('done', i < state.progress);
+    });
+  }
+
+  // Puts a puzzle on screen (pieces with .at are already on the board).
+  function showPuzzle(pz, pop){
+    boardToken++;
+    clearTimeout(winTimer);
+    clearTimeout(celebrationTimer);
+    cancelDrag();
+    finishFly();
+    els.floater.className = 'floater';
+    els.floater.innerHTML = '';
+    els.celebration.style.display = 'none';
+    els.game.style.display = '';
+    state.mask = { rows: pz.rows, cols: pz.cols, on: pz.on.slice() };
+    state.turn = !!pz.turn;
+    state.pieces = pz.pieces;
+    state.occ = pz.on.map(function(){ return -1; });
+    state.pieces.forEach(function(p, k){
+      if (p.at) squaresOf(curCells(p), p.at.r, p.at.c).forEach(function(i){ state.occ[i] = k; });
+    });
+    state.busy = false;
+    state.solved = false;
+    buildBoardDom();
+    renderBoard();
+    renderTray(pop);
+    fitLayout(true);
+  }
+
+  // Refresh, level switch and the next board all come here. The dots are
+  // kept; only a finished round starts them over.
+  function newBoard(){
+    if (state.progress >= ROUND_SIZE) state.progress = 0;
+    updateProgressDots();
+    var level = state.difficulty;
+    var m = maskRowsFor(level, state.count[level]++, state.lastOutline[level]);
+    if (m.outline >= 0) state.lastOutline[level] = m.outline;
+    var pz = makePuzzle(level, m.rows) || makePuzzle(level, squareRows(LEVELS[level].square));
+    showPuzzle(pz, true);
+  }
+
+  function commitPlace(k, r, c){
+    var p = state.pieces[k];
+    p.at = { r: r, c: c };
+    squaresOf(curCells(p), r, c).forEach(function(i){
+      state.occ[i] = k;
+      renderSq(i);
+      var el = sqEls[i];
+      el.classList.remove('drop'); void el.offsetWidth; el.classList.add('drop');
+    });
+    var slot = slotEls[k];
+    slot.classList.remove('lifted', 'pressed', 'spring', 'turn', 'pop');
+    slot.classList.add('placed');
+    if (isFull()) onSolved();
+  }
+
+  // ---------- solved ----------
+  function onSolved(){
+    state.busy = true;
+    state.solved = true;
+    state.progress += 1; // counted straight away, so leaving now can't lose it
+    saveProgress();
+    PLSound.play('positive');
+    // A green wave across the board, one diagonal at a time from the top left.
+    var C = state.mask.cols, R = state.mask.rows;
+    sqEls.forEach(function(el, i){
+      if (!state.mask.on[i]) return;
+      var diagonal = Math.floor(i / C) + i % C;
+      el.style.setProperty('--d', diagonal * WAVE_STEP_MS + 'ms');
+      el.classList.remove('drop', 'pressed', 'spring');
+      el.classList.add('win');
+    });
+    var token = boardToken;
+    winTimer = setTimeout(function(){
+      if (token !== boardToken) return;
+      updateProgressDots();
+      if (state.progress >= ROUND_SIZE) showCelebration();
+      else newBoard();
+    }, (R + C - 2) * WAVE_STEP_MS + WAVE_POP_MS + WIN_HOLD_MS);
+  }
+
+  var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="var(--face)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--face)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--face)" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--face)" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--face)" x="291" y="301" width="392" height="65"/>' +
+    '</svg>';
+
+  // Five boards: the smiley for 3 seconds, then the dots start over.
+  function showCelebration(){
+    updateAppHeight();
+    els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
+    els.game.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    celebrationTimer = setTimeout(newBoard, 3000);
+  }
+
+  // ---------- drag ----------
+  // Pieces are dragged from the tray, or picked up again from the board.
+  var drag = null;
+  var ghost = { key: '', cells: [] };
+  var flying = null; // a piece on its way back to the tray
+
+  function boardGeom(){
+    var rect = els.board.getBoundingClientRect();
+    var gap = parseFloat(getComputedStyle(els.board).columnGap) || 0;
+    var cell = (rect.width - (state.mask.cols - 1) * gap) / state.mask.cols;
+    return { left: rect.left, top: rect.top, cell: cell, gap: gap, step: cell + gap };
+  }
+
+  function onSlotDown(e, k){
+    finishFly();
+    var p = state.pieces[k];
+    if (drag || state.busy || !p || p.at) return;
+    if (e.button != null && e.button > 0) return;
+    // Mouse only: on touch, the tap must stay a tap so iOS lets sound start.
+    if (e.pointerType === 'mouse') e.preventDefault();
+    PLSound.play('click');
+    var slot = slotEls[k];
+    slot.classList.remove('spring', 'turn');
+    slot.classList.add('pressed');
+    beginDrag(e, k, slot, null);
+  }
+
+  els.board.addEventListener('pointerdown', function(e){
+    finishFly();
+    if (drag || state.busy) return;
+    var i = sqEls.indexOf(e.target.closest('.sq'));
+    var k = i < 0 ? -1 : state.occ[i];
+    if (k < 0) return;
+    if (e.button != null && e.button > 0) return;
+    if (e.pointerType === 'mouse') e.preventDefault();
+    PLSound.play('click');
+    var p = state.pieces[k];
+    var sqs = squaresOf(curCells(p), p.at.r, p.at.c);
+    sqs.forEach(function(x){ sqEls[x].classList.remove('spring', 'drop'); sqEls[x].classList.add('pressed'); });
+    beginDrag(e, k, els.board, sqs);
+  });
+
+  function beginDrag(e, k, src, boardSqs){
+    drag = {
+      k: k,
+      src: src,
+      fromBoard: !!boardSqs,
+      sqs: boardSqs,
+      pointerId: e.pointerId,
+      touch: e.pointerType !== 'mouse',
+      startX: e.clientX,
+      startY: e.clientY,
+      started: false
+    };
+    try { src.setPointerCapture(e.pointerId); } catch (err) {}
+    src.addEventListener('pointermove', onMove);
+    src.addEventListener('pointerup', onUp);
+    src.addEventListener('pointercancel', onCancel);
+  }
+
+  function detach(){
+    if (!drag) return;
+    var s = drag.src;
+    s.removeEventListener('pointermove', onMove);
+    s.removeEventListener('pointerup', onUp);
+    s.removeEventListener('pointercancel', onCancel);
+    try { s.releasePointerCapture(drag.pointerId); } catch (err) {}
+  }
+
+  function setFloater(x, y, s){
+    els.floater.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+  }
+
+  // Where piece k sits in its tray spot (layout size, not the on-screen
+  // box: a piece grabbed while popping in or pressed is scaled down).
+  function trayPos(k){
+    var slot = slotEls[k], pe = slot.querySelector('.piece');
+    var sr = slot.getBoundingClientRect();
+    return {
+      x: sr.left + (sr.width - pe.offsetWidth) / 2,
+      y: sr.top + (sr.height - pe.offsetHeight) / 2,
+      w: pe.offsetWidth
+    };
+  }
+
+  function startLift(e){
+    var d = drag;
+    d.started = true;
+    var p = state.pieces[d.k], slot = slotEls[d.k];
+    var g = boardGeom();
+    var cells = curCells(p), dm = dims(cells);
+    d.geom = g;
+    d.cells = cells;
+    d.fullW = dm.w * g.cell + (dm.w - 1) * g.gap;
+    d.fullH = dm.h * g.cell + (dm.h - 1) * g.gap;
+    var home = trayPos(d.k);
+    d.trayX = home.x; d.trayY = home.y;
+    d.trayScale = home.w / d.fullW;
+    var sx, sy, ss;
+    if (d.fromBoard) {
+      // Off the board: its squares are free again (its tray spot stays
+      // empty until it lands or flies back).
+      sx = g.left + p.at.c * g.step; sy = g.top + p.at.r * g.step; ss = 1;
+      d.sqs.forEach(function(i){ state.occ[i] = -1; renderSq(i); });
+      p.at = null;
+    } else {
+      slot.classList.remove('pressed', 'spring', 'pop', 'turn');
+      sx = d.trayX; sy = d.trayY; ss = d.trayScale;
+      slot.classList.add('lifted');
+    }
+    // Mouse keeps the spot that was grabbed; a finger holds the piece
+    // above itself so it stays in sight.
+    d.grabX = (d.startX - sx) / ss;
+    d.grabY = (d.startY - sy) / ss;
+    d.lift = g.cell * 1.1;
+
+    var f = els.floater;
+    f.innerHTML = '';
+    f.appendChild(pieceEl(cells, p.color));
+    f.className = 'floater on';
+    setFloater(sx, sy, ss);
+    void f.offsetWidth;
+    f.classList.add('lifting');
+    clearTimeout(d.liftT);
+    d.liftT = setTimeout(function(){ f.classList.remove('lifting'); }, 150);
+    moveTo(e);
+  }
+
+  function targetXY(e){
+    var d = drag;
+    if (d.touch) return { x: e.clientX - d.fullW / 2, y: e.clientY - d.fullH - d.lift };
+    return { x: e.clientX - d.grabX, y: e.clientY - d.grabY };
+  }
+
+  function moveTo(e){
+    var d = drag, t = targetXY(e);
+    setFloater(t.x, t.y, 1);
+    var g = d.geom;
+    var c = Math.round((t.x - g.left) / g.step);
+    var r = Math.round((t.y - g.top) / g.step);
+    if (fitsAt(d.cells, r, c)) { d.r = r; d.c = c; showGhost(d.cells, state.pieces[d.k].color, r, c); }
+    else { d.r = null; clearGhost(); }
+  }
+
+  function showGhost(cells, color, r, c){
+    var key = r + ',' + c;
+    if (ghost.key === key) return;
+    clearGhost();
+    ghost.key = key;
+    ghost.cells = squaresOf(cells, r, c);
+    ghost.cells.forEach(function(i){
+      sqEls[i].classList.add('ghost');
+      sqEls[i].style.setProperty('--c', COLORS[color]);
+    });
+  }
+  function clearGhost(){
+    ghost.cells.forEach(function(i){
+      var el = sqEls[i];
+      if (!el || !el.classList.contains('ghost')) return;
+      el.classList.remove('ghost');
+      if (state.occ[i] === -1) el.style.removeProperty('--c');
+    });
+    ghost.cells = [];
+    ghost.key = '';
+  }
+
+  function onMove(e){
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    if (!drag.started) {
+      if (Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) <= TAP_SLOP) return;
+      startLift(e);
+      return;
+    }
+    moveTo(e);
+  }
+
+  function onUp(e){
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    var d = drag;
+    detach();
+    drag = null;
+    if (!d.started) { tapped(d); return; }
+    clearTimeout(d.liftT);
+    clearGhost();
+    var f = els.floater;
+    f.classList.remove('lifting');
+    if (d.r != null && fitsAt(d.cells, d.r, d.c) && !state.busy) {
+      state.busy = true;
+      f.classList.add('placing');
+      setFloater(d.geom.left + d.c * d.geom.step, d.geom.top + d.r * d.geom.step, 1);
+      var token = boardToken;
+      setTimeout(function(){
+        if (token !== boardToken) return;
+        f.className = 'floater';
+        f.innerHTML = '';
+        state.busy = false;
+        commitPlace(d.k, d.r, d.c);
+      }, 90);
+    } else {
+      flyBack(d);
+    }
+  }
+
+  // A tap: press and spring. On hard, a tray piece also turns a quarter
+  // turn clockwise (the click on pointerdown is its sound).
+  function tapped(d){
+    if (d.fromBoard) {
+      d.sqs.forEach(function(i){
+        var el = sqEls[i];
+        el.classList.remove('pressed'); void el.offsetWidth; el.classList.add('spring');
+      });
+      return;
+    }
+    var slot = slotEls[d.k];
+    slot.classList.remove('pressed');
+    var p = state.pieces[d.k];
+    if (state.turn) {
+      p.rot = (p.rot + 1) % 4;
+      slot.innerHTML = '';
+      slot.appendChild(pieceEl(curCells(p), p.color));
+      void slot.offsetWidth;
+      slot.classList.add('turn');
+    } else {
+      void slot.offsetWidth;
+      slot.classList.add('spring');
+    }
+  }
+
+  // Off the board, or where it doesn't fit: back to its tray spot.
+  function flyBack(d){
+    var f = els.floater;
+    f.classList.add('returning');
+    setFloater(d.trayX, d.trayY, d.trayScale);
+    var slot = slotEls[d.k];
+    flying = { slot: slot, t: setTimeout(finishFly, 230) };
+  }
+  function finishFly(){
+    if (!flying) return;
+    clearTimeout(flying.t);
+    flying.slot.classList.remove('lifted', 'placed');
+    flying = null;
+    els.floater.className = 'floater';
+    els.floater.innerHTML = '';
+  }
+
+  function onCancel(e){
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    cancelDrag();
+  }
+  // A drag that never got its pointerup (an OS gesture took the touch,
+  // the tab was hidden): the piece goes back to the tray.
+  function cancelDrag(){
+    if (!drag) return;
+    var d = drag;
+    detach();
+    drag = null;
+    clearGhost();
+    if (d.fromBoard && !d.started) d.sqs.forEach(function(i){ sqEls[i].classList.remove('pressed'); });
+    if (!d.fromBoard) slotEls[d.k].classList.remove('pressed');
+    if (d.started) { clearTimeout(d.liftT); els.floater.classList.remove('lifting'); flyBack(d); }
+  }
+  window.addEventListener('blur', cancelDrag);
+  document.addEventListener('visibilitychange', function(){ if (document.hidden) cancelDrag(); });
+
+  // ---------- buttons ----------
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    state.difficulty = btn.dataset.tier;
+    markActive();
+    newBoard();
+  });
+  els.refreshBtn.addEventListener('click', function(){ newBoard(); });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../../'); });
+
+  function markActive(){
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === state.difficulty);
+    });
+  }
+
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'fillshape.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = maxScroll;
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  introduceTraySlider();
+
+  // ---------- resume after the rotate-block reload ----------
+  var RESUME_KEY = 'playandlearn.resume.fillshape';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // The board, every piece (cells, colour, turn, on the board or in the
+  // tray), the level and the dots. A piece mid-drag counts as in the tray.
+  // A solved board (wave or smiley showing) resumes as the next board.
+  function snapshotGame(){
+    if (!state.mask) return null;
+    var data = {
+      difficulty: state.difficulty,
+      progress: state.progress >= ROUND_SIZE ? 0 : state.progress,
+      count: state.count,
+      puzzle: null
+    };
+    if (state.solved || els.celebration.style.display === 'flex') return data;
+    data.puzzle = {
+      rows: state.mask.rows,
+      cols: state.mask.cols,
+      on: state.mask.on.slice(),
+      turn: state.turn,
+      pieces: state.pieces.map(function(p){
+        return { cells: p.cells, home: p.home, color: p.color, rot: p.rot, at: p.at ? [p.at.r, p.at.c] : null };
+      })
+    };
+    return data;
+  }
+
+  function restoreGame(data){
+    if (!data || typeof data !== 'object') return false;
+    if (TIERS.indexOf(data.difficulty) === -1) return false;
+    if (!isInt(data.progress, 0, ROUND_SIZE - 1)) return false;
+    var pz = data.puzzle;
+    if (pz != null && !validatePuzzle(pz)) return false;
+    var copy = null;
+    if (pz) {
+      copy = {
+        rows: pz.rows, cols: pz.cols, on: pz.on.slice(), turn: !!pz.turn,
+        pieces: pz.pieces.map(function(p){
+          return { cells: p.cells.map(function(q){ return q.slice(); }), home: p.home.slice(), color: p.color, rot: p.rot, at: null };
+        })
+      };
+      // Put back the pieces that were on the board; they must still fit.
+      var occ = copy.on.map(function(){ return -1; });
+      for (var k = 0; k < copy.pieces.length; k++) {
+        var at = pz.pieces[k].at;
+        if (at == null) continue;
+        if (!Array.isArray(at) || !isInt(at[0], 0, copy.rows - 1) || !isInt(at[1], 0, copy.cols - 1)) return false;
+        var cells = turnCells(copy.pieces[k].cells, copy.pieces[k].rot);
+        for (var j = 0; j < cells.length; j++) {
+          var r = at[0] + cells[j][0], c = at[1] + cells[j][1], x = r * copy.cols + c;
+          if (r >= copy.rows || c >= copy.cols || !copy.on[x] || occ[x] !== -1) return false;
+          occ[x] = k;
+        }
+        copy.pieces[k].at = { r: at[0], c: at[1] };
+      }
+      if (copy.pieces.every(function(p){ return p.at; })) copy = null; // already solved: next board
+    }
+    state.difficulty = data.difficulty;
+    state.progress = data.progress;
+    if (data.count && typeof data.count === 'object') {
+      TIERS.forEach(function(t){ if (isInt(data.count[t], 0, 1e9)) state.count[t] = data.count[t]; });
+    }
+    if (copy) {
+      updateProgressDots();
+      showPuzzle(copy, true);
+    } else {
+      newBoard();
+    }
+    return true;
+  }
+
+  // Remember the chosen level and the progress dots between visits: leaving the game,
+  // playing another one or coming back another day keeps them.
+  var SAVE_KEY = null;
+  function saveProgress(){
+    if (!SAVE_KEY) return; // not set up yet (nothing loaded to overwrite)
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ difficulty: state.difficulty, progress: state.progress || 0 }));
+    } catch (e) {}
+  }
+  function loadProgress(){
+    try {
+      var d = JSON.parse(localStorage.getItem('playandlearn.saved.fillshape') || 'null');
+      if (!d || TIERS.indexOf(d.difficulty) === -1) return null;
+      if (typeof d.progress !== 'number' || d.progress % 1 !== 0 || d.progress < 0 || d.progress >= ROUND_SIZE) d.progress = 0;
+      return d;
+    } catch (e) { return null; }
+  }
+  var saved = loadProgress();
+  window.addEventListener('pagehide', saveProgress);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') saveProgress();
+  });
+
+  var resumed = takeResume();
+  SAVE_KEY = 'playandlearn.saved.fillshape';
+  if (resumed && restoreGame(resumed)) {
+    markActive();
+  } else {
+    if (saved) { state.difficulty = saved.difficulty; state.progress = saved.progress; }
+    markActive();
+    newBoard();
+  }
+})();
+</script>
+<script>
+/* Level hint: the three levels light up green, yellow and red in turn, once
+   on the whole site. ?levelhint replays. */
+(function(){
+  var g = document.getElementById('diffGroup'); if (!g) return;
+  var KEY = 'playandlearn.levelHintShown';
+  var force = /[?&]levelhint\b/.test(location.search), played = false;
+  function shown(){
+    try {
+      if (localStorage.getItem(KEY)) return true;
+      for (var i = 0; i < localStorage.length; i++) {
+        if (/\.levelHintShown$/.test(localStorage.key(i))) return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+  function play(delay){
+    if (played || (!force && shown())) return;
+    played = true;
+    try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    setTimeout(function(){
+      ['easy','medium','hard'].forEach(function(t, i){
+        setTimeout(function(){
+          var b = g.querySelector('[data-tier="' + t + '"]'); if (!b) return;
+          b.classList.remove('hint'); void b.offsetWidth; b.classList.add('hint');
+          setTimeout(function(){ b.classList.remove('hint'); }, 1350);
+        }, i * 500);
+      });
+    }, delay || 0);
+  }
+  g.addEventListener('click', function(e){
+    var b = e.target.closest('.diff-btn'); if (!b) return;
+    b.classList.remove('pick'); void b.offsetWidth; b.classList.add('pick');
+    clearTimeout(b._pickT);
+    b._pickT = setTimeout(function(){ b.classList.remove('pick'); }, 950);
+  });
+  window.PLLevelHint = play;
+  if (!document.currentScript.hasAttribute('data-after-first-solve')) {
+    play(window.innerWidth <= 767 ? 2200 : 900);
+  }
+})();
+</script>
+</body>
+</html>
