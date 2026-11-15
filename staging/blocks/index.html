@@ -464,9 +464,11 @@
   //   ?look=blue-dark    cream, sun, orange, sage teal + a dark espresso
   //   ?look=unblock      Unblock's amber/cyan/pink/lime (no red); white rows
   var BLOCKS_LOOKS = {
-    'blue-earthy': { bg: '#5F44FF', colors: ['#EED6A6', '#E9B949', '#FF6B4A', '#F2A7BB', '#86D3C3'] },
-    'blue-warm':   { bg: '#5F44FF', colors: ['#FFF1D6', '#FFD24D', '#FF6B4A', '#FF9FC4', '#7DF0DA'] },
-    'blue-dark':   { bg: '#5F44FF', colors: ['#FFF1D6', '#FFD24D', '#FF6B4A', '#86D3C3', '#2A2420'] },
+    // Same order as the real colours (blue, pink, yellow, teal, orange), so a
+    // saved game shows each piece in its closest match and orange as orange.
+    'blue-earthy': { bg: '#5F44FF', colors: ['#EED6A6', '#F2A7BB', '#E9B949', '#86D3C3', '#FF6B4A'] },
+    'blue-warm':   { bg: '#5F44FF', colors: ['#FFF1D6', '#FF9FC4', '#FFD24D', '#7DF0DA', '#FF6B4A'] },
+    'blue-dark':   { bg: '#5F44FF', colors: ['#2A2420', '#FFF1D6', '#FFD24D', '#86D3C3', '#FF6B4A'] },
     'unblock':     { bg: '#5F44FF', correct: '#FFFFFF', colors: ['#F2B238', '#21CECE', '#F362EE', '#9EDE54'] }
   };
   var BLOCKS_LOOK = (/[?&]look=(blue-earthy|blue-warm|blue-dark|unblock)\b/.exec(location.search) || [])[1] || '';
