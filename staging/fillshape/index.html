@@ -34,7 +34,8 @@
     --bg:#283347;
     --bright:#E4E4E4;
     --ink:#202020;
-    --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
+    --ink-muted:rgba(0,0,0,0.28); /* buttons and the shape's empty squares */
+    --mat-sq:rgba(0,0,0,0.11); /* the rest of the mat: a quiet table grid */
     --face:#FFA226;
     --win:#0DC754; /* the solved board's wave: Othello's green */
     --incorrect:#F2383B;
@@ -44,21 +45,13 @@
     --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
     --gap: 3px;
     --round: 12%; /* slightly rounded squares */
-    --cell: 60px; /* one square, board and tray alike; fitLayout sets it */
+    --cell: 60px; /* one mat square; fitLayout sets it */
   }
 
-  /* The board and tray are sized by fitLayout to fit inside the body's
-     padding box: here (tablet) between the top and bottom button rows. */
+  /* The mat fills the body's padding box (fitLayout reads it): on tablet
+     and desktop, between the top and bottom button rows, nearly full width. */
   body{
     padding: var(--v-reserve-top) var(--unit) var(--v-reserve-bottom);
-  }
-
-  /* Desktop: the board starts below the level buttons and the tray may
-     reach down beside back and refresh (they're in the corner), as in Blocks. */
-  @media (min-width: 1024px) and (min-height: 501px){
-    body{
-      padding: var(--v-reserve-top) calc(2.1 * var(--icon-size) + 3 * var(--unit)) var(--unit);
-    }
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
@@ -81,9 +74,6 @@
     user-select:none;
     -webkit-touch-callout:none;
     overflow:hidden;
-    display:flex;
-    align-items:center;
-    justify-content:center;
     touch-action:manipulation;
   }
   @media (prefers-reduced-motion: reduce){
@@ -156,27 +146,20 @@
   }
   .progress-dots .dot.done{ background: var(--bright); }
 
-  /* ---------- board ---------- */
-  .game{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    flex:none;
-  }
-  .board{
+  /* ---------- the mat: one grid, the shape in it, the pieces on it ---------- */
+  .mat{
+    position:absolute;
+    left:0; top:0;
     display:grid;
     gap:var(--gap);
-    touch-action:none;
   }
   .sq{
     width:var(--cell);
     height:var(--cell);
-    background:var(--ink-muted);
-    position:relative;
+    background:var(--mat-sq);
     border-radius:var(--round);
   }
-  /* Squares outside the shape keep their grid spot but aren't shown. */
-  .sq.off{ visibility:hidden; }
+  .sq.shape{ background:var(--ink-muted); }
   .sq.filled{ background:var(--c); cursor:grab; }
   /* Where the dragged piece will land. */
   .sq.ghost{ background:var(--c); opacity:0.45; }
@@ -185,9 +168,13 @@
     0%{ transform:scale(0.86); }
     100%{ transform:scale(1); }
   }
-  html .sq.pressed{ transform:scale(0.92); }
-  html .sq.spring{ animation: press-spring 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
-  /* Solved: a green wave runs across the board from the top-left corner --
+  /* A new board's pieces pop in, one piece after another (--d). */
+  .sq.pop{ animation: piece-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both; animation-delay:var(--d, 0ms); }
+  @keyframes piece-pop{
+    0%{ transform:scale(0); }
+    100%{ transform:scale(1); }
+  }
+  /* Solved: a green wave runs across the shape from its top-left corner --
      each square pops and turns green in turn (--d, set by onSolved). */
   .sq.win{
     background:var(--win);
@@ -199,22 +186,8 @@
     45%{ transform:scale(1.06); }
   }
 
-  /* ---------- piece tray (every piece, under the board) ----------
-     fitLayout places each spot; a piece's spot stays put (empty) while
-     the piece is on the board, so the tray never shuffles about. */
-  .tray{ position:relative; }
-  .slot{
-    position:absolute;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    touch-action:none;
-    cursor:grab;
-  }
-  .slot.placed{ cursor:default; }
   .piece{
     position:relative;
-    flex:none;
     width:calc(var(--cell) * var(--w) + var(--gap) * (var(--w) - 1));
     height:calc(var(--cell) * var(--h) + var(--gap) * (var(--h) - 1));
   }
@@ -227,32 +200,9 @@
     background:var(--c);
     border-radius:var(--round);
   }
-  .slot .piece{ transition: transform 120ms ease; }
-  .slot.lifted .piece, .slot.placed .piece{ visibility:hidden; }
-  /* Press and spring, like the other games' pieces. */
-  html .slot.pressed .piece{ transform:scale(0.92); transition:none; }
-  html .slot.spring .piece{ animation: press-spring 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
-  @keyframes press-spring{
-    0%{ transform:scale(0.92); }
-    55%{ transform:scale(1.06); }
-    100%{ transform:scale(1); }
-  }
-  /* Hard: a tap turns the piece a quarter turn, with the same spring. */
-  html .slot.turn .piece{ animation: piece-turn 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
-  @keyframes piece-turn{
-    0%{ transform:rotate(-90deg) scale(0.92); }
-    100%{ transform:rotate(0deg) scale(1); }
-  }
-  @media (hover:hover) and (pointer:fine){
-    .slot:not(.placed):hover .piece{ transform:scale(1.035); }
-  }
-  .slot.pop .piece{ animation: piece-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both; animation-delay:var(--d, 0ms); }
-  @keyframes piece-pop{
-    0%{ transform:scale(0); }
-    100%{ transform:scale(1); }
-  }
 
-  /* The piece being dragged. */
+  /* A touched piece is drawn here (its mat squares look empty meanwhile):
+     pressed, dragged, flying back, springing, turning or wobbling. */
   .floater{
     position:fixed;
     left:0; top:0;
@@ -265,6 +215,30 @@
   .floater.lifting{ transition: transform 140ms ease-out; }
   .floater.placing{ transition: transform 90ms ease-out; }
   .floater.returning{ transition: transform 220ms cubic-bezier(0.34, 1.2, 0.64, 1); }
+  .floater .piece{ transition: transform 120ms ease; }
+  /* Press and spring, like the other games' pieces. */
+  .floater .piece.pressed{ transform:scale(0.92); transition:none; }
+  .floater .piece.spring{ animation: press-spring 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes press-spring{
+    0%{ transform:scale(0.92); }
+    55%{ transform:scale(1.06); }
+    100%{ transform:scale(1); }
+  }
+  /* Hard: a tap turns the piece a quarter turn, with the same spring... */
+  .floater .piece.turn{ animation: piece-turn 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes piece-turn{
+    0%{ transform:rotate(-90deg) scale(0.92); }
+    100%{ transform:rotate(0deg) scale(1); }
+  }
+  /* ...or, with no room to turn, a little wobble. */
+  .floater .piece.wobble{ animation: piece-wobble 380ms ease-out; }
+  @keyframes piece-wobble{
+    0%{ transform:rotate(0deg) scale(0.92); }
+    30%{ transform:rotate(-7deg) scale(1); }
+    60%{ transform:rotate(5deg); }
+    85%{ transform:rotate(-2deg); }
+    100%{ transform:rotate(0deg); }
+  }
 
   @keyframes bounce-in{
     0%{ transform:scale(0); opacity:0; }
@@ -343,7 +317,7 @@
     .rotate-block{ display:flex; }
   }
   html, body, .controls-slider{ touch-action:manipulation; }
-  .slot, .board{ touch-action:none; }
+  .mat{ touch-action:none; }
 </style>
 <script type="application/ld+json">
 {
@@ -421,10 +395,7 @@
     <span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span>
   </div>
 
-  <div class="game" id="game">
-    <div class="board" id="board"></div>
-    <div class="tray" id="tray"></div>
-  </div>
+  <div class="mat" id="mat"></div>
 
   <div class="floater" id="floater"></div>
   <div class="celebration" id="celebration"></div>
@@ -446,9 +417,6 @@
   var WAVE_STEP_MS = 70;
   var WAVE_POP_MS = 320;
   var WIN_HOLD_MS = 600;
-  // Square size limits (px) for fitLayout.
-  var MAX_CELL = 90;
-  var MIN_CELL = 12;
 
   // ---- generator start ----
   // ---------- puzzles ----------
@@ -664,7 +632,7 @@
     });
   }
 
-  // A puzzle: the shape (rows, cols, on) and its pieces in tray order. Each
+  // A puzzle: the shape (rows, cols, on) and its pieces in shuffled order. Each
   // piece keeps its cells as they sit in the answer, where they sit (home),
   // and how far it is turned now (rot, quarter turns clockwise).
   function makePuzzle(level, rows){
@@ -728,15 +696,157 @@
     }
     return covered === total;
   }
+
+  // ---------- mat layout ----------
+  // The mat is one grid filling the play area. fitLayout tries square
+  // sizes from MAX_CELL down; at each size the mat is as many squares as
+  // fit, the shape goes in the middle (or at the top, in a tall area) and
+  // the loose pieces are packed around it. The first size where it all
+  // fits wins.
+  var MAX_CELL = 90;
+  var MIN_CELL = 12;
+
+  // items: per piece { w, h, inside: [row, col] within the shape, or null
+  // (loose) }. Returns the square size, the mat size, the shape's top-left
+  // on the mat (sr, sc) and every piece's top-left (pos).
+  function planLayout(availW, availH, gap, mask, items){
+    // A wide area keeps the pieces beside the shape, a tall one below it;
+    // the other way is only tried if nothing fits at any size.
+    var ways = availW >= availH ? ['centre', 'top'] : ['top', 'centre'];
+    for (var w = 0; w < ways.length; w++) {
+      for (var cell = MAX_CELL; cell >= MIN_CELL; cell--) {
+        var step = cell + gap;
+        var cols = Math.floor((availW + gap) / step), rows = Math.floor((availH + gap) / step);
+        if (cols < mask.cols || rows < mask.rows) continue;
+        var plan = arrange(ways[w], cols, rows, mask, items, true);
+        if (plan) { plan.cell = cell; plan.ok = true; plan.way = ways[w]; return plan; }
+      }
+    }
+    // Never needed on a real screen: the smallest squares, pieces wherever
+    // there's room.
+    cell = MIN_CELL;
+    cols = Math.max(mask.cols, Math.floor((availW + gap) / (cell + gap)));
+    rows = Math.max(mask.rows, Math.floor((availH + gap) / (cell + gap)));
+    plan = arrange('centre', cols, rows, mask, items, false);
+    plan.cell = cell;
+    plan.ok = false;
+    return plan;
+  }
+
+  function region(r0, c0, h, w){ return { r0: r0, c0: c0, h: h, w: w, y: 0, x: 0, sh: 0, area: 0, items: [] }; }
+
+  // Shelf packing: pieces go left to right in a row (a shelf), one free
+  // square apart; a piece that doesn't fit starts a new shelf one free
+  // square below. Returns false if the piece doesn't fit at all.
+  function shelfPlace(reg, k, w, h){
+    if (w > reg.w || h > reg.h) return false;
+    if (reg.sh && reg.x + w <= reg.w && reg.y + h <= reg.h) {
+      reg.items.push({ k: k, r: reg.y, c: reg.x, w: w, h: h, shelf: reg.y });
+      reg.x += w + 1;
+      reg.sh = Math.max(reg.sh, h);
+    } else {
+      var y = reg.sh ? reg.y + reg.sh + 1 : 0;
+      if (y + h > reg.h) return false;
+      reg.y = y; reg.x = w + 1; reg.sh = h;
+      reg.items.push({ k: k, r: y, c: 0, w: w, h: h, shelf: y });
+    }
+    reg.area += w * h;
+    return true;
+  }
+
+  // 'centre': shape in the middle, pieces left and right of it (split
+  // evenly), then above and below it. 'top': shape at the top centre,
+  // pieces below it, then beside it. Regions keep one free square from
+  // the shape.
+  function arrange(way, cols, rows, mask, items, packed){
+    var R = mask.rows, C = mask.cols;
+    var sc = Math.floor((cols - C) / 2);
+    var sr = way === 'top' ? 0 : Math.floor((rows - R) / 2);
+    var main, extra;
+    if (way === 'top') {
+      main = [region(R + 1, 0, rows - R - 1, cols)];
+      extra = [region(0, 0, R, sc - 1), region(0, sc + C + 1, R, cols - sc - C - 1)];
+    } else {
+      main = [region(0, 0, rows, sc - 1), region(0, sc + C + 1, rows, cols - sc - C - 1)];
+      extra = [region(0, sc, sr - 1, C), region(sr + R + 1, sc, rows - sr - R - 1, C)];
+    }
+    var pos = [], loose = [];
+    items.forEach(function(it, k){
+      if (it.inside) pos[k] = [sr + it.inside[0], sc + it.inside[1]];
+      else loose.push(k);
+    });
+    // Tallest first, so each shelf is as tall as its first piece.
+    loose.sort(function(a, b){ return items[b].h - items[a].h || items[b].w - items[a].w || a - b; });
+
+    if (!packed) {
+      // Last resort: first free spot anywhere outside the shape.
+      var used = [];
+      for (var i = 0; i < rows * cols; i++) {
+        var r = Math.floor(i / cols), c = i % cols;
+        used.push(r >= sr && r < sr + R && c >= sc && c < sc + C ? 1 : 0);
+      }
+      loose.forEach(function(k){
+        var it = items[k], spot = null;
+        for (var r = 0; r + it.h <= rows && !spot; r++) {
+          for (var c = 0; c + it.w <= cols && !spot; c++) {
+            var free = true;
+            for (var y = r; y < r + it.h && free; y++) for (var x = c; x < c + it.w; x++) if (used[y * cols + x]) { free = false; break; }
+            if (free) spot = [r, c];
+          }
+        }
+        spot = spot || [0, 0];
+        for (var y = spot[0]; y < spot[0] + it.h; y++) for (var x = spot[1]; x < spot[1] + it.w; x++) used[y * cols + x] = 1;
+        pos[k] = spot;
+      });
+      return { cols: cols, rows: rows, sr: sr, sc: sc, pos: pos };
+    }
+
+    for (var n = 0; n < loose.length; n++) {
+      var k = loose[n], it = items[k];
+      var regs = main.slice().sort(function(a, b){ return a.area - b.area; }).concat(extra);
+      var done = false;
+      for (var j = 0; j < regs.length && !done; j++) done = shelfPlace(regs[j], k, it.w, it.h);
+      if (!done) return null;
+    }
+    // Centre each shelf across its region, and the shelves within it.
+    main.concat(extra).forEach(function(reg){
+      if (!reg.items.length) return;
+      var shelves = {}, bottom = 0;
+      reg.items.forEach(function(p){
+        var s = shelves[p.shelf] = shelves[p.shelf] || { w: 0, h: 0 };
+        s.w = Math.max(s.w, p.c + p.w);
+        s.h = Math.max(s.h, p.h);
+        bottom = Math.max(bottom, p.shelf + p.h);
+      });
+      var dy = Math.floor((reg.h - bottom) / 2);
+      reg.items.forEach(function(p){
+        var s = shelves[p.shelf];
+        pos[p.k] = [reg.r0 + dy + p.r + Math.floor((s.h - p.h) / 2), reg.c0 + Math.floor((reg.w - s.w) / 2) + p.c];
+      });
+    });
+    return { cols: cols, rows: rows, sr: sr, sc: sc, pos: pos };
+  }
+
+  // Hard's tap-to-turn: the spots to try, nearest first (within 2 squares).
+  var TURN_TRIES = [];
+  for (var tr = -2; tr <= 2; tr++) for (var tc = -2; tc <= 2; tc++) TURN_TRIES.push([tr, tc]);
+  TURN_TRIES.sort(function(a, b){ return (a[0] * a[0] + a[1] * a[1]) - (b[0] * b[0] + b[1] * b[1]); });
+  // Rounds halves away from zero, so turning a piece four times brings it
+  // back to the very same squares.
+  function halfRound(x){ return x < 0 ? -Math.round(-x) : Math.round(x); }
   // ---- generator end ----
 
   var state = {
     difficulty: 'easy',
     progress: 0,      // boards solved this round
-    mask: null,       // { rows, cols, on }
+    mask: null,       // the shape: { rows, cols, on }
     turn: false,      // hard: pieces turn
-    pieces: [],       // tray order; { cells, home, color, rot, at: null or {r, c} }
-    occ: [],          // per board square: the piece on it, or -1
+    pieces: [],       // { cells, home, color, rot, at, pos: {r, c} on the mat }
+    mat: null,        // { cols, rows, sr, sc }: the shape's top-left is (sr, sc)
+    cell: 0,
+    gap: 0,
+    occ: [],          // per mat square: the piece on it, or -1
+    hidden: {},       // pieces the floater is drawing right now
     busy: false,      // a piece landing, or the solved wave
     solved: false,
     count: { easy: 0, medium: 0, hard: 0 },       // boards so far per level
@@ -744,9 +854,7 @@
   };
 
   var els = {
-    board: document.getElementById('board'),
-    tray: document.getElementById('tray'),
-    game: document.getElementById('game'),
+    mat: document.getElementById('mat'),
     floater: document.getElementById('floater'),
     progressDots: document.querySelectorAll('#progressDots .dot'),
     celebration: document.getElementById('celebration'),
@@ -755,7 +863,7 @@
     refreshBtn: document.getElementById('refreshBtn'),
     controlsSlider: document.getElementById('controlsSlider')
   };
-  var sqEls = [], slotEls = [];
+  var sqEls = [];
 
   function updateAppHeight(){
     var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -789,44 +897,65 @@
 
   // ---------- rules ----------
   function curCells(p){ return turnCells(p.cells, p.rot); }
+  // A piece fits where every square is on the mat and free.
   function fitsAt(cells, r, c){
-    var m = state.mask;
+    var m = state.mat;
     for (var i = 0; i < cells.length; i++) {
       var rr = r + cells[i][0], cc = c + cells[i][1];
       if (rr < 0 || rr >= m.rows || cc < 0 || cc >= m.cols) return false;
-      var x = rr * m.cols + cc;
-      if (!m.on[x] || state.occ[x] !== -1) return false;
+      if (state.occ[rr * m.cols + cc] !== -1) return false;
     }
     return true;
   }
   function squaresOf(cells, r, c){
-    return cells.map(function(q){ return (r + q[0]) * state.mask.cols + c + q[1]; });
+    return cells.map(function(q){ return (r + q[0]) * state.mat.cols + c + q[1]; });
   }
-  function isFull(){
-    for (var i = 0; i < state.mask.on.length; i++) {
-      if (state.mask.on[i] && state.occ[i] === -1) return false;
+  function pieceSquares(k){
+    var p = state.pieces[k];
+    return squaresOf(curCells(p), p.pos.r, p.pos.c);
+  }
+  function isShape(r, c){
+    var m = state.mask, rr = r - state.mat.sr, cc = c - state.mat.sc;
+    return rr >= 0 && rr < m.rows && cc >= 0 && cc < m.cols && m.on[rr * m.cols + cc] === 1;
+  }
+  // [row, col] of a piece within the shape if it lies wholly in it, else null.
+  function shapeOffset(p){
+    if (!state.mat || !p.pos) return null;
+    var inside = curCells(p).every(function(q){ return isShape(p.pos.r + q[0], p.pos.c + q[1]); });
+    return inside ? [p.pos.r - state.mat.sr, p.pos.c - state.mat.sc] : null;
+  }
+  // Solved when every shape square is covered (the pieces add up to the
+  // shape exactly, so they're then all in it).
+  function isSolved(){
+    var m = state.mask;
+    for (var i = 0; i < m.on.length; i++) {
+      if (!m.on[i]) continue;
+      var r = state.mat.sr + Math.floor(i / m.cols), c = state.mat.sc + i % m.cols;
+      if (state.occ[r * state.mat.cols + c] === -1) return false;
     }
     return true;
   }
 
   // ---------- rendering ----------
-  function buildBoardDom(){
-    var m = state.mask;
-    els.board.innerHTML = '';
-    els.board.style.gridTemplateColumns = 'repeat(' + m.cols + ', var(--cell))';
-    els.board.style.gridTemplateRows = 'repeat(' + m.rows + ', var(--cell))';
+  function buildMatDom(){
+    var m = state.mat;
+    els.mat.innerHTML = '';
+    els.mat.style.gridTemplateColumns = 'repeat(' + m.cols + ', var(--cell))';
+    els.mat.style.gridTemplateRows = 'repeat(' + m.rows + ', var(--cell))';
     sqEls = [];
-    for (var i = 0; i < m.rows * m.cols; i++) {
-      var sq = document.createElement('div');
-      sq.className = m.on[i] ? 'sq' : 'sq off';
-      els.board.appendChild(sq);
-      sqEls.push(sq);
+    for (var r = 0; r < m.rows; r++) {
+      for (var c = 0; c < m.cols; c++) {
+        var sq = document.createElement('div');
+        sq.className = isShape(r, c) ? 'sq shape' : 'sq';
+        els.mat.appendChild(sq);
+        sqEls.push(sq);
+      }
     }
   }
   function renderSq(i){
     var el = sqEls[i], k = state.occ[i];
-    el.classList.remove('ghost', 'win', 'pressed', 'spring');
-    if (k === -1) {
+    el.classList.remove('ghost', 'win', 'pop');
+    if (k === -1 || state.hidden[k]) {
       el.classList.remove('filled');
       el.style.removeProperty('--c');
     } else {
@@ -834,11 +963,12 @@
       el.style.setProperty('--c', COLORS[state.pieces[k].color]);
     }
   }
-  function renderBoard(){ for (var i = 0; i < sqEls.length; i++) renderSq(i); }
-  els.board.addEventListener('animationend', function(e){
+  function renderPiece(k){ pieceSquares(k).forEach(renderSq); }
+  function renderMat(){ for (var i = 0; i < sqEls.length; i++) renderSq(i); }
+  els.mat.addEventListener('animationend', function(e){
     var el = e.target;
     if (e.animationName === 'sq-drop') el.classList.remove('drop');
-    if (e.animationName === 'press-spring') el.classList.remove('spring');
+    if (e.animationName === 'piece-pop') el.classList.remove('pop');
   });
 
   function pieceEl(cells, color){
@@ -856,102 +986,46 @@
     });
     return el;
   }
-  function renderTray(pop){
-    els.tray.innerHTML = '';
-    slotEls = state.pieces.map(function(p, k){
-      var slot = document.createElement('div');
-      slot.className = 'slot';
-      slot.appendChild(pieceEl(curCells(p), p.color));
-      if (p.at) slot.classList.add('placed');
-      slot.addEventListener('pointerdown', function(e){ onSlotDown(e, k); });
-      slot.addEventListener('animationend', function(e){
-        if (e.animationName === 'piece-pop') slot.classList.remove('pop');
-        if (e.animationName === 'press-spring') slot.classList.remove('spring');
-        if (e.animationName === 'piece-turn') slot.classList.remove('turn');
-      });
-      if (pop && !p.at) {
-        slot.style.setProperty('--d', (k * 50) + 'ms');
-        slot.classList.add('pop');
-      }
-      els.tray.appendChild(slot);
-      return slot;
-    });
-  }
 
   // ---------- layout ----------
-  // Tray spots, in squares: the piece's own size, or on hard (where pieces
-  // turn) a square that fits it either way round, so turning never moves
-  // the other pieces.
-  function slotDims(p){
-    var d = dims(p.cells);
-    if (state.turn) { var m = Math.max(d.w, d.h); return { w: m, h: m }; }
-    return d;
-  }
-  // Lay the spots out in centred rows, wrapping at maxW, half a square apart.
-  function packTray(sizes, cell, gap, maxW){
-    var sgap = Math.round(cell * 0.5);
-    var rows = [], row = null;
-    sizes.forEach(function(s, k){
-      var w = s.w * cell + (s.w - 1) * gap, h = s.h * cell + (s.h - 1) * gap;
-      if (row && row.w + sgap + w <= maxW) {
-        row.items.push({ k: k, w: w, h: h });
-        row.w += sgap + w;
-        row.h = Math.max(row.h, h);
-      } else {
-        row = { items: [{ k: k, w: w, h: h }], w: w, h: h };
-        rows.push(row);
-      }
-    });
-    var W = 0, H = 0, boxes = [];
-    rows.forEach(function(r){ W = Math.max(W, r.w); });
-    rows.forEach(function(r, ri){
-      if (ri) H += sgap;
-      var x = (W - r.w) / 2;
-      r.items.forEach(function(it){
-        boxes[it.k] = { left: x, top: H + (r.h - it.h) / 2, w: it.w, h: it.h };
-        x += it.w + sgap;
-      });
-      H += r.h;
-    });
-    return { w: W, h: H, boxes: boxes };
-  }
-  function trayGapFor(cell){ return Math.round(cell * 0.6); }
-
-  // Picks the square size: starts big and shrinks until the board, the gap
-  // and the tray all fit inside the body's padding box (between the button
-  // rows; on desktop the tray may reach down beside back and refresh).
+  // Fits the mat to the body's padding box. Pieces lying wholly inside
+  // the shape keep their place in it; the rest are packed around it again.
   var lastFit = '';
   function fitLayout(force){
-    if (!state.mask || !slotEls.length) return;
+    if (!state.mask) return;
     var b = document.body, cs = getComputedStyle(b);
-    var availW = b.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    var availH = b.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var padL = parseFloat(cs.paddingLeft), padT = parseFloat(cs.paddingTop);
+    var availW = b.clientWidth - padL - parseFloat(cs.paddingRight);
+    var availH = b.clientHeight - padT - parseFloat(cs.paddingBottom);
     var gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap')) || 3;
-    var R = state.mask.rows, C = state.mask.cols;
-    var sizes = state.pieces.map(slotDims);
-    var cell, tray;
-    for (cell = MAX_CELL; ; cell--) {
-      tray = packTray(sizes, cell, gap, availW);
-      var bw = C * cell + (C - 1) * gap, bh = R * cell + (R - 1) * gap;
-      if (cell <= MIN_CELL) break;
-      if (bw <= availW && tray.w <= availW && bh + trayGapFor(cell) + tray.h <= availH) break;
-    }
-    var key = availW + 'x' + availH + ':' + cell + ':' + gap;
+    var key = availW + 'x' + availH + ':' + gap;
     if (!force && key === lastFit) return;
     lastFit = key;
-    // A drag can't carry on through a new size: the piece goes home.
-    if (!force) { cancelDrag(); finishFly(); }
-    document.documentElement.style.setProperty('--cell', cell + 'px');
-    els.game.style.gap = trayGapFor(cell) + 'px';
-    els.tray.style.width = tray.w + 'px';
-    els.tray.style.height = tray.h + 'px';
-    slotEls.forEach(function(slot, k){
-      var bx = tray.boxes[k];
-      slot.style.left = bx.left + 'px';
-      slot.style.top = bx.top + 'px';
-      slot.style.width = bx.w + 'px';
-      slot.style.height = bx.h + 'px';
+    // A piece mid-drag (or mid-turn) goes back where it came from first.
+    cancelDrag();
+    finishFly();
+    var items = state.pieces.map(function(p){
+      var d = dims(curCells(p));
+      return { w: d.w, h: d.h, inside: state.mat ? shapeOffset(p) : p.at };
     });
+    var plan = planLayout(availW, availH, gap, state.mask, items);
+    state.mat = { cols: plan.cols, rows: plan.rows, sr: plan.sr, sc: plan.sc };
+    state.cell = plan.cell;
+    state.gap = gap;
+    state.occ = [];
+    for (var i = 0; i < plan.cols * plan.rows; i++) state.occ.push(-1);
+    state.pieces.forEach(function(p, k){
+      p.at = null;
+      p.pos = { r: plan.pos[k][0], c: plan.pos[k][1] };
+      pieceSquares(k).forEach(function(x){ state.occ[x] = k; });
+    });
+    document.documentElement.style.setProperty('--cell', plan.cell + 'px');
+    buildMatDom();
+    renderMat();
+    var mw = plan.cols * plan.cell + (plan.cols - 1) * gap;
+    var mh = plan.rows * plan.cell + (plan.rows - 1) * gap;
+    els.mat.style.left = Math.floor(padL + (availW - mw) / 2) + 'px';
+    els.mat.style.top = Math.floor(padT + (availH - mh) / 2) + 'px';
   }
   var fitQueued = false;
   function scheduleFit(){
@@ -970,7 +1044,8 @@
     });
   }
 
-  // Puts a puzzle on screen (pieces with .at are already on the board).
+  // Puts a puzzle on the mat. Pieces with .at ([row, col] in the shape)
+  // start there; the others are packed around the shape.
   function showPuzzle(pz, pop){
     boardToken++;
     clearTimeout(winTimer);
@@ -980,20 +1055,24 @@
     els.floater.className = 'floater';
     els.floater.innerHTML = '';
     els.celebration.style.display = 'none';
-    els.game.style.display = '';
+    els.mat.style.display = '';
     state.mask = { rows: pz.rows, cols: pz.cols, on: pz.on.slice() };
     state.turn = !!pz.turn;
     state.pieces = pz.pieces;
-    state.occ = pz.on.map(function(){ return -1; });
-    state.pieces.forEach(function(p, k){
-      if (p.at) squaresOf(curCells(p), p.at.r, p.at.c).forEach(function(i){ state.occ[i] = k; });
-    });
+    state.mat = null;
+    state.hidden = {};
     state.busy = false;
     state.solved = false;
-    buildBoardDom();
-    renderBoard();
-    renderTray(pop);
     fitLayout(true);
+    if (pop) {
+      state.pieces.forEach(function(p, k){
+        if (shapeOffset(p)) return;
+        pieceSquares(k).forEach(function(i){
+          sqEls[i].style.setProperty('--d', (k * 50) + 'ms');
+          sqEls[i].classList.add('pop');
+        });
+      });
+    }
   }
 
   // Refresh, level switch and the next board all come here. The dots are
@@ -1008,21 +1087,6 @@
     showPuzzle(pz, true);
   }
 
-  function commitPlace(k, r, c){
-    var p = state.pieces[k];
-    p.at = { r: r, c: c };
-    squaresOf(curCells(p), r, c).forEach(function(i){
-      state.occ[i] = k;
-      renderSq(i);
-      var el = sqEls[i];
-      el.classList.remove('drop'); void el.offsetWidth; el.classList.add('drop');
-    });
-    var slot = slotEls[k];
-    slot.classList.remove('lifted', 'pressed', 'spring', 'turn', 'pop');
-    slot.classList.add('placed');
-    if (isFull()) onSolved();
-  }
-
   // ---------- solved ----------
   function onSolved(){
     state.busy = true;
@@ -1030,22 +1094,23 @@
     state.progress += 1; // counted straight away, so leaving now can't lose it
     saveProgress();
     PLSound.play('positive');
-    // A green wave across the board, one diagonal at a time from the top left.
-    var C = state.mask.cols, R = state.mask.rows;
-    sqEls.forEach(function(el, i){
-      if (!state.mask.on[i]) return;
-      var diagonal = Math.floor(i / C) + i % C;
-      el.style.setProperty('--d', diagonal * WAVE_STEP_MS + 'ms');
-      el.classList.remove('drop', 'pressed', 'spring');
+    // A green wave across the shape, one diagonal at a time from its top left.
+    var m = state.mask;
+    for (var i = 0; i < m.on.length; i++) {
+      if (!m.on[i]) continue;
+      var r = Math.floor(i / m.cols), c = i % m.cols;
+      var el = sqEls[(state.mat.sr + r) * state.mat.cols + state.mat.sc + c];
+      el.style.setProperty('--d', (r + c) * WAVE_STEP_MS + 'ms');
+      el.classList.remove('drop', 'pop');
       el.classList.add('win');
-    });
+    }
     var token = boardToken;
     winTimer = setTimeout(function(){
       if (token !== boardToken) return;
       updateProgressDots();
       if (state.progress >= ROUND_SIZE) showCelebration();
       else newBoard();
-    }, (R + C - 2) * WAVE_STEP_MS + WAVE_POP_MS + WIN_HOLD_MS);
+    }, (m.rows + m.cols - 2) * WAVE_STEP_MS + WAVE_POP_MS + WIN_HOLD_MS);
   }
 
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
@@ -1061,132 +1126,105 @@
     updateAppHeight();
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
     PLSound.play('complete');
-    els.game.style.display = 'none';
+    els.mat.style.display = 'none';
     els.celebration.style.display = 'flex';
     celebrationTimer = setTimeout(newBoard, 3000);
   }
 
   // ---------- drag ----------
-  // Pieces are dragged from the tray, or picked up again from the board.
+  // A touched piece moves into the floater (its mat squares look empty)
+  // until it lands, flies back, or finishes its spring, turn or wobble.
   var drag = null;
-  var ghost = { key: '', cells: [] };
-  var flying = null; // a piece on its way back to the tray
+  var ghost = { cells: [], key: '' };
+  var flying = null; // { k, t }: the floater is still showing piece k
 
-  function boardGeom(){
-    var rect = els.board.getBoundingClientRect();
-    var gap = parseFloat(getComputedStyle(els.board).columnGap) || 0;
-    var cell = (rect.width - (state.mask.cols - 1) * gap) / state.mask.cols;
-    return { left: rect.left, top: rect.top, cell: cell, gap: gap, step: cell + gap };
+  function matGeom(){
+    var rect = els.mat.getBoundingClientRect();
+    return { left: rect.left, top: rect.top, cell: state.cell, gap: state.gap, step: state.cell + state.gap };
   }
-
-  function onSlotDown(e, k){
-    finishFly();
-    var p = state.pieces[k];
-    if (drag || state.busy || !p || p.at) return;
-    if (e.button != null && e.button > 0) return;
-    // Mouse only: on touch, the tap must stay a tap so iOS lets sound start.
-    if (e.pointerType === 'mouse') e.preventDefault();
-    PLSound.play('click');
-    var slot = slotEls[k];
-    slot.classList.remove('spring', 'turn');
-    slot.classList.add('pressed');
-    beginDrag(e, k, slot, null);
+  function setFloater(x, y){
+    els.floater.style.transform = 'translate(' + x + 'px,' + y + 'px)';
   }
+  // Draws piece k in the floater at mat square (r, c).
+  function showInFloater(k, r, c){
+    var p = state.pieces[k], g = matGeom();
+    state.hidden[k] = true;
+    renderPiece(k);
+    var f = els.floater, pe = pieceEl(curCells(p), p.color);
+    f.innerHTML = '';
+    f.appendChild(pe);
+    f.className = 'floater on';
+    setFloater(g.left + c * g.step, g.top + r * g.step);
+    return pe;
+  }
+  // The floater hands piece k back to the mat.
+  function finishFly(){
+    if (!flying) return;
+    var k = flying.k;
+    clearTimeout(flying.t);
+    flying = null;
+    delete state.hidden[k];
+    if (state.pieces[k] && state.pieces[k].pos) renderPiece(k);
+    els.floater.className = 'floater';
+    els.floater.innerHTML = '';
+  }
+  function settleLater(k, ms){ flying = { k: k, t: setTimeout(finishFly, ms) }; }
 
-  els.board.addEventListener('pointerdown', function(e){
+  els.mat.addEventListener('pointerdown', function(e){
     finishFly();
     if (drag || state.busy) return;
     var i = sqEls.indexOf(e.target.closest('.sq'));
     var k = i < 0 ? -1 : state.occ[i];
     if (k < 0) return;
     if (e.button != null && e.button > 0) return;
+    // Mouse only: on touch, the tap must stay a tap so iOS lets sound start.
     if (e.pointerType === 'mouse') e.preventDefault();
     PLSound.play('click');
     var p = state.pieces[k];
-    var sqs = squaresOf(curCells(p), p.at.r, p.at.c);
-    sqs.forEach(function(x){ sqEls[x].classList.remove('spring', 'drop'); sqEls[x].classList.add('pressed'); });
-    beginDrag(e, k, els.board, sqs);
-  });
-
-  function beginDrag(e, k, src, boardSqs){
     drag = {
       k: k,
-      src: src,
-      fromBoard: !!boardSqs,
-      sqs: boardSqs,
+      from: { r: p.pos.r, c: p.pos.c },
       pointerId: e.pointerId,
       touch: e.pointerType !== 'mouse',
       startX: e.clientX,
       startY: e.clientY,
       started: false
     };
-    try { src.setPointerCapture(e.pointerId); } catch (err) {}
-    src.addEventListener('pointermove', onMove);
-    src.addEventListener('pointerup', onUp);
-    src.addEventListener('pointercancel', onCancel);
-  }
+    drag.pe = showInFloater(k, p.pos.r, p.pos.c);
+    drag.pe.classList.add('pressed');
+    try { els.mat.setPointerCapture(e.pointerId); } catch (err) {}
+    els.mat.addEventListener('pointermove', onMove);
+    els.mat.addEventListener('pointerup', onUp);
+    els.mat.addEventListener('pointercancel', onCancel);
+  });
 
   function detach(){
     if (!drag) return;
-    var s = drag.src;
-    s.removeEventListener('pointermove', onMove);
-    s.removeEventListener('pointerup', onUp);
-    s.removeEventListener('pointercancel', onCancel);
-    try { s.releasePointerCapture(drag.pointerId); } catch (err) {}
-  }
-
-  function setFloater(x, y, s){
-    els.floater.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
-  }
-
-  // Where piece k sits in its tray spot (layout size, not the on-screen
-  // box: a piece grabbed while popping in or pressed is scaled down).
-  function trayPos(k){
-    var slot = slotEls[k], pe = slot.querySelector('.piece');
-    var sr = slot.getBoundingClientRect();
-    return {
-      x: sr.left + (sr.width - pe.offsetWidth) / 2,
-      y: sr.top + (sr.height - pe.offsetHeight) / 2,
-      w: pe.offsetWidth
-    };
+    els.mat.removeEventListener('pointermove', onMove);
+    els.mat.removeEventListener('pointerup', onUp);
+    els.mat.removeEventListener('pointercancel', onCancel);
+    try { els.mat.releasePointerCapture(drag.pointerId); } catch (err) {}
   }
 
   function startLift(e){
-    var d = drag;
+    var d = drag, p = state.pieces[d.k], g = matGeom();
     d.started = true;
-    var p = state.pieces[d.k], slot = slotEls[d.k];
-    var g = boardGeom();
-    var cells = curCells(p), dm = dims(cells);
     d.geom = g;
-    d.cells = cells;
+    d.cells = curCells(p);
+    var dm = dims(d.cells);
     d.fullW = dm.w * g.cell + (dm.w - 1) * g.gap;
     d.fullH = dm.h * g.cell + (dm.h - 1) * g.gap;
-    var home = trayPos(d.k);
-    d.trayX = home.x; d.trayY = home.y;
-    d.trayScale = home.w / d.fullW;
-    var sx, sy, ss;
-    if (d.fromBoard) {
-      // Off the board: its squares are free again (its tray spot stays
-      // empty until it lands or flies back).
-      sx = g.left + p.at.c * g.step; sy = g.top + p.at.r * g.step; ss = 1;
-      d.sqs.forEach(function(i){ state.occ[i] = -1; renderSq(i); });
-      p.at = null;
-    } else {
-      slot.classList.remove('pressed', 'spring', 'pop', 'turn');
-      sx = d.trayX; sy = d.trayY; ss = d.trayScale;
-      slot.classList.add('lifted');
-    }
+    d.originX = g.left + d.from.c * g.step;
+    d.originY = g.top + d.from.r * g.step;
     // Mouse keeps the spot that was grabbed; a finger holds the piece
     // above itself so it stays in sight.
-    d.grabX = (d.startX - sx) / ss;
-    d.grabY = (d.startY - sy) / ss;
+    d.grabX = d.startX - d.originX;
+    d.grabY = d.startY - d.originY;
     d.lift = g.cell * 1.1;
-
+    // Its squares are free while it's carried (it may land on them again).
+    squaresOf(d.cells, d.from.r, d.from.c).forEach(function(i){ state.occ[i] = -1; });
+    d.pe.classList.remove('pressed');
     var f = els.floater;
-    f.innerHTML = '';
-    f.appendChild(pieceEl(cells, p.color));
-    f.className = 'floater on';
-    setFloater(sx, sy, ss);
     void f.offsetWidth;
     f.classList.add('lifting');
     clearTimeout(d.liftT);
@@ -1202,7 +1240,7 @@
 
   function moveTo(e){
     var d = drag, t = targetXY(e);
-    setFloater(t.x, t.y, 1);
+    setFloater(t.x, t.y);
     var g = d.geom;
     var c = Math.round((t.x - g.left) / g.step);
     var r = Math.round((t.y - g.top) / g.step);
@@ -1223,10 +1261,9 @@
   }
   function clearGhost(){
     ghost.cells.forEach(function(i){
-      var el = sqEls[i];
-      if (!el || !el.classList.contains('ghost')) return;
-      el.classList.remove('ghost');
-      if (state.occ[i] === -1) el.style.removeProperty('--c');
+      if (!sqEls[i]) return;
+      sqEls[i].classList.remove('ghost');
+      renderSq(i);
     });
     ghost.cells = [];
     ghost.key = '';
@@ -1255,60 +1292,76 @@
     if (d.r != null && fitsAt(d.cells, d.r, d.c) && !state.busy) {
       state.busy = true;
       f.classList.add('placing');
-      setFloater(d.geom.left + d.c * d.geom.step, d.geom.top + d.r * d.geom.step, 1);
+      setFloater(d.geom.left + d.c * d.geom.step, d.geom.top + d.r * d.geom.step);
       var token = boardToken;
       setTimeout(function(){
         if (token !== boardToken) return;
-        f.className = 'floater';
-        f.innerHTML = '';
         state.busy = false;
-        commitPlace(d.k, d.r, d.c);
+        place(d.k, d.r, d.c);
       }, 90);
     } else {
       flyBack(d);
     }
   }
 
-  // A tap: press and spring. On hard, a tray piece also turns a quarter
-  // turn clockwise (the click on pointerdown is its sound).
-  function tapped(d){
-    if (d.fromBoard) {
-      d.sqs.forEach(function(i){
-        var el = sqEls[i];
-        el.classList.remove('pressed'); void el.offsetWidth; el.classList.add('spring');
-      });
-      return;
-    }
-    var slot = slotEls[d.k];
-    slot.classList.remove('pressed');
-    var p = state.pieces[d.k];
-    if (state.turn) {
-      p.rot = (p.rot + 1) % 4;
-      slot.innerHTML = '';
-      slot.appendChild(pieceEl(curCells(p), p.color));
-      void slot.offsetWidth;
-      slot.classList.add('turn');
-    } else {
-      void slot.offsetWidth;
-      slot.classList.add('spring');
-    }
-  }
-
-  // Off the board, or where it doesn't fit: back to its tray spot.
-  function flyBack(d){
-    var f = els.floater;
-    f.classList.add('returning');
-    setFloater(d.trayX, d.trayY, d.trayScale);
-    var slot = slotEls[d.k];
-    flying = { slot: slot, t: setTimeout(finishFly, 230) };
-  }
-  function finishFly(){
-    if (!flying) return;
-    clearTimeout(flying.t);
-    flying.slot.classList.remove('lifted', 'placed');
-    flying = null;
+  function place(k, r, c){
+    var p = state.pieces[k];
+    p.pos = { r: r, c: c };
+    pieceSquares(k).forEach(function(i){ state.occ[i] = k; });
+    delete state.hidden[k];
     els.floater.className = 'floater';
     els.floater.innerHTML = '';
+    pieceSquares(k).forEach(function(i){
+      renderSq(i);
+      var el = sqEls[i];
+      el.classList.remove('drop'); void el.offsetWidth; el.classList.add('drop');
+    });
+    if (isSolved()) onSolved();
+  }
+
+  // A tap: press and spring. On hard it also turns the piece a quarter
+  // turn clockwise about its middle -- nudged up to 2 squares if that
+  // spot is taken, or a wobble if there's no room. (The click on
+  // pointerdown is its sound.)
+  function tapped(d){
+    var k = d.k, p = state.pieces[k];
+    d.pe.classList.remove('pressed');
+    void d.pe.offsetWidth;
+    if (!state.turn) { d.pe.classList.add('spring'); settleLater(k, 330); return; }
+    var spot = turnSpot(k);
+    if (!spot) { d.pe.classList.add('wobble'); settleLater(k, 390); return; }
+    var old = pieceSquares(k);
+    old.forEach(function(i){ state.occ[i] = -1; });
+    p.rot = (p.rot + 1) % 4;
+    p.pos = spot;
+    pieceSquares(k).forEach(function(i){ state.occ[i] = k; });
+    old.forEach(renderSq);
+    var pe = showInFloater(k, spot.r, spot.c);
+    pe.classList.add('turn');
+    settleLater(k, 330);
+  }
+  // Where piece k lands turned once more, or null if there's no room.
+  function turnSpot(k){
+    var p = state.pieces[k], cur = curCells(p), next = turnCells(p.cells, p.rot + 1);
+    var a = dims(cur), b = dims(next);
+    var r0 = p.pos.r + halfRound((a.h - b.h) / 2), c0 = p.pos.c + halfRound((a.w - b.w) / 2);
+    var own = pieceSquares(k), spot = null;
+    own.forEach(function(i){ state.occ[i] = -1; });
+    for (var t = 0; t < TURN_TRIES.length && !spot; t++) {
+      var r = r0 + TURN_TRIES[t][0], c = c0 + TURN_TRIES[t][1];
+      if (fitsAt(next, r, c)) spot = { r: r, c: c };
+    }
+    own.forEach(function(i){ state.occ[i] = k; });
+    return spot;
+  }
+
+  // Off the mat, or onto another piece: back where it was picked up.
+  function flyBack(d){
+    squaresOf(d.cells, d.from.r, d.from.c).forEach(function(i){ state.occ[i] = d.k; });
+    var f = els.floater;
+    f.classList.add('returning');
+    setFloater(d.originX, d.originY);
+    settleLater(d.k, 230);
   }
 
   function onCancel(e){
@@ -1316,16 +1369,21 @@
     cancelDrag();
   }
   // A drag that never got its pointerup (an OS gesture took the touch,
-  // the tab was hidden): the piece goes back to the tray.
+  // the tab was hidden, the screen changed size): the piece goes back.
   function cancelDrag(){
     if (!drag) return;
     var d = drag;
     detach();
     drag = null;
     clearGhost();
-    if (d.fromBoard && !d.started) d.sqs.forEach(function(i){ sqEls[i].classList.remove('pressed'); });
-    if (!d.fromBoard) slotEls[d.k].classList.remove('pressed');
-    if (d.started) { clearTimeout(d.liftT); els.floater.classList.remove('lifting'); flyBack(d); }
+    if (d.started) {
+      clearTimeout(d.liftT);
+      els.floater.classList.remove('lifting');
+      flyBack(d);
+    } else {
+      settleLater(d.k, 0);
+      finishFly();
+    }
   }
   window.addEventListener('blur', cancelDrag);
   document.addEventListener('visibilitychange', function(){ if (document.hidden) cancelDrag(); });
@@ -1396,11 +1454,13 @@
     } catch (e) { return null; }
   }
 
-  // The board, every piece (cells, colour, turn, on the board or in the
-  // tray), the level and the dots. A piece mid-drag counts as in the tray.
-  // A solved board (wave or smiley showing) resumes as the next board.
+  // The shape, every piece (cells, colour, turn, and where it sits in the
+  // shape -- or null when it's loose: loose pieces are packed again on
+  // restore, as mat squares change with the screen), the level and the
+  // dots. A piece mid-drag counts as where it was picked up. A solved
+  // board (wave or smiley showing) resumes as the next board.
   function snapshotGame(){
-    if (!state.mask) return null;
+    if (!state.mat) return null;
     var data = {
       difficulty: state.difficulty,
       progress: state.progress >= ROUND_SIZE ? 0 : state.progress,
@@ -1414,7 +1474,7 @@
       on: state.mask.on.slice(),
       turn: state.turn,
       pieces: state.pieces.map(function(p){
-        return { cells: p.cells, home: p.home, color: p.color, rot: p.rot, at: p.at ? [p.at.r, p.at.c] : null };
+        return { cells: p.cells, home: p.home, color: p.color, rot: p.rot, at: shapeOffset(p) };
       })
     };
     return data;
@@ -1431,10 +1491,10 @@
       copy = {
         rows: pz.rows, cols: pz.cols, on: pz.on.slice(), turn: !!pz.turn,
         pieces: pz.pieces.map(function(p){
-          return { cells: p.cells.map(function(q){ return q.slice(); }), home: p.home.slice(), color: p.color, rot: p.rot, at: null };
+          return { cells: p.cells.map(function(q){ return q.slice(); }), home: p.home.slice(), color: p.color, rot: p.rot, at: null, pos: null };
         })
       };
-      // Put back the pieces that were on the board; they must still fit.
+      // Pieces that were in the shape go back there; they must still fit.
       var occ = copy.on.map(function(){ return -1; });
       for (var k = 0; k < copy.pieces.length; k++) {
         var at = pz.pieces[k].at;
@@ -1446,7 +1506,7 @@
           if (r >= copy.rows || c >= copy.cols || !copy.on[x] || occ[x] !== -1) return false;
           occ[x] = k;
         }
-        copy.pieces[k].at = { r: at[0], c: at[1] };
+        copy.pieces[k].at = [at[0], at[1]];
       }
       if (copy.pieces.every(function(p){ return p.at; })) copy = null; // already solved: next board
     }
