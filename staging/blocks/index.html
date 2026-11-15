@@ -38,7 +38,7 @@
   }
 
   :root{
-    --bg:#283347;
+    --bg:#8A2F2A; /* brick: her son's pick of 16, 2026-11-15 */
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
@@ -434,13 +434,6 @@
     "url": "https://playandlearn.kids/"
   }
 }
-</script>
-<script>
-  // Background trial: ?bg=1..16 (compare.html shows all sixteen). A trial view
-  // shows the saved game but never saves, so it can't change the real one.
-  var BG_OPTIONS = { 1:'#5A1A1A', 2:'#4A1F2E', 3:'#8A2F2A', 4:'#7A3B2E', 5:'#7A5C6E', 6:'#6C6487', 7:'#4B4466', 8:'#2A1B3D', 9:'#3E2470', 10:'#2B2670', 11:'#0F2350', 12:'#1E3F8A', 13:'#34508A', 14:'#12355B', 15:'#6B6F78', 16:'#5A5552' };
-  var BG_TRIAL = (/[?&]bg=(1[0-6]|[1-9])\b/.exec(location.search) || [])[1];
-  if (BG_TRIAL) document.documentElement.style.setProperty('--bg', BG_OPTIONS[BG_TRIAL]);
 </script>
 </head>
 <body>
@@ -1423,7 +1416,7 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = BG_TRIAL ? null : 'playandlearn.saved.blocks'; // trial views don't save
+  SAVE_KEY = 'playandlearn.saved.blocks';
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
