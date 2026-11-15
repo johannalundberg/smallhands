@@ -58,23 +58,28 @@
     --n: 8; /* board and mat width in squares (must match N in the script) */
     --stack: calc((var(--n) + 6.1) / var(--n));
     --mat-n: var(--n); /* mat width in squares: the board's (she chose this over a wider mat) */
+    --mat-rows: 5;     /* mat height in squares (desktop turns the mat on its side) */
     --board-fit-rows: min(calc((100vw - 2 * var(--unit)) * var(--n) / var(--mat-n)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / var(--stack)));
     --board-w: min(var(--board-fit-rows), 720px);
     --cell-full: calc((var(--board-w) - (var(--n) - 1) * var(--gap)) / var(--n));
     --mat-sq: rgba(0,0,0,0.11); /* the mat's blank tiles, fainter than the board's */
   }
 
-  /* Desktop (her pick, 2026-11-15): the board starts below the level
-     buttons and the mat reaches down beside back and refresh (they're in
-     the corner), its bottom on the same line as their bottom edge. */
+  /* Desktop: the mat stands beside the board instead of below it (5 wide,
+     as tall as the board), one empty column between, both between the top
+     and bottom button rows -- the wide screen is used and the squares grow
+     (she found the narrow board-over-mat column looked odd on desktop). */
   @media (min-width: 1024px) and (min-height: 501px){
     :root{
-      --board-w: min(calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--unit)) / var(--stack)), calc(100vw - 2 * (2.1 * var(--icon-size) + 3 * var(--unit))), 720px);
+      --mat-n: 5;
+      --mat-rows: var(--n);
+      --board-w: min(calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), calc((100vw - 2 * var(--unit)) * var(--n) / (var(--n) + 6.1)), 720px);
     }
     body{
       padding-top: var(--v-reserve-top);
-      padding-bottom: var(--unit);
+      padding-bottom: var(--v-reserve-bottom);
     }
+    html .game{ flex-direction:row; } /* outranks the base .game rule further down */
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
@@ -237,14 +242,14 @@
   .tray{
     position:relative;
     width:calc(var(--cell-full) * var(--mat-n) + var(--gap) * (var(--mat-n) - 1));
-    height:calc(5 * var(--cell-full) + 4 * var(--gap));
+    height:calc(var(--mat-rows) * var(--cell-full) + (var(--mat-rows) - 1) * var(--gap));
   }
   .mat-grid{
     position:absolute;
     inset:0;
     display:grid;
     grid-template-columns:repeat(var(--mat-n), minmax(0, 1fr));
-    grid-template-rows:repeat(5, minmax(0, 1fr));
+    grid-template-rows:repeat(var(--mat-rows), minmax(0, 1fr));
     gap:var(--gap);
   }
   .mat-grid i{ background:var(--mat-sq); border-radius:var(--round); }
@@ -748,16 +753,24 @@
   // one row if they fit with gaps, otherwise one above the other two (or
   // two above one), a free row between. Sets that can't be arranged like
   // that aren't dealt.
-  var MAT_COLS = N, MAT_ROWS = 5;
+  // Phones and tablets: 8 wide x 5 deep under the board. Desktop: 5 wide x
+  // 8 tall beside it (same media query as the CSS).
+  var SIDE_MAT = window.matchMedia('(min-width: 1024px) and (min-height: 501px)');
+  var MAT_COLS, MAT_ROWS;
+  function setMatDims(){
+    if (SIDE_MAT.matches) { MAT_COLS = 5; MAT_ROWS = N; }
+    else { MAT_COLS = N; MAT_ROWS = 5; }
+  }
+  setMatDims();
   function setWidth(set){
     return set.reduce(function(sum, p){ return sum + (p ? dims(p.cells).w : 0); }, 0);
   }
   // Columns for a row of pieces (widths ws) with at least `gap` between
   // them; spare columns go to the gaps between pieces first, then the edges.
   // Returns the start column of each, or null if they don't fit.
-  function rowCols(ws, gap){
+  function rowCols(ws, gap, cols){
     var n = ws.length;
-    var spare = MAT_COLS - ws.reduce(function(a, b){ return a + b; }, 0) - gap * (n - 1);
+    var spare = cols - ws.reduce(function(a, b){ return a + b; }, 0) - gap * (n - 1);
     if (spare < 0) return null;
     var gaps = [];
     for (var i = 0; i <= n; i++) gaps.push((i > 0 && i < n ? gap : 0) + Math.floor(spare / (n + 1)));
@@ -773,14 +786,24 @@
   // Spots ({col,row} per tray index) for the pieces in `set`, or null.
   // tight: allow pieces touching in one row (only for games saved before
   // the gaps existed).
+  // A tall mat (desktop) is planned as a wide one on its side: widths and
+  // heights swap, then the spots swap back.
   function planLayout(set, tight){
     var ks = [];
     set.forEach(function(p, k){ if (p) ks.push(k); });
     if (!ks.length) return {};
-    var d = {};
-    ks.forEach(function(k){ d[k] = dims(set[k].cells); });
+    var d = {}, tall = MAT_ROWS > MAT_COLS;
+    ks.forEach(function(k){
+      var dm = dims(set[k].cells);
+      d[k] = tall ? { w: dm.h, h: dm.w } : dm;
+    });
+    var plan = planWide(ks, d, tall ? MAT_ROWS : MAT_COLS, tall ? MAT_COLS : MAT_ROWS, tight);
+    if (plan && tall) Object.keys(plan).forEach(function(k){ plan[k] = { col: plan[k].row, row: plan[k].col }; });
+    return plan;
+  }
+  function planWide(ks, d, MAT_COLS, MAT_ROWS, tight){
     function row(group, top, height){
-      var cols = rowCols(group.map(function(k){ return d[k].w; }), 1);
+      var cols = rowCols(group.map(function(k){ return d[k].w; }), 1, MAT_COLS);
       if (!cols) return null;
       var out = {};
       group.forEach(function(k, i){ out[k] = { col: cols[i], row: top + Math.floor((height - d[k].h) / 2) }; });
@@ -806,7 +829,7 @@
       }
     }
     if (tight) {
-      var cols = rowCols(ks.map(function(k){ return d[k].w; }), 0);
+      var cols = rowCols(ks.map(function(k){ return d[k].w; }), 0, MAT_COLS);
       if (cols) {
         var out = {};
         ks.forEach(function(k, i){ out[k] = { col: cols[i], row: Math.floor((MAT_ROWS - d[k].h) / 2) }; });
@@ -896,12 +919,32 @@
     });
   }
   function buildMat(){
+    var old = els.tray.querySelector('.mat-grid');
+    if (old) old.remove();
     var grid = document.createElement('div');
     grid.className = 'mat-grid';
     for (var i = 0; i < MAT_COLS * MAT_ROWS; i++) grid.appendChild(document.createElement('i'));
     els.tray.insertBefore(grid, els.tray.firstChild);
   }
   buildMat();
+  // Crossing between the phone/tablet and desktop layouts turns the mat:
+  // re-arrange the pieces on it (a set that can't lie on the new mat with
+  // gaps gets a new deal -- only happens when a window is resized).
+  function onMatShapeChange(){
+    cancelDrag();
+    setMatDims();
+    buildMat();
+    if (!state.tray.some(function(p){ return p; })) return;
+    if (!state.over && !planLayout(state.tray)) {
+      state.tray = dealSet();
+      renderTray(true);
+      saveProgress();
+    } else {
+      layoutTray();
+    }
+  }
+  if (SIDE_MAT.addEventListener) SIDE_MAT.addEventListener('change', onMatShapeChange);
+  else if (SIDE_MAT.addListener) SIDE_MAT.addListener(onMatShapeChange);
   function renderTray(pop){
     if (pop) layoutTray();
     state.tray.forEach(function(p, k){
