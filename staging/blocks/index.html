@@ -435,6 +435,13 @@
   }
 }
 </script>
+<script>
+  // Background trial: ?bg=1..16, warm variations around brick (compare.html
+  // shows all sixteen). A trial view shows the saved game but never saves.
+  var BG_OPTIONS = { 1:'#5E2219', 2:'#6E2420', 3:'#8A2F2A', 4:'#8E3B3B', 5:'#8C4A2F', 6:'#9E3B2C', 7:'#A0441E', 8:'#B5655A', 9:'#B85C3E', 10:'#B5521F', 11:'#C2452D', 12:'#C46A3A', 13:'#D9644A', 14:'#E07A5F', 15:'#E8946A', 16:'#EBA884' };
+  var BG_TRIAL = (/[?&]bg=(1[0-6]|[1-9])\b/.exec(location.search) || [])[1];
+  if (BG_TRIAL) document.documentElement.style.setProperty('--bg', BG_OPTIONS[BG_TRIAL]);
+</script>
 </head>
 <body>
 
@@ -1416,7 +1423,7 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = 'playandlearn.saved.blocks';
+  SAVE_KEY = (typeof BG_TRIAL !== 'undefined' && BG_TRIAL) ? null : 'playandlearn.saved.blocks'; // trial views don't save
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
