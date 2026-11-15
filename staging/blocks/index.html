@@ -38,7 +38,7 @@
   }
 
   :root{
-    --bg:#3D3A8F; /* indigo, on test (2026-11-15); before: brick #8A2F2A. Trial below. */
+    --bg:#3D3A8F; /* indigo (2026-11-15); before: brick #8A2F2A. Look trial below. */
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
@@ -456,11 +456,21 @@
 }
 </script>
 <script>
-  // Background trial: ?bg=1..20, mid-tone colours (compare.html shows all
-  // twenty). A trial view shows the saved game but never saves.
-  var BG_OPTIONS = { 1:'#8A2F2A', 2:'#8E3B3B', 3:'#A3262E', 4:'#9E3B2C', 5:'#A0441E', 6:'#B5521F', 7:'#B85C3E', 8:'#C46A3A', 9:'#B5655A', 10:'#7A5C6E', 11:'#6C6487', 12:'#5E5873', 13:'#5A3A9A', 14:'#3D3A8F', 15:'#2F55B0', 16:'#3F5F9E', 17:'#4A6FA0', 18:'#1F4A73', 19:'#6B6F78', 20:'#6E6763' };
-  var BG_TRIAL = (/[?&]bg=(20|1[0-9]|[1-9])\b/.exec(location.search) || [])[1];
-  if (BG_TRIAL) document.documentElement.style.setProperty('--bg', BG_OPTIONS[BG_TRIAL]);
+  // Look trial (compare.html shows them side by side; trial views never save):
+  //   ?look=earthy       indigo, toned-down earthy pieces, lime full rows
+  //   ?look=earthy-blue  the same pieces on Unblock's blue #5F44FF
+  //   ?look=unblock      Unblock's blue with its amber/cyan/pink/lime (no red)
+  var BLOCKS_LOOKS = {
+    'earthy':      { colors: ['#D9A93B', '#D2704A', '#E39AA6', '#EAD3A8', '#5FB3A9'] },
+    'earthy-blue': { bg: '#5F44FF', colors: ['#D9A93B', '#D2704A', '#E39AA6', '#EAD3A8', '#5FB3A9'] },
+    'unblock':     { bg: '#5F44FF', correct: '#FFFFFF', colors: ['#F2B238', '#21CECE', '#F362EE', '#9EDE54'] }
+  };
+  var BLOCKS_LOOK = (/[?&]look=(earthy-blue|earthy|unblock)\b/.exec(location.search) || [])[1] || '';
+  if (BLOCKS_LOOK) {
+    var L = BLOCKS_LOOKS[BLOCKS_LOOK];
+    if (L.bg) document.documentElement.style.setProperty('--bg', L.bg);
+    if (L.correct) document.documentElement.style.setProperty('--correct', L.correct);
+  }
 </script>
 </head>
 <body>
@@ -532,6 +542,7 @@
   // green -- that's for full rows; no amber; one pink only, so the purple
   // that read as a second pink is gone): blue, pink, yellow, teal, orange.
   var COLORS = ['#00B2FF', '#FF4FB8', '#FFD60A', '#14D9C4', '#FF6B4A'];
+  if (BLOCKS_LOOK) COLORS = BLOCKS_LOOKS[BLOCKS_LOOK].colors; // look trial
   var COLORS_VERSION = 3;
   // Older saves, upgraded step by step:
   // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest
@@ -1496,7 +1507,7 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = (typeof BG_TRIAL !== 'undefined' && BG_TRIAL) ? null : 'playandlearn.saved.blocks'; // trial views don't save
+  SAVE_KEY = BLOCKS_LOOK ? null : 'playandlearn.saved.blocks'; // trial views don't save
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
