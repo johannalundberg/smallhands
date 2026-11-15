@@ -453,6 +453,12 @@
   @media (hover: hover) and (pointer: fine) and (min-width: 768px) and (min-height: 501px){
     :root{ --face: var(--bright); --ink-muted: rgba(32,32,32,0.4); }
     body.showing-answer .answer-slots{ color:var(--bright); } /* purple on purple wouldn't show */
+    /* STAGING TRIAL: on computers the numbers stay white and the whole page
+       flashes green (right) or red (wrong) with the pop / shake instead. */
+    html body.flash-right .answer-slots,
+    html body.flash-wrong .answer-slots{ color:var(--bright); }
+    html body.flash-right{ background:var(--success); }
+    html body.flash-wrong{ background:var(--incorrect); }
     body{ padding:0; background:var(--bg); }
     .num-pad{ display:none; }
     body .op-group{ display:flex; }
