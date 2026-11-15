@@ -469,6 +469,12 @@
     5:['#F93134', '#2A2420', '#FD6427']   // Unblock red + Copy the Pattern orange
   };
   var RED_TRIAL = (/[?&]look=([1-5])\b/.exec(location.search) || [])[1];
+  // Background trial for the brighter pieces: ?bg=1..6 (staging colours on
+  // a calmer blue), same sample board, never saves.
+  LOOK_TRIAL_OPTIONS[6] = ['#F93134', '#2A2420', '#FF7235'];
+  var BG_TRIAL_OPTIONS = { 1:'#4848A8', 2:'#5557A3', 3:'#5F639E', 4:'#676C99', 5:'#4D4F8C', 6:'#525680' };
+  var BG_TRIAL = (/[?&]bg=([1-6])\b/.exec(location.search) || [])[1];
+  if (BG_TRIAL) { RED_TRIAL = '6'; document.documentElement.style.setProperty('--bg', BG_TRIAL_OPTIONS[BG_TRIAL]); }
 </script>
 </head>
 <body>
