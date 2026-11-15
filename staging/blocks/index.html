@@ -51,12 +51,10 @@
     --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
     --gap: 3px;
     --round: 12%; /* slightly rounded squares */
-    /* Board (8 rows), one empty row, then the mat of blank tiles (5 rows)
-       the pieces wait on: 14 rows in all, about 1.76 board widths tall,
+    /* Board (7 rows, her pick over 8x8 on 2026-11-15), one empty row, then
+       the mat of blank tiles (5 rows) the pieces wait on: 13 rows in all,
        between the top and bottom button rows. */
-    /* Board size trial: ?n=7 gives a 7x7 board and a 7-wide mat (--n set
-       from the head script); the stack is n + 1 + 5 rows tall. */
-    --n: 8;
+    --n: 7; /* board and mat width in squares (must match N in the script) */
     --stack: calc((var(--n) + 6.1) / var(--n));
     --board-fit-rows: min(calc(100vw - 2 * var(--unit)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / var(--stack)));
     --board-w: min(var(--board-fit-rows), 720px);
@@ -430,11 +428,6 @@
   }
 }
 </script>
-<script>
-  // Board size trial: ?n=7 for a 7x7 board (8x8 when not given).
-  var BOARD_N = /[?&]n=7\b/.test(location.search) ? 7 : 8;
-  document.documentElement.style.setProperty('--n', BOARD_N);
-</script>
 </head>
 <body>
 
@@ -497,8 +490,7 @@
 
   document.addEventListener('touchstart', function(){}, { passive: true });
 
-  // Board size trial: ?n=7 (8 when not given), see the head script.
-  var N = BOARD_N;
+  var N = 7; // 7x7 board (her pick over 8x8); matches --n in the CSS
   var TAP_SLOP = 6;
   var COLORS = ['#FFA226', '#0DC754', '#707EFF', '#E570E1', '#FFD60A', '#3CC8C8', '#FF6B4A'];
 
@@ -1246,8 +1238,7 @@
   introduceTraySlider();
 
   // ---------- resume after the rotate-block reload ----------
-  var KEY_SUFFIX = N === 8 ? '' : String(N); // the 7x7 trial keeps its own game and bests
-  var RESUME_KEY = 'playandlearn.resume.blocks' + KEY_SUFFIX;
+  var RESUME_KEY = 'playandlearn.resume.blocks';
   var RESUME_MAX_AGE = 10 * 60 * 1000;
   function saveResume(){
     try {
@@ -1319,13 +1310,19 @@
   function saveProgress(){
     if (!SAVE_KEY) return; // not set up yet (nothing loaded to overwrite)
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ difficulty: state.difficulty, game: snapshotGame(), best: state.best }));
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ n: N, difficulty: state.difficulty, game: snapshotGame(), best: state.best }));
     } catch (e) {}
   }
   function loadProgress(){
     try {
-      var d = JSON.parse(localStorage.getItem('playandlearn.saved.blocks' + KEY_SUFFIX) || 'null');
+      // A save from the 7x7 trial (its own key) carries over once.
+      var trial = localStorage.getItem('playandlearn.saved.blocks7');
+      if (trial) localStorage.removeItem('playandlearn.saved.blocks7');
+      var d = JSON.parse(trial || localStorage.getItem('playandlearn.saved.blocks') || 'null');
       if (!d || ['easy', 'medium', 'hard'].indexOf(d.difficulty) === -1) return null;
+      // From the 8x8 board: keep the level, but its game can't continue on
+      // 7x7 and its bests (longer games) would be out of reach.
+      if (!trial && d.n !== N) { d.game = null; d.best = null; }
       return d;
     } catch (e) { return null; }
   }
@@ -1347,7 +1344,7 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = 'playandlearn.saved.blocks' + KEY_SUFFIX;
+  SAVE_KEY = 'playandlearn.saved.blocks';
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
