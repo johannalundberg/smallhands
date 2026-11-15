@@ -54,9 +54,13 @@
     /* Board (8 rows), one empty row, then the mat of blank tiles (5 rows)
        the pieces wait on: 14 rows in all, about 1.76 board widths tall,
        between the top and bottom button rows. */
-    --board-fit-rows: min(calc(100vw - 2 * var(--unit)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / 1.76));
+    /* Board size trial: ?n=7 gives a 7x7 board and a 7-wide mat (--n set
+       from the head script); the stack is n + 1 + 5 rows tall. */
+    --n: 8;
+    --stack: calc((var(--n) + 6.1) / var(--n));
+    --board-fit-rows: min(calc(100vw - 2 * var(--unit)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / var(--stack)));
     --board-w: min(var(--board-fit-rows), 720px);
-    --cell-full: calc((var(--board-w) - 7 * var(--gap)) / 8);
+    --cell-full: calc((var(--board-w) - (var(--n) - 1) * var(--gap)) / var(--n));
     --mat-sq: rgba(0,0,0,0.11); /* the mat's blank tiles, fainter than the board's */
   }
 
@@ -65,7 +69,7 @@
      the corner), its bottom on the same line as their bottom edge. */
   @media (min-width: 1024px) and (min-height: 501px){
     :root{
-      --board-w: min(calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--unit)) / 1.76), calc(100vw - 2 * (2.1 * var(--icon-size) + 3 * var(--unit))), 720px);
+      --board-w: min(calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--unit)) / var(--stack)), calc(100vw - 2 * (2.1 * var(--icon-size) + 3 * var(--unit))), 720px);
     }
     body{
       padding-top: var(--v-reserve-top);
@@ -202,8 +206,8 @@
     width:var(--board-w);
     aspect-ratio:1;
     display:grid;
-    grid-template-columns:repeat(8, minmax(0, 1fr));
-    grid-template-rows:repeat(8, minmax(0, 1fr));
+    grid-template-columns:repeat(var(--n), minmax(0, 1fr));
+    grid-template-rows:repeat(var(--n), minmax(0, 1fr));
     gap:var(--gap);
   }
   .sq{
@@ -240,7 +244,7 @@
     position:absolute;
     inset:0;
     display:grid;
-    grid-template-columns:repeat(8, minmax(0, 1fr));
+    grid-template-columns:repeat(var(--n), minmax(0, 1fr));
     grid-template-rows:repeat(5, minmax(0, 1fr));
     gap:var(--gap);
   }
@@ -426,6 +430,11 @@
   }
 }
 </script>
+<script>
+  // Board size trial: ?n=7 for a 7x7 board (8x8 when not given).
+  var BOARD_N = /[?&]n=7\b/.test(location.search) ? 7 : 8;
+  document.documentElement.style.setProperty('--n', BOARD_N);
+</script>
 </head>
 <body>
 
@@ -488,7 +497,8 @@
 
   document.addEventListener('touchstart', function(){}, { passive: true });
 
-  var N = 8;
+  // Board size trial: ?n=7 (8 when not given), see the head script.
+  var N = BOARD_N;
   var TAP_SLOP = 6;
   var COLORS = ['#FFA226', '#0DC754', '#707EFF', '#E570E1', '#FFD60A', '#3CC8C8', '#FF6B4A'];
 
@@ -690,7 +700,7 @@
   // The three pieces lie side by side on the 8-wide mat, so a set's widths
   // must add up to 8 or less (a line of 5 lying flat only comes with small
   // pieces, and never with a 3x3).
-  var MAT_COLS = 8, MAT_ROWS = 5;
+  var MAT_COLS = N, MAT_ROWS = 5;
   function setWidth(set){
     return set.reduce(function(sum, p){ return sum + (p ? dims(p.cells).w : 0); }, 0);
   }
@@ -1236,7 +1246,8 @@
   introduceTraySlider();
 
   // ---------- resume after the rotate-block reload ----------
-  var RESUME_KEY = 'playandlearn.resume.blocks';
+  var KEY_SUFFIX = N === 8 ? '' : String(N); // the 7x7 trial keeps its own game and bests
+  var RESUME_KEY = 'playandlearn.resume.blocks' + KEY_SUFFIX;
   var RESUME_MAX_AGE = 10 * 60 * 1000;
   function saveResume(){
     try {
@@ -1313,7 +1324,7 @@
   }
   function loadProgress(){
     try {
-      var d = JSON.parse(localStorage.getItem('playandlearn.saved.blocks') || 'null');
+      var d = JSON.parse(localStorage.getItem('playandlearn.saved.blocks' + KEY_SUFFIX) || 'null');
       if (!d || ['easy', 'medium', 'hard'].indexOf(d.difficulty) === -1) return null;
       return d;
     } catch (e) { return null; }
@@ -1336,7 +1347,7 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = 'playandlearn.saved.blocks';
+  SAVE_KEY = 'playandlearn.saved.blocks' + KEY_SUFFIX;
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
