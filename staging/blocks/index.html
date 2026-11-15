@@ -232,7 +232,7 @@
   .sq.clearing::after, .sq.wave-out::after{
     content:''; position:absolute; inset:0; border-radius:inherit;
   }
-  .sq.clearing::after{ background:var(--correct); animation: sq-out 380ms ease-in both; }
+  .sq.clearing::after{ background:var(--correct); animation: sq-out 240ms ease-in both; } /* 380ms felt slow without the grow (her note) */
   /* No grow first (her call, 2026-11-15): at 108% neighbours overlapped
      (gap 3px, a square grows ~3.6px), leaving thin hard lines between them. */
   @keyframes sq-out{
@@ -323,9 +323,9 @@
   /* ...then every block on the board and every piece left on the mat pop
      and disappear, all at once. */
   /* The same as a full row clearing (her call): shrink away on the empty
-     square, 380ms ease-in -- but in the block's own colour, not green. */
-  .sq.wave-out::after{ background:var(--c); animation: sq-out 380ms ease-in both; }
-  .slot.gone .piece{ animation: sq-out 380ms ease-in both; }
+     square, 240ms ease-in -- but in the block's own colour, not green. */
+  .sq.wave-out::after{ background:var(--c); animation: sq-out 240ms ease-in both; }
+  .slot.gone .piece{ animation: sq-out 240ms ease-in both; }
 
   /* The piece being dragged, at full board size. */
   .floater{
@@ -1046,7 +1046,7 @@
         el.classList.add('clearing');
         setTimeout(function(){
           if (el.classList.contains('clearing')) renderSq(i);
-        }, 400);
+        }, 260);
       });
     }
     renderScore(true);
@@ -1093,7 +1093,7 @@
   function quietEnd(){
     sqEls.forEach(function(el){ if (el.classList.contains('filled')) el.classList.add('wave-out'); });
     els.slots.forEach(function(s){ if (!s.classList.contains('empty')) s.classList.add('gone'); });
-    celebrationTimer = setTimeout(startGame, 520);
+    celebrationTimer = setTimeout(startGame, 380);
   }
 
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
