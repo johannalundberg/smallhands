@@ -58,28 +58,22 @@
     --board-w: min(var(--board-fit-rows), 720px);
   }
 
-  /* Desktop trial (?layout=1|2|3):
-     1 = smaller: everything between the top and bottom button rows.
-     2 = pieces closer: same rows, the tray tucked up under the board, so
-         the board can be a bit bigger.
-     3 = pieces closer, and the tray may reach down beside the back and
-         refresh buttons (they sit in the corner), so the board is bigger
-         still while staying below the level buttons. */
+  /* Desktop (her pick of three, 2026-11-15): the board starts below the
+     level buttons, the pieces sit close under it, and the tray reaches down
+     beside back and refresh (they're in the corner), with every piece's
+     bottom edge on the same line as those buttons' bottom edge. */
   @media (min-width: 1024px) and (min-height: 501px){
-    :root[data-layout="2"], :root[data-layout="3"]{
+    :root{
       --tray-gap-k: 0.03;
       --tray-k: 0.32;
-    }
-    :root[data-layout="2"]{
-      --board-w: min(calc(100vw - 2 * var(--unit)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / 1.35), 720px);
-    }
-    :root[data-layout="3"]{
       --board-w: min(calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--unit)) / 1.35), calc(100vw - 2 * (2.1 * var(--icon-size) + 3 * var(--unit))), 720px);
     }
-    :root[data-layout="3"] body{
+    body{
       padding-top: var(--v-reserve-top);
       padding-bottom: var(--unit);
     }
+    .tray .slot{ align-items:flex-end; }
+    .tray .piece{ transform-origin:50% 100%; }
   }
 
   @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
@@ -403,13 +397,6 @@
     "url": "https://playandlearn.kids/"
   }
 }
-</script>
-<script>
-  // Desktop layout trial: ?layout=1|2|3 (3 when not given).
-  (function(){
-    var m = /[?&]layout=([123])\b/.exec(location.search);
-    document.documentElement.setAttribute('data-layout', m ? m[1] : '3');
-  })();
 </script>
 </head>
 <body>
@@ -933,9 +920,10 @@
     // Layout size, not the on-screen box: a piece grabbed while it is still
     // popping in (or pressed) is scaled down on screen.
     var sr = d.slot.getBoundingClientRect();
+    var bottomAligned = getComputedStyle(d.slot).alignItems === 'flex-end'; // desktop
     var rect = {
       left: sr.left + (sr.width - pe.offsetWidth) / 2,
-      top: sr.top + (sr.height - pe.offsetHeight) / 2,
+      top: sr.top + (sr.height - pe.offsetHeight) * (bottomAligned ? 1 : 0.5),
       width: pe.offsetWidth
     };
     var g = boardGeom();
