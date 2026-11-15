@@ -1033,7 +1033,10 @@
     if (newBest) state.best[state.difficulty] = state.score;
     saveProgress();
     overTimer = setTimeout(function(){
-      // The pieces that don't fit shake their heads.
+      // The pieces that don't fit shake their heads, with the site's short
+      // 'negative' sound (her call) -- not on a new best, where the smiley's
+      // big sound follows instead.
+      if (!newBest) PLSound.play('negative');
       els.slots.forEach(function(s){
         if (s.classList.contains('empty')) return;
         s.classList.remove('shake', 'pop', 'spring'); void s.offsetWidth; s.classList.add('shake');
