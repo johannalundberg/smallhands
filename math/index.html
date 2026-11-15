@@ -235,11 +235,15 @@
   @keyframes blink{
     50%{ opacity:0; }
   }
-  /* Right or wrong without colour, on every screen: a wrong answer's digits
-     shake their heads (Sudoku's wobble), a right answer pops (Memory's
-     found-a-pair bounce). The page stays as it is. */
+  /* Right or wrong: a wrong answer's digits shake their heads (Sudoku's
+     wobble) and turn red, a right answer pops (Memory's found-a-pair
+     bounce) and turns green, then back. On computers the digits stay white
+     and the whole page flashes instead (see the computer block below). */
   body.flash-wrong .answer-digit{ animation: digit-shake 520ms ease-in-out; }
   body.flash-right .answer-slots{ animation: ans-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .answer-slots{ transition: color 150ms ease; }
+  html body.flash-right .answer-slots{ color:var(--success); }
+  html body.flash-wrong .answer-slots{ color:var(--incorrect); }
   /* Out of tries: while the right answer is shown, it turns the signs'
      bright purple so it's clear this is the answer, not another try. */
   body.showing-answer .answer-slots{ color:#B15CFF; }
@@ -446,6 +450,12 @@
   @media (hover: hover) and (pointer: fine) and (min-width: 768px) and (min-height: 501px){
     :root{ --face: var(--bright); --ink-muted: rgba(32,32,32,0.4); }
     body.showing-answer .answer-slots{ color:var(--bright); } /* purple on purple wouldn't show */
+    /* Computers: white numbers, the whole page flashes green (right) or
+       red (wrong) with the pop / shake. */
+    html body.flash-right .answer-slots,
+    html body.flash-wrong .answer-slots{ color:var(--bright); }
+    html body.flash-right{ background:var(--success); }
+    html body.flash-wrong{ background:var(--incorrect); }
     body{ padding:0; background:var(--bg); }
     .num-pad{ display:none; }
     body .op-group{ display:flex; }
