@@ -43,6 +43,7 @@
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
     --face:#FFA226;
+    --best-ink:rgba(228,228,228,0.45); /* best score: the light ink, greyed */
     --incorrect:#F2383B;
     --unit: 1.1574vw;
     --icon-size: clamp(44px, 8.912vw, 154px);
@@ -159,8 +160,9 @@
 
   .controls-slider{ display:contents; }
 
-  /* ---------- score: a plain number top left (no circle) ---------- */
-  .score{
+  /* ---------- score: a plain number top left (no circle), and under it
+     this level's best score, smaller and grey, behind a pixel crown ---------- */
+  .score-box{
     position:absolute;
     left:var(--unit);
     /* The digits' top edge lines up with the top of the level buttons
@@ -169,13 +171,31 @@
     z-index:2;
     font-size:calc(var(--icon-size) * 0.58);
     line-height:1;
-    color:var(--bright);
+    pointer-events:none;
+  }
+  .score, .best{
     transform-origin:left center;
     transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
-  .score.bump{ transform:scale(1.12); }
+  .score{ display:block; color:var(--bright); }
+  .best{
+    display:flex;
+    align-items:center;
+    gap:0.3em;
+    margin-top:0.12em;
+    font-size:0.42em;
+    color:var(--best-ink);
+  }
+  .best[hidden]{ display:none; }
+  .best svg{ height:0.86em; width:auto; fill:currentColor; flex:none; }
+  .score.bump, .best.bump{ transform:scale(1.12); }
+  .best.new{ color:var(--bright); transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), color 300ms ease; }
 
   /* ---------- board ---------- */
+  .game{
+    transition: opacity 350ms ease;
+  }
+  .game.fade{ opacity:0; transition-duration:600ms; }
   .game{
     display:flex;
     flex-direction:column;
@@ -434,7 +454,14 @@
     </div>
   </div>
 
-  <div class="score num" id="score">0</div>
+  <div class="score-box">
+    <span class="score num" id="score">0</span>
+    <div class="best" id="best" hidden>
+      <!-- pixel crown: three points over a band -->
+      <svg viewBox="0 0 7 6" aria-hidden="true"><path d="M0 0h1v2h1v1h1v-3h1v3h1v-1h1v-2h1v6h-7z"/></svg>
+      <span class="num" id="bestVal">0</span>
+    </div>
+  </div>
 
   <div class="game" id="game">
     <div class="board" id="board"></div>
@@ -527,6 +554,7 @@
     board: [],        // length 64: -1 empty, else a COLORS index
     tray: [null, null, null], // { cells, color } or null once placed
     score: 0,
+    best: { easy: 0, medium: 0, hard: 0 }, // best score per level, kept between visits
     difficulty: 'easy',
     over: false,
     placing: false
@@ -539,6 +567,8 @@
     game: document.getElementById('game'),
     floater: document.getElementById('floater'),
     score: document.getElementById('score'),
+    best: document.getElementById('best'),
+    bestVal: document.getElementById('bestVal'),
     celebration: document.getElementById('celebration'),
     diffGroup: document.getElementById('diffGroup'),
     backBtn: document.getElementById('backBtn'),
@@ -740,15 +770,23 @@
     });
   });
 
+  function bumpEl(el){
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+    clearTimeout(el._bumpT);
+    el._bumpT = setTimeout(function(){ el.classList.remove('bump'); }, 200);
+  }
   function renderScore(bump){
     els.score.textContent = state.score;
-    if (bump) {
-      els.score.classList.remove('bump');
-      void els.score.offsetWidth;
-      els.score.classList.add('bump');
-      clearTimeout(renderScore.t);
-      renderScore.t = setTimeout(function(){ els.score.classList.remove('bump'); }, 200);
-    }
+    if (bump) bumpEl(els.score);
+  }
+  // The level's best, hidden until there is one.
+  function renderBest(){
+    var b = state.best[state.difficulty] || 0;
+    els.bestVal.textContent = b;
+    els.best.hidden = !b;
+    els.best.classList.remove('new');
   }
 
   // ---------- game flow ----------
@@ -762,6 +800,7 @@
     els.floater.innerHTML = '';
     els.celebration.style.display = 'none';
     els.game.style.display = '';
+    els.game.classList.remove('fade');
     state.board = new Array(N * N).fill(-1);
     state.score = 0;
     state.over = false;
@@ -769,6 +808,7 @@
     buildBoardDom();
     renderBoard();
     renderScore(false);
+    renderBest();
     state.tray = dealSet();
     renderTray(true);
     saveProgress();
@@ -834,11 +874,24 @@
     if (!left.length) return;
     if (left.some(function(t){ return fitsAnywhere(state.board, t.cells); })) return;
     state.over = true;
+    // A new best is kept straight away, so leaving now can't lose it.
+    var newBest = state.score > (state.best[state.difficulty] || 0);
+    if (newBest) state.best[state.difficulty] = state.score;
     saveProgress();
     overTimer = setTimeout(function(){
       els.slots.forEach(function(s){ if (!s.classList.contains('empty')) s.classList.add('dead'); });
-      overTimer = setTimeout(showCelebration, 1300);
+      overTimer = setTimeout(newBest ? showCelebration : quietEnd, 1300);
     }, delay);
+  }
+
+  // Out of room without beating the best: no face, no sound. The board
+  // fades away with the final score still showing, then a fresh one.
+  function quietEnd(){
+    els.game.classList.add('fade');
+    overTimer = setTimeout(function(){
+      startGame();
+      // startGame removed .fade, so the new board fades back in.
+    }, 900);
   }
 
   var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
@@ -849,14 +902,18 @@
     '<rect fill="var(--face)" x="291" y="301" width="392" height="65"/>' +
     '</svg>';
 
-  // Out of room: the smiley (with the final score still showing top left),
-  // then a fresh board.
+  // Out of room with a new best: the smiley, and the grey best under the
+  // score lights up and jumps to the new number. Then a fresh board.
   function showCelebration(){
     updateAppHeight();
     els.celebration.innerHTML = CELEBRATION_FACE_SVG;
     PLSound.play('complete');
     els.game.style.display = 'none';
     els.celebration.style.display = 'flex';
+    els.bestVal.textContent = state.best[state.difficulty];
+    els.best.hidden = false;
+    els.best.classList.add('new');
+    bumpEl(els.best);
     celebrationTimer = setTimeout(startGame, 3000);
   }
 
@@ -1180,6 +1237,7 @@
     buildBoardDom();
     renderBoard();
     renderScore(false);
+    renderBest();
     renderTray(true);
     checkOver(400);
     return true;
@@ -1191,7 +1249,7 @@
   function saveProgress(){
     if (!SAVE_KEY) return; // not set up yet (nothing loaded to overwrite)
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ difficulty: state.difficulty, game: snapshotGame() }));
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ difficulty: state.difficulty, game: snapshotGame(), best: state.best }));
     } catch (e) {}
   }
   function loadProgress(){
@@ -1202,6 +1260,12 @@
     } catch (e) { return null; }
   }
   var saved = loadProgress();
+  if (saved && saved.best && typeof saved.best === 'object') {
+    ['easy', 'medium', 'hard'].forEach(function(t){
+      var v = saved.best[t];
+      if (v >= 0 && v < 1e7) state.best[t] = Math.floor(v);
+    });
+  }
   function markActive(){
     els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
       b.classList.toggle('active', b.getAttribute('data-tier') === state.difficulty);
