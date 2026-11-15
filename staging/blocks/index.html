@@ -233,9 +233,10 @@
     content:''; position:absolute; inset:0; border-radius:inherit;
   }
   .sq.clearing::after{ background:var(--correct); animation: sq-out 380ms ease-in both; }
+  /* No grow first (her call, 2026-11-15): at 108% neighbours overlapped
+     (gap 3px, a square grows ~3.6px), leaving thin hard lines between them. */
   @keyframes sq-out{
     0%{ transform:scale(1); }
-    30%{ transform:scale(1.08); }
     100%{ transform:scale(0); }
   }
 
@@ -321,8 +322,8 @@
   }
   /* ...then every block on the board and every piece left on the mat pop
      and disappear, all at once. */
-  /* The same pop as a full row clearing (her call): 108% at 30%, then
-     shrink away, 380ms ease-in -- but in the block's own colour, not green. */
+  /* The same as a full row clearing (her call): shrink away on the empty
+     square, 380ms ease-in -- but in the block's own colour, not green. */
   .sq.wave-out::after{ background:var(--c); animation: sq-out 380ms ease-in both; }
   .slot.gone .piece{ animation: sq-out 380ms ease-in both; }
 
