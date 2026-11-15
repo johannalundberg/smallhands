@@ -56,7 +56,7 @@
        all, between the top and bottom button rows. */
     --n: 8; /* board and mat width in squares (must match N in the script) */
     --stack: calc((var(--n) + 6.1) / var(--n));
-    --mat-n: var(--n); /* mat width in squares; 10 in the ?mat=wide trial */
+    --mat-n: var(--n); /* mat width in squares: the board's (she chose this over a wider mat) */
     --board-fit-rows: min(calc((100vw - 2 * var(--unit)) * var(--n) / var(--mat-n)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / var(--stack)));
     --board-w: min(var(--board-fit-rows), 720px);
     --cell-full: calc((var(--board-w) - (var(--n) - 1) * var(--gap)) / var(--n));
@@ -431,14 +431,6 @@
   }
 }
 </script>
-<script>
-  // Mat trial: ?mat=wide = a 10-wide mat (wider than the board), pieces in
-  // one row with a free tile between them; otherwise (?mat=arrange) the
-  // 8-wide mat, pieces arranged with a free tile between them, in one row
-  // or one above two. Each keeps its own saved game and bests.
-  var MAT_MODE = /[?&]mat=wide\b/.test(location.search) ? 'wide' : 'arrange';
-  if (MAT_MODE === 'wide') document.documentElement.style.setProperty('--mat-n', 10);
-</script>
 </head>
 <body>
 
@@ -702,11 +694,11 @@
     else cls = 'big';
     return pick(pick(SHAPES[cls]));
   }
-  // The pieces lie on the mat with at least one free tile between them.
-  // wide: one row on a 10-wide mat (so a set's widths add up to 8 or less).
-  // arrange: the 8-wide mat, in one row if they fit with gaps, otherwise
-  // one above the other two (or two above one), a free row between.
-  var MAT_COLS = MAT_MODE === 'wide' ? 10 : N, MAT_ROWS = 5;
+  // The pieces lie on the mat with at least one free tile between them: in
+  // one row if they fit with gaps, otherwise one above the other two (or
+  // two above one), a free row between. Sets that can't be arranged like
+  // that aren't dealt.
+  var MAT_COLS = N, MAT_ROWS = 5;
   function setWidth(set){
     return set.reduce(function(sum, p){ return sum + (p ? dims(p.cells).w : 0); }, 0);
   }
@@ -746,7 +738,7 @@
     }
     var one = row(ks, 0, MAT_ROWS);
     if (one) return one;
-    if (MAT_MODE !== 'wide' && ks.length > 1) {
+    if (ks.length > 1) {
       // One piece on its own row, the rest on another, a free row between.
       for (var a = 0; a < ks.length; a++) {
         var alone = [ks[a]], rest = ks.filter(function(_, i){ return i !== a; });
@@ -1300,8 +1292,7 @@
   introduceTraySlider();
 
   // ---------- resume after the rotate-block reload ----------
-  var MODE_SUFFIX = MAT_MODE === 'wide' ? '-wide' : ''; // the trial modes keep separate games and bests
-  var RESUME_KEY = 'playandlearn.resume.blocks' + MODE_SUFFIX;
+  var RESUME_KEY = 'playandlearn.resume.blocks';
   var RESUME_MAX_AGE = 10 * 60 * 1000;
   function saveResume(){
     try {
@@ -1378,7 +1369,8 @@
   }
   function loadProgress(){
     try {
-      var d = JSON.parse(localStorage.getItem('playandlearn.saved.blocks' + MODE_SUFFIX) || 'null');
+      localStorage.removeItem('playandlearn.saved.blocks-wide'); // left over from the wide-mat trial
+      var d = JSON.parse(localStorage.getItem('playandlearn.saved.blocks') || 'null');
       if (!d || ['easy', 'medium', 'hard'].indexOf(d.difficulty) === -1) return null;
       // Saved on a different board size (the 7x7 days): keep the level, but
       // that game can't continue here and its bests don't compare.
@@ -1404,7 +1396,7 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = 'playandlearn.saved.blocks' + MODE_SUFFIX;
+  SAVE_KEY = 'playandlearn.saved.blocks';
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
