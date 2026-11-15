@@ -240,13 +240,13 @@
     grid-template-columns:repeat(3, minmax(0, 1fr));
     --cell-full: calc((var(--board-w) - 7 * var(--gap)) / 8);
   }
-  /* Each tray piece is as big as its third of the tray allows, up to the
-     board's own square size (her call): small pieces show full size, wide
-     or tall ones shrink to fit. Room per piece, in board squares: 2.35
-     across (a third of 8, minus space between pieces), and the tray's
-     height minus a little. */
+  /* The three pieces of a set share one size (her call): as big as the
+     set's widest and tallest piece allow, up to the board's own square
+     size. Room per piece, in board squares: 2.35 across (a third of 8,
+     minus space between pieces) and the tray's height minus a little.
+     --set-w / --set-h (the set's biggest piece) are set from JS. */
   .tray .piece{
-    --s: min(1, calc(2.35 / var(--w)), calc((var(--tray-k) * 8 - 0.3) / var(--h)));
+    --s: min(1, calc(2.35 / var(--set-w, 5)), calc((var(--tray-k) * 8 - 0.3) / var(--set-h, 5)));
     --pc: calc(var(--cell-full) * var(--s));
     --pg: calc(var(--gap) * var(--s));
   }
@@ -754,6 +754,18 @@
     return el;
   }
   function renderTray(pop){
+    // A new set (or a restored one): its biggest piece sets the size for
+    // all three, kept until the next set.
+    if (pop) {
+      var mw = 1, mh = 1;
+      state.tray.forEach(function(p){
+        if (!p) return;
+        var d = dims(p.cells);
+        mw = Math.max(mw, d.w); mh = Math.max(mh, d.h);
+      });
+      els.tray.style.setProperty('--set-w', mw);
+      els.tray.style.setProperty('--set-h', mh);
+    }
     state.tray.forEach(function(p, k){
       var slot = els.slots[k];
       slot.innerHTML = '';
