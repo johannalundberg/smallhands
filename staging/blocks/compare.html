@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Blocks: mat trial</title>
+<style>
+  /* Trial page (not part of the site): the two mat ideas side by side, each
+     in a phone-sized frame so the phone layout shows. Each frame is a real,
+     playable copy with its own saved game. */
+  html, body{ margin:0; height:100%; background:#1b2232; }
+  body{
+    display:flex; align-items:center; justify-content:center; gap:48px;
+    font:14px/1.3 -apple-system, system-ui, sans-serif; color:#9aa3b5;
+  }
+  figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .frame{
+    width:calc(390px * var(--k)); height:calc(844px * var(--k));
+    border-radius:calc(36px * var(--k)); overflow:hidden;
+    box-shadow:0 0 0 2px #39425a;
+  }
+  iframe{
+    width:390px; height:844px; border:0; display:block;
+    transform:scale(var(--k)); transform-origin:0 0;
+  }
+  :root{ --k: min(1, calc((100vh - 70px) / 844px)); }
+</style>
+</head>
+<body>
+  <figure>
+    <div class="frame"><iframe src="./?mat=arrange" title="Arranged within the mat"></iframe></div>
+    <figcaption>Arranged within the 8-wide mat</figcaption>
+  </figure>
+  <figure>
+    <div class="frame"><iframe src="./?mat=wide" title="Wider mat"></iframe></div>
+    <figcaption>Wider mat (10 wide)</figcaption>
+  </figure>
+</body>
+</html>
