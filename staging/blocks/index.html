@@ -43,7 +43,7 @@
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
     --face:#313333; /* smiley: the dark piece colour (her call; was amber #FFA226) */
-    --correct:#AFCE67; /* full rows/columns: her green (Figma tile) */
+    --correct:#0DC754; /* full rows/columns: Othello's green (her call); was her Figma #AFCE67 */
     --best-ink:rgba(228,228,228,0.45); /* best score: the light ink, greyed */
     --incorrect:#F2383B;
     --unit: 1.1574vw;
@@ -455,6 +455,29 @@
   }
 }
 </script>
+<script>
+  // Colour trial (compare.html shows them side by side on a fixed sample
+  // board; trial views never save):
+  //   ?look=a  blue, pink / dark grey / orange, green rows (now)
+  //   ?look=b  blue, Figma red / dark grey / orange, green rows
+  //   ?look=c  dark grey, pink / light grey / orange, green rows
+  //   ?look=d  green, pink / dark grey / orange, white rows
+  //   ?look=e  orange, pink / dark grey / blue, green rows
+  var BLOCKS_LOOKS = {
+    a: { bg: '#5F44FF', colors: ['#EE65EA', '#313333', '#E87C4C'] },
+    b: { bg: '#5F44FF', colors: ['#BA4844', '#313333', '#E87C4C'] },
+    c: { bg: '#313333', colors: ['#EE65EA', '#E4E4E4', '#E87C4C'], face: '#E87C4C' },
+    d: { bg: '#AFCE67', colors: ['#EE65EA', '#313333', '#E87C4C'], correct: '#FFFFFF' },
+    e: { bg: '#E87C4C', colors: ['#EE65EA', '#313333', '#5F44FF'] }
+  };
+  var BLOCKS_LOOK = (/[?&]look=([a-e])\b/.exec(location.search) || [])[1] || '';
+  if (BLOCKS_LOOK) {
+    var L = BLOCKS_LOOKS[BLOCKS_LOOK];
+    document.documentElement.style.setProperty('--bg', L.bg);
+    if (L.correct) document.documentElement.style.setProperty('--correct', L.correct);
+    if (L.face) document.documentElement.style.setProperty('--face', L.face);
+  }
+</script>
 </head>
 <body>
 
@@ -524,6 +547,7 @@
   // for full rows (--correct). Same slots as the earlier cream / dark brown
   // / orange, so saved games keep their pattern.
   var COLORS = ['#EE65EA', '#313333', '#E87C4C']; // pink (was red #D33A35), dark grey, orange (her calls); light grey #E4E4E4 tried and removed
+  if (BLOCKS_LOOK) COLORS = BLOCKS_LOOKS[BLOCKS_LOOK].colors; // colour trial
   var COLORS_VERSION = 5;
   // Older saves, upgraded step by step:
   // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest
@@ -1567,7 +1591,37 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = 'playandlearn.saved.blocks';
+  SAVE_KEY = BLOCKS_LOOK ? null : 'playandlearn.saved.blocks'; // trial views don't save
+  if (BLOCKS_LOOK) {
+    // Colour trial: the same sample board in every frame, every colour on
+    // it and one piece of each colour on the mat.
+    markActive();
+    startGame();
+    var SAMPLE = [
+      '........',
+      '........',
+      '........',
+      '.....2..',
+      '0...122.',
+      '00.21100',
+      '1110..00',
+      '11..2.22'
+    ];
+    for (var sr = 0; sr < N; sr++) for (var sc = 0; sc < N; sc++) {
+      var ch = SAMPLE[sr].charAt(sc);
+      state.board[sr * N + sc] = ch === '.' ? -1 : Number(ch);
+    }
+    state.score = 0;
+    state.tray = [
+      { cells: [[0, 0], [0, 1], [0, 2]], color: 2 },
+      { cells: [[0, 0], [1, 1]], color: 0 },
+      { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], color: 1 }
+    ];
+    renderBoard();
+    renderScore(false);
+    renderTray(true);
+    return;
+  }
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
@@ -1576,7 +1630,7 @@
     if (saved) state.difficulty = saved.difficulty;
     markActive();
     var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!saved && !starterShown() && !reduced) { startStarter(); return; }
+    if (!saved && !starterShown() && !reduced && !BLOCKS_LOOK) { startStarter(); return; }
     startGame();
   }
   // No demo this time: the level hint plays as on every other game.

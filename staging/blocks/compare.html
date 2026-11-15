@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Blocks: colour trial</title>
+<style>
+  /* Trial page (not part of the site): colour options for Blocks side by
+     side at phone size, all on the same sample board. Nothing saves. */
+  html, body{ margin:0; min-height:100%; background:#141414; }
+  body{
+    display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:center; gap:28px 20px; padding:20px; box-sizing:border-box;
+    font:13px/1.3 -apple-system, system-ui, sans-serif; color:#9a9a9a;
+  }
+  figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  figcaption{ max-width:calc(390px * var(--k)); text-align:center; }
+  .frame{
+    width:calc(390px * var(--k)); height:calc(844px * var(--k));
+    border-radius:calc(36px * var(--k)); overflow:hidden; box-shadow:0 0 0 2px #333;
+  }
+  iframe{ width:390px; height:844px; border:0; display:block; transform:scale(var(--k)); transform-origin:0 0; }
+  :root{ --k: 0.5; }
+  b{ color:#ddd; font-weight:600; }
+</style>
+</head>
+<body>
+  <figure><div class="frame"><iframe data-src="./?look=a"></iframe></div><figcaption><b>A</b> now: blue, pink / dark grey / orange</figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?look=b"></iframe></div><figcaption><b>B</b> blue, red / dark grey / orange</figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?look=c"></iframe></div><figcaption><b>C</b> dark grey, pink / light grey / orange</figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?look=d"></iframe></div><figcaption><b>D</b> green, pink / dark grey / orange (white rows)</figcaption></figure>
+  <figure><div class="frame"><iframe data-src="./?look=e"></iframe></div><figcaption><b>E</b> orange, pink / dark grey / blue</figcaption></figure>
+<script>
+  // Fit all frames in one row if the window allows, and load them one by one.
+  (function(){
+    var frames = Array.prototype.slice.call(document.querySelectorAll('iframe[data-src]'));
+    var n = frames.length;
+    function fit(){
+      var k = Math.min(1, (window.innerHeight - 90) / 844, (window.innerWidth - 20 * (n + 1)) / (390 * n));
+      document.documentElement.style.setProperty('--k', Math.max(0.3, k));
+    }
+    fit();
+    window.addEventListener('resize', fit);
+    function next(i){
+      if (i >= n) return;
+      var f = frames[i], done = false;
+      function go(){ if (!done) { done = true; next(i + 1); } }
+      f.addEventListener('load', go);
+      setTimeout(go, 4000);
+      f.src = f.getAttribute('data-src');
+    }
+    next(0);
+  })();
+</script>
+</body>
+</html>
