@@ -43,6 +43,7 @@
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
     --face:#FFA226;
+    --correct:#0DC754; /* full rows/columns: the site's green, so no piece is green */
     --best-ink:rgba(228,228,228,0.45); /* best score: the light ink, greyed */
     --incorrect:#F2383B;
     --unit: 1.1574vw;
@@ -218,14 +219,17 @@
   /* Where the dragged piece will land. */
   .sq.ghost{ background:var(--c); opacity:0.45; }
   /* Rows and columns that this drop would fill light up in the piece's colour. */
-  .sq.lit{ background:var(--lit); }
+  /* Rows and columns this drop would fill light up green (her call: green
+     means a correct row, so no piece is green). */
+  .sq.lit{ background:var(--correct); }
   .sq.ghost.lit{ opacity:1; }
   .sq.clearing{ animation: sq-clear 380ms ease-in both; }
   @keyframes sq-clear{
-    0%{ transform:scale(1); background:var(--c); }
-    30%{ transform:scale(1.08); background:var(--bright); }
-    100%{ transform:scale(0); background:var(--bright); }
+    0%{ transform:scale(1); background:var(--correct); }
+    30%{ transform:scale(1.08); background:var(--correct); }
+    100%{ transform:scale(0); background:var(--correct); }
   }
+
   .sq.drop{ animation: sq-drop 260ms cubic-bezier(0.34, 1.56, 0.64, 1); }
   @keyframes sq-drop{
     0%{ transform:scale(0.86); }
@@ -495,7 +499,9 @@
 
   var N = 8; // 8x8 board; matches --n in the CSS
   var TAP_SLOP = 6;
-  var COLORS = ['#FFA226', '#0DC754', '#707EFF', '#E570E1', '#FFD60A', '#3CC8C8', '#FF6B4A'];
+  // No green: green is kept for full rows (her call). The purple took green's
+  // place in the list, so saved games keep their colours otherwise.
+  var COLORS = ['#FFA226', '#A55CFF', '#707EFF', '#E570E1', '#FFD60A', '#3CC8C8', '#FF6B4A'];
 
   // ---------- shapes ----------
   // Every shape is on every level; the level only changes how often the
