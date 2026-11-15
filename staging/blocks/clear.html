@@ -6,105 +6,126 @@
 <meta name="robots" content="noindex">
 <title>Blocks: line clear trial</title>
 <style>
-  /* Trial page (not part of the site): ways for a full line to leave,
-     looping on a slice of the Blocks board in the game's colours. */
+  /* Trial page (not part of the site): the line clear in each version, on
+     the same slice of the board, playing at exactly the same time. Sizes,
+     gap, corners and timings are copied from the game. */
   :root{
     --bg:#4848A8; --sq-empty:rgba(0,0,0,0.18); --correct:#0DC754;
     --red:#F53B3C; --brown:#2A2420; --orange:#FF7235;
-    --sq:38px; --gap:4px; --round:4.5px;
+    --sq:45.5px; --gap:3px;
   }
   html, body{ margin:0; min-height:100%; background:#141414; }
   body{
     display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start;
-    gap:28px; padding:28px 16px; box-sizing:border-box;
+    gap:28px 20px; padding:28px 16px; box-sizing:border-box;
     font:13px/1.35 -apple-system, system-ui, sans-serif; color:#9a9a9a;
   }
   figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:10px; }
-  figcaption{ max-width:360px; text-align:center; }
+  figcaption{ max-width:400px; text-align:center; }
   figcaption b{ color:#ddd; font-weight:600; display:block; }
   .board{
-    background:var(--bg); padding:16px; border-radius:20px;
+    background:var(--bg); padding:18px; border-radius:22px;
     display:grid; grid-template-columns:repeat(8, var(--sq)); gap:var(--gap);
   }
-  .sq{ width:var(--sq); height:var(--sq); border-radius:var(--round); background:var(--sq-empty); position:relative; }
+  .sq{ width:var(--sq); height:var(--sq); border-radius:12%; background:var(--sq-empty); position:relative; }
   .sq.f{ background:var(--c); }
-  .r{ --c:var(--red); } .b{ --c:var(--brown); } .o{ --c:var(--orange); }
-
-  /* The line that clears: its pieces sit in the middle row; a loop of
-     3.2s: full (0-25%), green (25-40%), leaves, empty, refills. */
-  .line .fill{
-    position:absolute; inset:0; border-radius:inherit; background:var(--c);
-    animation: var(--anim) 3.2s linear infinite;
-  }
-
-  /* A: now -- pop to 108%, then shrink all the way to nothing; the empty
-     square goes with it and comes back after. */
-  .a .line{ animation: a-slot 3.2s linear infinite; }
-  @keyframes a-slot{ 0%, 51.9%{ transform:scale(1); } 52%{ transform:scale(0); } 52.5%, 100%{ transform:scale(1); } }
-  .a .fill{ --anim: a-fill; }
-  @keyframes a-fill{
-    0%, 24.9%{ background:var(--c); transform:scale(1); opacity:1; }
-    25%, 40%{ background:var(--correct); transform:scale(1); animation-timing-function:ease-out; }
-    43.5%{ background:var(--correct); transform:scale(1.08); animation-timing-function:ease-in; }
-    52%{ background:var(--correct); transform:scale(0); opacity:1; }
-    52.1%, 84.9%{ opacity:0; transform:scale(0); }
-    85%{ opacity:1; transform:scale(0); background:var(--c); animation-timing-function:cubic-bezier(0.34, 1.56, 0.64, 1); }
-    92%, 100%{ opacity:1; transform:scale(1); background:var(--c); }
-  }
-
-  /* B: like Memory's matched pair -- a springy pop up (108%, not Memory's 118%: more makes neighbours touch), then it fades out
-     while shrinking only a little (to 80%), leaving the empty square. */
-  .b-opt .fill{ --anim: b-fill; }
-  @keyframes b-fill{
-    0%, 24.9%{ background:var(--c); transform:scale(1); opacity:1; }
-    25%, 40%{ background:var(--correct); transform:scale(1); animation-timing-function:cubic-bezier(0.34, 1.56, 0.64, 1); }
-    47%{ background:var(--correct); transform:scale(1.08); opacity:1; animation-timing-function:ease; } /* 1.12 like Memory made neighbours touch */
-    56.5%{ background:var(--correct); transform:scale(0.8); opacity:0; }
-    56.6%, 84.9%{ opacity:0; transform:scale(0); }
-    85%{ opacity:1; transform:scale(0); background:var(--c); animation-timing-function:cubic-bezier(0.34, 1.56, 0.64, 1); }
-    92%, 100%{ opacity:1; transform:scale(1); background:var(--c); }
-  }
-
-  /* C: a small pop, then the green simply fades into the empty square at
-     full size -- no shrinking at all. */
-  .c .fill{ --anim: c-fill; }
-  @keyframes c-fill{
-    0%, 24.9%{ background:var(--c); transform:scale(1); opacity:1; }
-    25%, 40%{ background:var(--correct); transform:scale(1); animation-timing-function:ease-out; }
-    43.5%{ background:var(--correct); transform:scale(1.08); opacity:1; animation-timing-function:ease-in; }
-    47%{ background:var(--correct); transform:scale(1); opacity:1; animation-timing-function:ease; }
-    56.5%{ background:var(--correct); transform:scale(1); opacity:0; }
-    56.6%, 84.9%{ opacity:0; transform:scale(0); }
-    85%{ opacity:1; transform:scale(0); background:var(--c); animation-timing-function:cubic-bezier(0.34, 1.56, 0.64, 1); }
-    92%, 100%{ opacity:1; transform:scale(1); background:var(--c); }
-  }
+  .sq .fill{ position:absolute; inset:0; border-radius:inherit; }
 </style>
 </head>
 <body>
-</body>
 <script>
-  // Three copies of the same board slice: rows above and below stay put,
-  // the middle row fills, turns green and leaves.
-  var opts = [
-    ['a', 'A: now', 'Pops to 108%, then shrinks to nothing; the empty square goes with it.'],
-    ['b-opt', 'B: like Memory', 'Springy pop, then fades out while shrinking a little (to 80%), onto the empty square.'],
-    ['c', 'C: pop and fade', 'Small pop, then the green fades away at full size, onto the empty square.']
+  // Three copies of the same board slice. Every 2.4s the bottom row fills
+  // (the last square lands at the right end), turns green, and clears --
+  // in all three boards at the same moment.
+  var C = { r:'#F53B3C', b:'#2A2420', o:'#FF7235' };
+  var GREEN = '#0DC754';
+  var rows = ['..b..or.', 'r..bb...', 'rbooobr.'];   // bottom row: last square drops in at the right
+  var LAND = 'o';
+  var versions = [
+    { id:'live',  title:'Live now', text:'Ripples out from the drop, grows to 108% (the squares touch), the empty square goes too.' },
+    { id:'stay',  title:'Empty square stays', text:'All at once, no grow, 240ms; only the green shrinks, the dark square stays.' },
+    { id:'go',    title:'Empty square goes too', text:'All at once, no grow, 240ms; the whole square shrinks and is back right after.' }
   ];
-  var above = '..b..or.', below = 'r..bb..o';
-  var line = 'rbooobrr';
-  var cls = { r:'r', b:'b', o:'o' };
-  function row(pattern, isLine){
-    return pattern.split('').map(function(ch){
-      if (isLine) return '<div class="sq line ' + cls[ch] + '"><div class="fill"></div></div>';
-      return ch === '.' ? '<div class="sq"></div>' : '<div class="sq f ' + cls[ch] + '"></div>';
-    }).join('');
-  }
-  opts.forEach(function(o){
+  var boards = versions.map(function(v){
     var fig = document.createElement('figure');
-    fig.className = o[0];
-    fig.innerHTML = '<div class="board">' + row(above) + row(line, true) + row(below) + '</div>' +
-      '<figcaption><b>' + o[1] + '</b>' + o[2] + '</figcaption>';
+    var html = '';
+    rows.forEach(function(row, ri){
+      row.split('').forEach(function(ch, ci){
+        html += '<div class="sq" data-r="' + ri + '" data-c="' + ci + '"' + (ch !== '.' ? ' data-k="' + ch + '"' : '') + '><div class="fill"></div></div>';
+      });
+    });
+    fig.innerHTML = '<div class="board">' + html + '</div><figcaption><b>' + v.title + '</b>' + v.text + '</figcaption>';
     document.body.appendChild(fig);
+    return { v: v, sqs: Array.prototype.slice.call(fig.querySelectorAll('.sq')) };
   });
+
+  function paint(){
+    boards.forEach(function(bd){
+      bd.sqs.forEach(function(el){
+        var k = el.getAttribute('data-k'), fill = el.firstChild;
+        el.getAnimations().concat(fill.getAnimations()).forEach(function(a){ a.cancel(); });
+        el.style.background = 'var(--sq-empty)';
+        fill.style.background = k ? C[k] : 'transparent';
+        fill.style.transform = 'scale(1)';
+        // The square that lands this round starts empty.
+        if (el.dataset.r === '2' && el.dataset.c === '7') fill.style.background = 'transparent';
+      });
+    });
+  }
+
+  function round(){
+    paint();
+    // 600ms: the last square drops in (the game's sq-drop: 86% -> 100%, springy).
+    setTimeout(function(){
+      boards.forEach(function(bd){
+        var el = bd.sqs.filter(function(e){ return e.dataset.r === '2' && e.dataset.c === '7'; })[0];
+        el.firstChild.style.background = C[LAND];
+        el.firstChild.animate([{ transform:'scale(0.86)' }, { transform:'scale(1)' }], { duration:260, easing:'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+      });
+      // Same moment: the full row turns green and clears.
+      boards.forEach(function(bd){
+        var line = bd.sqs.filter(function(e){ return e.dataset.r === '2'; });
+        line.forEach(function(el){
+          var fill = el.firstChild;
+          fill.style.background = GREEN;
+          var c = +el.dataset.c;
+          if (bd.v.id === 'live') {
+            // Live: the whole square (slot too), 108% at 30%, 380ms ease-in,
+            // delayed 28ms per square of distance from the drop.
+            var dist = Math.abs(c + 0.5 - 7.5);
+            el.style.background = GREEN;
+            fill.style.background = 'transparent';
+            el.animate([
+              { transform:'scale(1)', easing:'ease-in' },
+              { transform:'scale(1.08)', offset:0.3, easing:'ease-in' },
+              { transform:'scale(0)' }
+            ], { duration:380, delay:Math.round(dist * 28), fill:'both', easing:'ease-in' });
+          } else if (bd.v.id === 'stay') {
+            fill.animate([{ transform:'scale(1)' }, { transform:'scale(0)' }], { duration:240, easing:'ease-in', fill:'forwards' });
+          } else {
+            el.style.background = GREEN;
+            fill.style.background = 'transparent';
+            el.animate([{ transform:'scale(1)' }, { transform:'scale(0)' }], { duration:240, easing:'ease-in', fill:'forwards' });
+          }
+        });
+      });
+      // Back to empty squares when the game would re-render them.
+      boards.forEach(function(bd){
+        var line = bd.sqs.filter(function(e){ return e.dataset.r === '2'; });
+        line.forEach(function(el){
+          var c = +el.dataset.c;
+          var back = bd.v.id === 'live' ? 400 + Math.round(Math.abs(c + 0.5 - 7.5) * 28) : 260;
+          setTimeout(function(){
+            el.getAnimations().concat(el.firstChild.getAnimations()).forEach(function(a){ a.cancel(); });
+            el.style.background = 'var(--sq-empty)';
+            el.firstChild.style.background = 'transparent';
+          }, back);
+        });
+      });
+    }, 600);
+  }
+  round();
+  setInterval(round, 2400);
 </script>
+</body>
 </html>
