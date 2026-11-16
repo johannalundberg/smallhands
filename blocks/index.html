@@ -39,11 +39,11 @@
   }
 
   :root{
-    --bg:#766C65; /* darker clay grey: neutral like the other games (her pick 2026-11-16; was blue #4848A8) */
+    --bg:#3E4351; /* dark blue grey (her pick 2026-11-16; was clay grey #766C65 -- 'bleak' -- and blue #4848A8 before) */
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
-    --sq-empty:rgba(0,0,0,0.28); /* the board's empty squares: darker for more contrast (her pick 2026-11-15, was 18%), still light enough for the almost-black pieces */
+    --sq-empty:rgba(255,255,255,0.09); /* the board's empty squares: a touch LIGHTER than the dark background, so the almost-black pieces stay visible (darker squares hid them) */
     --face:#101010; /* smiley: the dark piece colour (her call; was brown #2A2420, amber #FFA226) */
     --correct:#0DC754; /* full rows/columns: Othello's green (her call); was her Figma #AFCE67 */
     --best-ink:rgba(228,228,228,0.45); /* best score: the light ink, greyed */
@@ -64,7 +64,7 @@
     --board-fit-rows: min(calc((100vw - 2 * var(--unit)) * var(--n) / var(--mat-n)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / var(--stack)));
     --board-w: min(var(--board-fit-rows), 720px);
     --cell-full: calc((var(--board-w) - (var(--n) - 1) * var(--gap)) / var(--n));
-    --mat-sq: rgba(255,255,255,0.05); /* the mat's blank tiles: a touch lighter than the background, so the darker board stands apart (her ask) */
+    --mat-sq: rgba(255,255,255,0.04); /* the mat's blank tiles: fainter than the board's, so the board stands apart (her ask) */
   }
 
   /* Desktop: the mat stands beside the board instead of below it (5 wide,
