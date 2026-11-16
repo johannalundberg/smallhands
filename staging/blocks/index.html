@@ -461,8 +461,8 @@
   // board's empty squares turn a touch LIGHTER than it (darker squares hide
   // the almost-black pieces). compare.html shows them side by side on a
   // fixed sample board; trial views never save.
-  var BG_TRIAL_OPTIONS = { 0:'#766C65', 1:'#655C56', 2:'#574F4A', 3:'#5E4A4A', 4:'#5A4652', 5:'#4A3A4A', 6:'#634A5A', 7:'#6B4238', 8:'#5A2E2E', 9:'#34405E', 10:'#2A3350', 11:'#2E4A36', 12:'#475238', 13:'#4A433F', 14:'#3D3A8F' };
-  var RED_TRIAL = (/[?&]bg=(1[0-4]|[0-9])\b/.exec(location.search) || [])[1];
+  var BG_TRIAL_OPTIONS = { 0:'#766C65', 1:'#655C56', 2:'#574F4A', 3:'#5E4A4A', 4:'#5A4652', 5:'#4A3A4A', 6:'#634A5A', 7:'#6B4238', 8:'#5A2E2E', 9:'#34405E', 10:'#2A3350', 11:'#2E4A36', 12:'#475238', 13:'#4A433F', 14:'#3D3A8F', 15:'#4D474E', 16:'#44424A', 17:'#4A404C', 18:'#4F3F47', 19:'#55444D', 20:'#574449', 21:'#45414F', 22:'#3E4351' };
+  var RED_TRIAL = (/[?&]bg=(2[0-2]|1[0-9]|[0-9])\b/.exec(location.search) || [])[1];
   if (RED_TRIAL) {
     var __r = document.documentElement.style;
     __r.setProperty('--bg', BG_TRIAL_OPTIONS[RED_TRIAL]);
