@@ -70,6 +70,12 @@
     }
   }
 
+  /* Phones: as wide as the other games' boards (full width less the side
+     margins), not the older 76vw. */
+  @media (max-width: 767px){
+    :root{ --board-size: calc(100vw - 2 * var(--unit)); }
+  }
+
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
   body{

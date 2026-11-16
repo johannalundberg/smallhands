@@ -188,6 +188,11 @@
       width:min(94vw, calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), 743px);
     }
   }
+  /* Phones: as wide as the other games' boards (full width less the side
+     margins), not the older 82vw. */
+  @media (max-width: 767px){
+    .pad-grid{ width:calc(100vw - 2 * var(--unit)); }
+  }
   /* Four fixed colors (Figma node 229:5126) -- color is the puzzle's signal
      here, not shape, so each pad is just a solid rounded square. Rest/lit
      pairs per pad; lit is used for playback highlight, a correct-tap
