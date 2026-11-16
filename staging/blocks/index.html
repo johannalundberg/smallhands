@@ -57,8 +57,7 @@
        then the mat of blank tiles (5 rows) the pieces wait on: 14 rows in
        all, between the top and bottom button rows. */
     --n: 8; /* board and mat width in squares (must match N in the script) */
-    --mat-space: 1; /* empty rows between the board and the mat (her call: one) */
-    --stack: calc((var(--n) + var(--mat-space) + 5.1) / var(--n));
+    --stack: calc((var(--n) + 6.1) / var(--n));
     --mat-n: var(--n); /* mat width in squares: the board's (she chose this over a wider mat) */
     --mat-rows: 5;     /* mat height in squares (desktop turns the mat on its side) */
     --board-fit-rows: min(calc((100vw - 2 * var(--unit)) * var(--n) / var(--mat-n)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / var(--stack)));
@@ -202,8 +201,8 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    /* --mat-space empty rows between the board and the mat. */
-    gap:calc(var(--mat-space) * (var(--cell-full) + var(--gap)) + var(--gap));
+    /* One empty row between the board and the mat. */
+    gap:calc(var(--cell-full) + 2 * var(--gap));
   }
   .board{
     width:var(--board-w);
@@ -455,13 +454,6 @@
     "url": "https://playandlearn.kids/"
   }
 }
-</script>
-<script>
-  // Phone width trial: ?space=1 (now, a full empty row between board and
-  // mat), ?space=0.5, ?space=0. Fixed sample board; trial views never save.
-  var SPACE_TRIAL_OPTIONS = { '1':'1', '05':'0.5', '0':'0' };
-  var RED_TRIAL = (/[?&]space=(1|05|0)\b/.exec(location.search) || [])[1];
-  if (RED_TRIAL) document.documentElement.style.setProperty('--mat-space', SPACE_TRIAL_OPTIONS[RED_TRIAL]);
 </script>
 </head>
 <body>
@@ -1574,36 +1566,7 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = RED_TRIAL ? null : 'playandlearn.saved.blocks'; // trial views don't save
-  if (RED_TRIAL) {
-    // Red trial: the same sample board in every frame.
-    markActive();
-    startGame();
-    var SAMPLE = [
-      '........',
-      '........',
-      '........',
-      '.....2..',
-      '0...122.',
-      '00.21100',
-      '1110..00',
-      '11..2.22'
-    ];
-    for (var sr = 0; sr < N; sr++) for (var sc = 0; sc < N; sc++) {
-      var ch = SAMPLE[sr].charAt(sc);
-      state.board[sr * N + sc] = ch === '.' ? -1 : Number(ch);
-    }
-    state.score = 0;
-    state.tray = [
-      { cells: [[0, 0], [0, 1], [0, 2]], color: 2 },
-      { cells: [[0, 0], [1, 1]], color: 0 },
-      { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], color: 1 }
-    ];
-    renderBoard();
-    renderScore(false);
-    renderTray(true);
-    return;
-  }
+  SAVE_KEY = 'playandlearn.saved.blocks';
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
@@ -1612,7 +1575,7 @@
     if (saved) state.difficulty = saved.difficulty;
     markActive();
     var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!saved && !starterShown() && !reduced && !RED_TRIAL) { startStarter(); return; }
+    if (!saved && !starterShown() && !reduced) { startStarter(); return; }
     startGame();
   }
   // No demo this time: the level hint plays as on every other game.
