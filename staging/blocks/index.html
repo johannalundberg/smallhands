@@ -57,7 +57,8 @@
        then the mat of blank tiles (5 rows) the pieces wait on: 14 rows in
        all, between the top and bottom button rows. */
     --n: 8; /* board and mat width in squares (must match N in the script) */
-    --stack: calc((var(--n) + 6.1) / var(--n));
+    --mat-space: 1; /* empty rows between the board and the mat (her call: one) */
+    --stack: calc((var(--n) + var(--mat-space) + 5.1) / var(--n));
     --mat-n: var(--n); /* mat width in squares: the board's (she chose this over a wider mat) */
     --mat-rows: 5;     /* mat height in squares (desktop turns the mat on its side) */
     --board-fit-rows: min(calc((100vw - 2 * var(--unit)) * var(--n) / var(--mat-n)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / var(--stack)));
@@ -201,8 +202,8 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    /* One empty row between the board and the mat. */
-    gap:calc(var(--cell-full) + 2 * var(--gap));
+    /* --mat-space empty rows between the board and the mat. */
+    gap:calc(var(--mat-space) * (var(--cell-full) + var(--gap)) + var(--gap));
   }
   .board{
     width:var(--board-w);
@@ -456,12 +457,11 @@
 }
 </script>
 <script>
-  // Third-colour trial on the clay grey (her ask: pink, purple, blue...):
-  // the orange slot swapped for colours from the other games. ?c=1..8;
-  // compare.html shows them side by side on a fixed sample board; trial
-  // views never save.
-  var C3_TRIAL_OPTIONS = { 1:'#FF7235', 2:'#F362EE', 3:'#B98BF2', 4:'#A632F9', 5:'#79A1FF', 6:'#707EFF', 7:'#21CECE', 8:'#F2B238' };
-  var RED_TRIAL = (/[?&]c=([1-8])\b/.exec(location.search) || [])[1];
+  // Phone width trial: ?space=1 (now, a full empty row between board and
+  // mat), ?space=0.5, ?space=0. Fixed sample board; trial views never save.
+  var SPACE_TRIAL_OPTIONS = { '1':'1', '05':'0.5', '0':'0' };
+  var RED_TRIAL = (/[?&]space=(1|05|0)\b/.exec(location.search) || [])[1];
+  if (RED_TRIAL) document.documentElement.style.setProperty('--mat-space', SPACE_TRIAL_OPTIONS[RED_TRIAL]);
 </script>
 </head>
 <body>
@@ -534,7 +534,6 @@
   // Her Figma red, dark grey and orange (her pick, option B, 2026-11-15;
   // pink #EE65EA before it, same slot).
   var COLORS = ['#F53B3C', '#101010', '#FF7235']; // red car (shared with Unblock), the hub tiles' almost black (was brown #2A2420), Memory's bright orange (her picks, 2026-11-15)
-  if (RED_TRIAL) COLORS[2] = C3_TRIAL_OPTIONS[RED_TRIAL];
   var COLORS_VERSION = 5;
   // Older saves, upgraded step by step:
   // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest

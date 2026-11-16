@@ -4,59 +4,49 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Blocks: third colour on clay grey</title>
+<title>Blocks: phone width trial</title>
 <style>
-  /* Trial page (not part of the site): neutral backgrounds for Blocks,
-     side by side at phone size on the same sample board. Nothing saves. */
+  /* Trial page (not part of the site): the board-to-mat spacing at two real
+     phone heights -- Safari with its bars (390x664) and the home-screen app
+     (390x797). Same sample board; nothing saves. */
   html, body{ margin:0; min-height:100%; background:#141414; }
-  body{
-    display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:center; gap:28px 16px; padding:20px; box-sizing:border-box;
-    font:13px/1.3 -apple-system, system-ui, sans-serif; color:#9a9a9a;
-  }
-  figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:8px; }
-  figcaption{ max-width:calc(390px * var(--k)); text-align:center; }
-  figcaption span{ display:block; color:#777; }
-  .frame{
-    width:calc(390px * var(--k)); height:calc(844px * var(--k));
-    border-radius:calc(36px * var(--k)); overflow:hidden; box-shadow:0 0 0 2px #333;
-  }
-  iframe{ width:390px; height:844px; border:0; display:block; transform:scale(var(--k)); transform-origin:0 0; }
-  :root{ --k: 0.5; }
-  b{ color:#ddd; font-weight:600; }
+  body{ padding:20px; box-sizing:border-box; font:13px/1.3 -apple-system, system-ui, sans-serif; color:#9a9a9a; }
+  .grid{ display:grid; grid-template-columns:repeat(3, max-content); gap:20px 16px; justify-content:center; align-items:start; }
+  .head{ text-align:center; color:#ddd; font-weight:600; }
+  .rowlabel{ grid-column:1 / -1; color:#777; text-align:center; margin-top:4px; }
+  figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .frame{ width:calc(390px * var(--k)); border-radius:calc(30px * var(--k)); overflow:hidden; box-shadow:0 0 0 2px #333; }
+  .frame.s{ height:calc(664px * var(--k)); } .frame.a{ height:calc(797px * var(--k)); }
+  iframe{ width:390px; border:0; display:block; transform:scale(var(--k)); transform-origin:0 0; }
+  iframe.s{ height:664px; } iframe.a{ height:797px; }
+  :root{ --k:0.4; }
 </style>
 </head>
 <body>
-  <figure><div class="frame"><iframe data-src="./?c=1"></iframe></div><figcaption><b>1 Orange (now)</b><span>#FF7235 · Memory</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?c=2"></iframe></div><figcaption><b>2 Pink</b><span>#F362EE · Unblock</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?c=3"></iframe></div><figcaption><b>3 Lilac</b><span>#B98BF2 · Memory</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?c=4"></iframe></div><figcaption><b>4 Purple</b><span>#A632F9 · Odd One Out</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?c=5"></iframe></div><figcaption><b>5 Light blue</b><span>#79A1FF · Memory</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?c=6"></iframe></div><figcaption><b>6 Blue</b><span>#707EFF · Memory, Copy the Pattern</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?c=7"></iframe></div><figcaption><b>7 Cyan</b><span>#21CECE · Unblock</span></figcaption></figure>
-  <figure><div class="frame"><iframe data-src="./?c=8"></iframe></div><figcaption><b>8 Yellow</b><span>#F2B238 · Unblock</span></figcaption></figure>
+<div class="grid" id="grid">
+  <div class="head">Now: a full empty row</div><div class="head">Half an empty row</div><div class="head">No empty row</div>
+  <div class="rowlabel">Safari with its bars (390 × 664)</div>
+  <figure><div class="frame s"><iframe class="s" data-src="./?space=1"></iframe></div></figure>
+  <figure><div class="frame s"><iframe class="s" data-src="./?space=05"></iframe></div></figure>
+  <figure><div class="frame s"><iframe class="s" data-src="./?space=0"></iframe></div></figure>
+  <div class="rowlabel">Home-screen app (390 × 797)</div>
+  <figure><div class="frame a"><iframe class="a" data-src="./?space=1"></iframe></div></figure>
+  <figure><div class="frame a"><iframe class="a" data-src="./?space=05"></iframe></div></figure>
+  <figure><div class="frame a"><iframe class="a" data-src="./?space=0"></iframe></div></figure>
+</div>
 <script>
-  // Fit all frames in one row if the window allows, and load them one by one.
   (function(){
     var frames = Array.prototype.slice.call(document.querySelectorAll('iframe[data-src]'));
-    var n = frames.length;
     function fit(){
-      // Pick the number of rows that makes the frames biggest.
-      var best = 0.2;
-      for (var rows = 1; rows <= 3; rows++) {
-        var cols = Math.ceil(n / rows);
-        var k = Math.min(1, (window.innerHeight - 40 - 90 * rows) / (844 * rows), (window.innerWidth - 16 * (cols + 1) - 40) / (390 * cols));
-        if (k > best) best = k;
-      }
-      document.documentElement.style.setProperty('--k', best);
+      var k = Math.min(1, (window.innerWidth - 40 - 32) / (390 * 3), (window.innerHeight - 140) / (664 + 797));
+      document.documentElement.style.setProperty('--k', Math.max(0.25, k));
     }
-    fit();
-    window.addEventListener('resize', fit);
+    fit(); window.addEventListener('resize', fit);
     function next(i){
-      if (i >= n) return;
+      if (i >= frames.length) return;
       var f = frames[i], done = false;
       function go(){ if (!done) { done = true; next(i + 1); } }
-      f.addEventListener('load', go);
-      setTimeout(go, 4000);
+      f.addEventListener('load', go); setTimeout(go, 4000);
       f.src = f.getAttribute('data-src');
     }
     next(0);
