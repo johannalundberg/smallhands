@@ -38,11 +38,11 @@
   }
 
   :root{
-    --bg:#766C65; /* darker clay grey: neutral like the other games (her pick 2026-11-16; was blue #4848A8) */
+    --bg:#3E4351; /* dark blue grey (her pick 2026-11-16; was clay grey #766C65 -- 'bleak' -- and blue #4848A8 before) */
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
-    --sq-empty:rgba(0,0,0,0.28); /* the board's empty squares: darker for more contrast (her pick 2026-11-15, was 18%), still light enough for the almost-black pieces */
+    --sq-empty:rgba(255,255,255,0.09); /* the board's empty squares: a touch LIGHTER than the dark background, so the almost-black pieces stay visible (darker squares hid them) */
     --face:#101010; /* smiley: the dark piece colour (her call; was brown #2A2420, amber #FFA226) */
     --correct:#0DC754; /* full rows/columns: Othello's green (her call); was her Figma #AFCE67 */
     --best-ink:rgba(228,228,228,0.45); /* best score: the light ink, greyed */
@@ -63,7 +63,7 @@
     --board-fit-rows: min(calc((100vw - 2 * var(--unit)) * var(--n) / var(--mat-n)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / var(--stack)));
     --board-w: min(var(--board-fit-rows), 720px);
     --cell-full: calc((var(--board-w) - (var(--n) - 1) * var(--gap)) / var(--n));
-    --mat-sq: rgba(255,255,255,0.05); /* the mat's blank tiles: a touch lighter than the background, so the darker board stands apart (her ask) */
+    --mat-sq: rgba(255,255,255,0.04); /* the mat's blank tiles: fainter than the board's, so the board stands apart (her ask) */
   }
 
   /* Desktop: the mat stands beside the board instead of below it (5 wide,
@@ -454,20 +454,6 @@
     "url": "https://playandlearn.kids/"
   }
 }
-</script>
-<script>
-  // Darker background trial (her note: the clay grey feels bleak next to
-  // the other games). ?bg=0..12 (0 = now). On a darker background the
-  // board's empty squares turn a touch LIGHTER than it (darker squares hide
-  // the almost-black pieces). compare.html shows them side by side on a
-  // fixed sample board; trial views never save.
-  var BG_TRIAL_OPTIONS = { 0:'#766C65', 1:'#655C56', 2:'#574F4A', 3:'#5E4A4A', 4:'#5A4652', 5:'#4A3A4A', 6:'#634A5A', 7:'#6B4238', 8:'#5A2E2E', 9:'#34405E', 10:'#2A3350', 11:'#2E4A36', 12:'#475238', 13:'#4A433F', 14:'#3D3A8F', 15:'#4D474E', 16:'#44424A', 17:'#4A404C', 18:'#4F3F47', 19:'#55444D', 20:'#574449', 21:'#45414F', 22:'#3E4351' };
-  var RED_TRIAL = (/[?&]bg=(2[0-2]|1[0-9]|[0-9])\b/.exec(location.search) || [])[1];
-  if (RED_TRIAL) {
-    var __r = document.documentElement.style;
-    __r.setProperty('--bg', BG_TRIAL_OPTIONS[RED_TRIAL]);
-    if (RED_TRIAL !== '0') { __r.setProperty('--sq-empty', 'rgba(255,255,255,0.09)'); __r.setProperty('--mat-sq', 'rgba(255,255,255,0.04)'); }
-  }
 </script>
 </head>
 <body>
@@ -1580,36 +1566,7 @@
   });
 
   var resumed = takeResume();
-  SAVE_KEY = RED_TRIAL ? null : 'playandlearn.saved.blocks'; // trial views don't save
-  if (RED_TRIAL) {
-    // Red trial: the same sample board in every frame.
-    markActive();
-    startGame();
-    var SAMPLE = [
-      '........',
-      '........',
-      '........',
-      '.....2..',
-      '0...122.',
-      '00.21100',
-      '1110..00',
-      '11..2.22'
-    ];
-    for (var sr = 0; sr < N; sr++) for (var sc = 0; sc < N; sc++) {
-      var ch = SAMPLE[sr].charAt(sc);
-      state.board[sr * N + sc] = ch === '.' ? -1 : Number(ch);
-    }
-    state.score = 0;
-    state.tray = [
-      { cells: [[0, 0], [0, 1], [0, 2]], color: 2 },
-      { cells: [[0, 0], [1, 1]], color: 0 },
-      { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], color: 1 }
-    ];
-    renderBoard();
-    renderScore(false);
-    renderTray(true);
-    return;
-  }
+  SAVE_KEY = 'playandlearn.saved.blocks';
   if (resumed && restoreGame(resumed)) {
     markActive();
   } else if (saved && saved.game && restoreGame(saved.game)) {
@@ -1618,7 +1575,7 @@
     if (saved) state.difficulty = saved.difficulty;
     markActive();
     var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!saved && !starterShown() && !reduced && !RED_TRIAL) { startStarter(); return; }
+    if (!saved && !starterShown() && !reduced) { startStarter(); return; }
     startGame();
   }
   // No demo this time: the level hint plays as on every other game.
