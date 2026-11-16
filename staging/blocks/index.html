@@ -456,11 +456,12 @@
 }
 </script>
 <script>
-  // Red trial on the clay grey: ?red=1..4 (1 = now, shared with Unblock's
-  // red car). compare.html shows them side by side on a fixed sample
-  // board; trial views never save.
-  var RED_TRIAL_OPTIONS = { 1:'#F53B3C', 2:'#F02822', 3:'#EB2617', 4:'#E0221B', 5:'#D12219' }; // truer, deeper reds (her ask)
-  var RED_TRIAL = (/[?&]red=([1-5])\b/.exec(location.search) || [])[1];
+  // Third-colour trial on the clay grey (her ask: pink, purple, blue...):
+  // the orange slot swapped for colours from the other games. ?c=1..8;
+  // compare.html shows them side by side on a fixed sample board; trial
+  // views never save.
+  var C3_TRIAL_OPTIONS = { 1:'#FF7235', 2:'#F362EE', 3:'#B98BF2', 4:'#A632F9', 5:'#79A1FF', 6:'#707EFF', 7:'#21CECE', 8:'#F2B238' };
+  var RED_TRIAL = (/[?&]c=([1-8])\b/.exec(location.search) || [])[1];
 </script>
 </head>
 <body>
@@ -533,7 +534,7 @@
   // Her Figma red, dark grey and orange (her pick, option B, 2026-11-15;
   // pink #EE65EA before it, same slot).
   var COLORS = ['#F53B3C', '#101010', '#FF7235']; // red car (shared with Unblock), the hub tiles' almost black (was brown #2A2420), Memory's bright orange (her picks, 2026-11-15)
-  if (RED_TRIAL) COLORS[0] = RED_TRIAL_OPTIONS[RED_TRIAL];
+  if (RED_TRIAL) COLORS[2] = C3_TRIAL_OPTIONS[RED_TRIAL];
   var COLORS_VERSION = 5;
   // Older saves, upgraded step by step:
   // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest
