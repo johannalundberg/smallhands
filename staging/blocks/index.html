@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#F2383B">
+<meta name="robots" content="noindex">
+
+<title>Blocks: Block Puzzle for Kids — Play and Learn</title>
+<link rel="canonical" href="https://playandlearn.kids/staging/blocks/">
+<meta name="description" content="Drag blocks onto the board and fill rows and columns to clear them. Free, no ads, pop-ups or cookies. Designed by a mom and her 6-year-old.">
+<link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<link rel="manifest" href="../../manifest.json">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://playandlearn.kids/staging/blocks/">
+<meta property="og:title" content="Blocks — Play and Learn">
+<meta property="og:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta property="og:image" content="https://playandlearn.kids/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:video" content="https://playandlearn.kids/og-video.mp4">
+<meta property="og:video:secure_url" content="https://playandlearn.kids/og-video.mp4">
+<meta property="og:video:type" content="video/mp4">
+<meta property="og:video:width" content="1200">
+<meta property="og:video:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Blocks — Play and Learn">
+<meta name="twitter:description" content="Free, kid-friendly math and logic games — memory match, number puzzles, othello, tic-tac-toe and more. Designed and built by a mom and her 6-year-old.">
+<meta name="twitter:image" content="https://playandlearn.kids/og-image.png">
+<style>
+  @font-face{
+    font-family:'Spline Sans Mono';
+    src: url('../../fonts/SplineSansMono.woff2') format('woff2');
+    font-weight:400;
+    font-style:normal;
+  }
+
+  :root{
+    --bg:#4848A8; /* toned-down blue (her pick, 2026-11-15; #5F44FF too poppy, then #5643CC); before: indigo #3D3A8F, brick #8A2F2A */
+    --bright:#E4E4E4;
+    --ink:#202020;
+    --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
+    --sq-empty:rgba(0,0,0,0.28); /* the board's empty squares: darker for more contrast (her pick 2026-11-15, was 18%), still light enough for the almost-black pieces */
+    --face:#101010; /* smiley: the dark piece colour (her call; was brown #2A2420, amber #FFA226) */
+    --correct:#0DC754; /* full rows/columns: Othello's green (her call); was her Figma #AFCE67 */
+    --best-ink:rgba(228,228,228,0.45); /* best score: the light ink, greyed */
+    --incorrect:#F2383B;
+    --unit: 1.1574vw;
+    --icon-size: clamp(44px, 8.912vw, 154px);
+    --v-reserve-top: calc(var(--icon-size) + 2 * var(--unit));
+    --v-reserve-bottom: calc(var(--icon-size) + 2 * var(--unit));
+    --gap: 3px;
+    --round: 12%; /* slightly rounded squares */
+    /* Board (8 rows; she tried 7x7 and went back to 8x8), one empty row,
+       then the mat of blank tiles (5 rows) the pieces wait on: 14 rows in
+       all, between the top and bottom button rows. */
+    --n: 8; /* board and mat width in squares (must match N in the script) */
+    --stack: calc((var(--n) + 6.1) / var(--n));
+    --mat-n: var(--n); /* mat width in squares: the board's (she chose this over a wider mat) */
+    --mat-rows: 5;     /* mat height in squares (desktop turns the mat on its side) */
+    --board-fit-rows: min(calc((100vw - 2 * var(--unit)) * var(--n) / var(--mat-n)), calc((var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)) / var(--stack)));
+    --board-w: min(var(--board-fit-rows), 720px);
+    --cell-full: calc((var(--board-w) - (var(--n) - 1) * var(--gap)) / var(--n));
+    --mat-sq: rgba(255,255,255,0.05); /* the mat's blank tiles: a touch lighter than the background, so the darker board stands apart (her ask) */
+  }
+
+  /* Desktop: the mat stands beside the board instead of below it (5 wide,
+     as tall as the board), one empty column between, both between the top
+     and bottom button rows -- the wide screen is used and the squares grow
+     (she found the narrow board-over-mat column looked odd on desktop). */
+  @media (min-width: 1024px) and (min-height: 501px){
+    :root{
+      --mat-n: 5;
+      --mat-rows: var(--n);
+      --board-w: min(calc(var(--app-height, 100vh) - var(--v-reserve-top) - var(--v-reserve-bottom)), calc((100vw - 2 * var(--unit)) * var(--n) / (var(--n) + 6.1)), 720px);
+    }
+    body{
+      padding-top: var(--v-reserve-top);
+      padding-bottom: var(--v-reserve-bottom);
+    }
+    html .game{ flex-direction:row; } /* outranks the base .game rule further down */
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    :root{
+      --unit: 2.3981vw;
+      --icon-size: clamp(80px, 11.4824vw, 120px);
+    }
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    position:relative;
+    margin:0;
+    height: var(--app-height, 100vh);
+    background:var(--bg);
+    color:var(--bright);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    touch-action:manipulation;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *, *::after{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  .num{
+    font-family:'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
+    font-variant-numeric: tabular-nums slashed-zero;
+    font-feature-settings: "zero" 1;
+    font-weight:400;
+  }
+
+  /* ---------- icon buttons (difficulty / back / refresh) ---------- */
+  .icon-btn{
+    appearance:none;
+    background:none;
+    border:none;
+    cursor:pointer;
+    width:var(--icon-size);
+    height:var(--icon-size);
+    aspect-ratio:1;
+    border-radius:50%;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: transform 120ms ease;
+  }
+  .icon-btn:active{ transform: translateZ(0) scale(0.94); }
+  @media (hover:hover) and (pointer:fine){
+    .icon-btn:hover{ transform: translateZ(0) scale(1.035); }
+  }
+  .icon-btn svg{ width:100%; height:100%; display:block; }
+  .icon-btn .fill-bg{ transition: fill 120ms ease; }
+
+  .diff-group{ position:absolute; right:var(--unit); top:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+  .diff-btn .fill-bg{ fill:var(--ink-muted); }
+  .diff-btn.active .fill-bg{ fill:var(--bright); }
+  .diff-btn[data-tier="easy"]   { --glow:#5CC72E; }
+  .diff-btn[data-tier="medium"] { --glow:#FFEA00; }
+  .diff-btn[data-tier="hard"]   { --glow:#F93134; }
+  .diff-btn.hint .fill-bg{ animation: level-glow-tier 1300ms ease-in-out; }
+  @keyframes level-glow-tier{ 40%,60%{ fill:var(--glow); } }
+  .diff-btn.pick .fill-bg{ animation: level-pick 900ms ease-out; }
+  @keyframes level-pick{ 0%,30%{ fill:var(--glow); } }
+
+  .btn-row{ position:absolute; left:var(--unit); bottom:var(--unit); display:flex; gap:calc(var(--icon-size) * 0.1); z-index:2; }
+
+  @media (min-width: 768px) and (max-width: 1023px) and (min-height: 501px){
+    .diff-group, .btn-row{ gap: calc(var(--icon-size) * 0.1253); }
+  }
+
+  .controls-slider{ display:contents; }
+
+  /* ---------- score: a plain number top left (no circle), then this
+     level's best score in grey after a slash, "45 / 200" -- same size as
+     the score (her pick of five styles, 2026-11-15). ---------- */
+  .score-box{
+    position:absolute;
+    left:var(--unit);
+    /* The digits' top edge lines up with the top of the level buttons
+       (Spline Sans Mono's digits start 0.121em below the line box top). */
+    top:calc(var(--unit) - 0.121em);
+    z-index:2;
+    font-size:calc(var(--icon-size) * 0.58);
+    line-height:1;
+    pointer-events:none;
+    display:flex;
+    align-items:baseline;
+    gap:0.22em;
+    white-space:nowrap;
+  }
+  .score, .best{
+    display:inline-block;
+    transform-origin:left center;
+    transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .score{ color:var(--bright); }
+  .best{ color:var(--best-ink); }
+  .best[hidden]{ display:none; }
+  .best-num::before{ content:'/'; margin-right:0.18em; }
+  .score.bump, .best.bump{ transform:scale(1.12); }
+  .best.new{ color:var(--bright); transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), color 300ms ease; }
+
+  /* ---------- board ---------- */
+  .game{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    /* One empty row between the board and the mat. */
+    gap:calc(var(--cell-full) + 2 * var(--gap));
+  }
+  .board{
+    width:var(--board-w);
+    aspect-ratio:1;
+    display:grid;
+    grid-template-columns:repeat(var(--n), minmax(0, 1fr));
+    grid-template-rows:repeat(var(--n), minmax(0, 1fr));
+    gap:var(--gap);
+  }
+  .sq{
+    background:var(--sq-empty);
+    position:relative;
+    border-radius:var(--round);
+  }
+  .sq.filled{ background:var(--c); }
+  /* Where the dragged piece will land. */
+  .sq.ghost{ background:var(--c); opacity:0.45; }
+  /* Rows and columns that this drop would fill light up in the piece's colour. */
+  /* Rows and columns this drop would fill light up green (her call: green
+     means a correct row, so no piece is green). */
+  .sq.lit{ background:var(--correct); }
+  .sq.ghost.lit{ opacity:1; }
+  /* A full line: the whole square, green, shrinks away -- its empty slot
+     goes with it and is back right after, like the hub tile (her call,
+     2026-11-15). No grow first: at 108% neighbours overlapped (gap 3px, a
+     square grows ~3.6px), leaving thin hard lines between them. 240ms:
+     380 felt slow without the grow. */
+  .sq.clearing{ background:var(--correct); animation: sq-out 240ms ease-in both; }
+  @keyframes sq-out{
+    0%{ transform:scale(1); }
+    100%{ transform:scale(0); }
+  }
+
+  .sq.drop{ animation: sq-drop 260ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes sq-drop{
+    0%{ transform:scale(0.86); }
+    100%{ transform:scale(1); }
+  }
+
+  /* ---------- the mat: 8 x 5 blank tiles under the board, the three
+     pieces lying on it at full size (her idea, so they don't float) ---------- */
+  .tray{
+    position:relative;
+    width:calc(var(--cell-full) * var(--mat-n) + var(--gap) * (var(--mat-n) - 1));
+    height:calc(var(--mat-rows) * var(--cell-full) + (var(--mat-rows) - 1) * var(--gap));
+  }
+  .mat-grid{
+    position:absolute;
+    inset:0;
+    display:grid;
+    grid-template-columns:repeat(var(--mat-n), minmax(0, 1fr));
+    grid-template-rows:repeat(var(--mat-rows), minmax(0, 1fr));
+    gap:var(--gap);
+  }
+  .mat-grid i{ background:var(--mat-sq); border-radius:var(--round); }
+  .tray .piece{
+    --pc: var(--cell-full);
+    --pg: var(--gap);
+  }
+  /* Each piece's spot on the mat, in tiles (--col / --row set from JS). */
+  .slot{
+    position:absolute;
+    left:calc((var(--cell-full) + var(--gap)) * var(--col, 0));
+    top:calc((var(--cell-full) + var(--gap)) * var(--row, 0));
+    display:block;
+    touch-action:none;
+    cursor:grab;
+  }
+  .slot.empty{ cursor:default; }
+  .piece{
+    position:relative;
+    flex:none;
+    width:calc(var(--pc) * var(--w) + var(--pg) * (var(--w) - 1));
+    height:calc(var(--pc) * var(--h) + var(--pg) * (var(--h) - 1));
+    transition: opacity 400ms ease;
+  }
+  .piece i{
+    position:absolute;
+    width:var(--pc);
+    height:var(--pc);
+    left:calc((var(--pc) + var(--pg)) * var(--x));
+    top:calc((var(--pc) + var(--pg)) * var(--y));
+    background:var(--c);
+    border-radius:var(--round);
+  }
+  .slot .piece{ transition: opacity 400ms ease, transform 120ms ease; }
+  .slot.lifted .piece{ visibility:hidden; }
+  /* Press and spring, like the other games' pieces. */
+  html .slot.pressed .piece{ transform:scale(0.92); transition:none; }
+  html .slot.spring .piece{ animation: press-spring 320ms cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes press-spring{
+    0%{ transform:scale(0.92); }
+    55%{ transform:scale(1.06); }
+    100%{ transform:scale(1); }
+  }
+  @media (hover:hover) and (pointer:fine){
+    .slot:not(.empty):hover .piece{ transform:scale(1.035); }
+  }
+  .slot.pop .piece{ animation: piece-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both; animation-delay:var(--d, 0ms); }
+  @keyframes piece-pop{
+    0%{ transform:scale(0); }
+    100%{ transform:scale(1); }
+  }
+  /* Out of room: the pieces that don't fit shake their heads once (the
+     site's wrong-answer shake, as in Sudoku and Math)... */
+  .slot.shake .piece{ animation: piece-shake 520ms ease-in-out; }
+  @keyframes piece-shake{
+    0%, 100%{ transform:translateX(0) rotate(0); }
+    15%{ transform:translateX(calc(var(--pc) * -0.22)) rotate(-5deg); }
+    35%{ transform:translateX(calc(var(--pc) * 0.2)) rotate(4deg); }
+    55%{ transform:translateX(calc(var(--pc) * -0.14)) rotate(-3deg); }
+    75%{ transform:translateX(calc(var(--pc) * 0.09)) rotate(2deg); }
+  }
+  /* ...then every block on the board and every piece left on the mat pop
+     and disappear, all at once. */
+  /* The same as a full row clearing (her call): the square shrinks away,
+     240ms ease-in -- but in the block's own colour, not green. */
+  .sq.wave-out{ animation: sq-out 240ms ease-in both; }
+  .slot.gone .piece{ animation: sq-out 240ms ease-in both; }
+
+  /* The piece being dragged, at full board size. */
+  .floater{
+    position:fixed;
+    left:0; top:0;
+    z-index:5;
+    pointer-events:none;
+    transform-origin:0 0;
+    display:none;
+  }
+  .floater.on{ display:block; }
+  .floater.lifting{ transition: transform 140ms ease-out; }
+  .floater.placing{ transition: transform 90ms ease-out; }
+  .floater.returning{ transition: transform 220ms cubic-bezier(0.34, 1.2, 0.64, 1); }
+
+  @keyframes bounce-in{
+    0%{ transform:scale(0); opacity:0; }
+    100%{ transform:scale(var(--final-scale)); opacity:1; }
+  }
+  .celebration{
+    position:absolute;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:4;
+  }
+  .celebration-face{
+    width:min(70vmin, 700px);
+    height:auto;
+    animation: bounce-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* ---------- phone: single scrollable slider-menu bar ---------- */
+  @media (max-width: 767px), (max-height: 500px){
+    .icon-btn:active{ transform: translateZ(0); filter: brightness(0.7); }
+    :root{
+      --unit: 5.089vw;
+      --icon-size: clamp(52px, 20.5344vw, 100px);
+      /* Only the score sits up top on phones (the buttons are in the tray
+         below), so the board may come up to one unit under its digits. */
+      --v-reserve-top: calc(var(--icon-size) * 0.45 + 2 * var(--unit));
+      --v-reserve-bottom: calc(var(--unit) * 2 + var(--icon-size));
+      --gap: 2px;
+    }
+    .controls-slider{
+      display:flex;
+      align-items:flex-end;
+      gap: calc(var(--icon-size) * 0.1239);
+      position:fixed;
+      left:var(--unit);
+      right:var(--unit);
+      bottom:var(--unit);
+      z-index:3;
+      background: rgba(32,32,32,0.4);
+      border-radius:999px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      --ink-muted: rgba(0,0,0,0.45);
+    }
+    .controls-slider::-webkit-scrollbar{ display:none; }
+    .controls-slider{ transition: transform 120ms ease; }
+    .controls-slider:active{ transform: scale(1.03); }
+    .diff-group, .btn-row{ display:contents; }
+    body{
+      padding-top: var(--v-reserve-top);
+      padding-bottom: var(--v-reserve-bottom);
+    }
+  }
+
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    :root{
+      --unit: clamp(8px, 3.5vh, 14px);
+      --icon-size: clamp(40px, 14vh, 64px);
+    }
+  }
+
+  .rotate-block{
+    display:none;
+    position:fixed;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    background:var(--incorrect);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  }
+  .rotate-block svg{ width:min(50vh, 320px); height:auto; }
+  @media (max-height: 500px) and (min-width: 500px) and (orientation: landscape){
+    .rotate-block{ display:flex; }
+  }
+  html, body, .controls-slider{ touch-action:manipulation; }
+  .slot{ touch-action:none; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "Blocks",
+  "url": "https://playandlearn.kids/staging/blocks/",
+  "description": "Drag blocks onto the board and fill rows and columns to clear them. Free, no ads, pop-ups or cookies. Designed by a mom and her 6-year-old.",
+  "genre": [
+    "Puzzle"
+  ],
+  "gamePlatform": "Web browser",
+  "applicationCategory": "Game",
+  "operatingSystem": "Any",
+  "isAccessibleForFree": true,
+  "isFamilyFriendly": true,
+  "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Play and Learn",
+    "url": "https://playandlearn.kids/"
+  },
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Play and Learn",
+    "url": "https://playandlearn.kids/"
+  }
+}
+</script>
+<script>
+  // Neutral background trial (her note: Blocks stands out against the
+  // other games -- try a more neutral background). ?bg=0..12 (0 = now);
+  // compare.html shows them side by side on a fixed sample board; trial
+  // views never save.
+  var BG_TRIAL_OPTIONS = { 0:'#4848A8', 1:'#6E6763', 2:'#7A756E', 3:'#6A6A6A', 4:'#6B6F78', 5:'#8C857D', 6:'#9A9285', 7:'#6F7568', 8:'#5E6152', 9:'#7B6E66', 10:'#5A5F66', 11:'#8E8E8A', 12:'#857A72' };
+  var RED_TRIAL = (/[?&]bg=(1[0-2]|[0-9])\b/.exec(location.search) || [])[1];
+  if (RED_TRIAL) document.documentElement.style.setProperty('--bg', BG_TRIAL_OPTIONS[RED_TRIAL]);
+</script>
+</head>
+<body>
+
+  <div class="rotate-block">
+    <svg viewBox="0 0 973 366">
+      <circle fill="var(--ink)" cx="65" cy="65" r="65"/>
+      <circle fill="var(--ink)" cx="908" cy="65" r="65"/>
+      <rect fill="var(--ink)" x="291" y="171" width="392" height="65"/>
+      <rect fill="var(--ink)" x="161" y="236" width="130" height="130"/>
+      <rect fill="var(--ink)" x="683" y="236" width="130" height="130"/>
+    </svg>
+  </div>
+
+  <div class="controls-slider" id="controlsSlider">
+    <div class="diff-group" id="diffGroup">
+      <button class="icon-btn diff-btn" data-tier="easy" aria-label="Easy">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M75 8C37.9969 8 8 37.9969 8 75C8 112.003 37.9969 142 75 142C112.003 142 142 112.003 142 75L150 75C150 116.421 116.421 150 75 150C33.5786 150 -1.46777e-06 116.421 -3.27835e-06 75C-5.08894e-06 33.5786 33.5786 -1.46777e-06 75 -3.27835e-06C116.421 -5.08894e-06 150 33.5786 150 75L142 75C142 37.9969 112.003 8 75 8Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="medium" aria-label="Medium">
+        <svg viewBox="0 0 150 150"><path class="fill-bg" d="M114 75C114 53.4609 96.5391 36 75 36C53.4609 36 36 53.4609 36 75C36 96.5391 53.4609 114 75 114V150C33.5786 150 0 116.421 0 75C0 33.5786 33.5786 0 75 0C116.421 0 150 33.5786 150 75C150 116.421 116.421 150 75 150V114C96.5391 114 114 96.5391 114 75Z"/></svg>
+      </button>
+      <button class="icon-btn diff-btn" data-tier="hard" aria-label="Hard">
+        <svg viewBox="0 0 150 150"><circle class="fill-bg" cx="75" cy="75" r="75"/></svg>
+      </button>
+    </div>
+
+    <div class="btn-row">
+      <button class="icon-btn" id="backBtn" aria-label="Back">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="var(--bright)" d="M36.0283 79.8692L33 77.207L35.8525 74.3565L66.2295 43.999L71.5732 49.3467L47.9971 72.9082L116 72.9082L116 80.1953L47.8467 80.1953L71.3975 100.906L66.4053 106.584L36.0283 79.8692Z"/></svg>
+      </button>
+      <button class="icon-btn" id="refreshBtn" aria-label="New game">
+        <svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="75" fill="var(--ink-muted)"/><path fill="none" stroke="var(--bright)" stroke-width="8" d="M111.491 32.1671L112.864 53.5756L90.0895 53.5683"/><path fill="none" stroke="var(--bright)" stroke-width="7" d="M110.802 97.5619C106.102 105.702 98.8837 112.094 90.2343 115.774C81.5848 119.454 71.9735 120.223 62.8492 117.964C53.7249 115.705 45.5822 110.541 39.6485 103.251C33.7149 95.9607 30.312 86.9392 29.9527 77.5463C29.5935 68.1534 32.2974 58.8983 37.6569 51.1762C43.0164 43.454 50.7409 37.6834 59.666 34.7343C68.5911 31.7851 78.2331 31.8172 87.1383 34.8258C96.0436 37.8343 103.729 43.6563 109.037 51.4139"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="score-box">
+    <span class="score num" id="score">0</span>
+    <div class="best" id="best" hidden>
+      <span class="num best-num" id="bestVal">0</span>
+    </div>
+  </div>
+
+  <div class="game" id="game">
+    <div class="board" id="board"></div>
+    <div class="tray" id="tray">
+      <div class="slot" data-slot="0"></div>
+      <div class="slot" data-slot="1"></div>
+      <div class="slot" data-slot="2"></div>
+    </div>
+  </div>
+
+  <div class="floater" id="floater"></div>
+  <div class="celebration" id="celebration"></div>
+
+<script src="../../sound.js?v=20261025ze"></script>
+<script>
+(function(){
+  "use strict";
+
+  document.addEventListener('touchstart', function(){}, { passive: true });
+
+  var N = 8; // 8x8 board; matches --n in the CSS
+  var TAP_SLOP = 6;
+  // Three colours on Unblock's blue, from her own Figma tiles (2026-11-15):
+  // red, dark grey, orange. Each set of three is one of each. Green is kept
+  // for full rows (--correct). Same slots as the earlier cream / dark brown
+  // / orange, so saved games keep their pattern.
+  // Her Figma red, dark grey and orange (her pick, option B, 2026-11-15;
+  // pink #EE65EA before it, same slot).
+  var COLORS = ['#F53B3C', '#101010', '#FF7235']; // red car (shared with Unblock), the hub tiles' almost black (was brown #2A2420), Memory's bright orange (her picks, 2026-11-15)
+  var COLORS_VERSION = 5;
+  // Older saves, upgraded step by step:
+  // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest
+  // move up one. v2 (purple, blue, pink, yellow, teal, orange) -> v3:
+  // purple becomes pink, the rest move up one. v3 (blue, pink, yellow,
+  // teal, orange) -> v4 (cream, dark brown, orange): blue and yellow become
+  // cream, pink becomes orange, teal becomes dark brown.
+  // v4 had a light grey for a while (4th slot) -> v5: it becomes orange.
+  var UPGRADE = { 1: [5, 0, 1, 2, 3, 4, 5], 2: [1, 0, 1, 2, 3, 4], 3: [0, 2, 0, 1, 2], 4: [0, 1, 2, 2] };
+  function upgradeColors(data){
+    if (!data) return data;
+    var cv = data.cv || 1;
+    while (cv < COLORS_VERSION && UPGRADE[cv]) {
+      var table = UPGRADE[cv];
+      var map = function(v){ return (v >= 0 && v < table.length && v % 1 === 0) ? table[v] : v; };
+      if (Array.isArray(data.board)) data.board = data.board.map(function(v){ return v === -1 ? -1 : map(v); });
+      if (Array.isArray(data.tray)) data.tray = data.tray.map(function(p){ return p && typeof p === 'object' ? { cells: p.cells, color: map(p.color) } : p; });
+      cv++;
+    }
+    data.cv = COLORS_VERSION;
+    return data;
+  }
+
+  // ---------- shapes ----------
+  // Every shape is on every level; the level only changes how often the
+  // small, middle and big ones come up (WEIGHTS) and how fair a deal is.
+  var BASES = {
+    small: [
+      [[0,0]],
+      [[0,0],[0,1]],
+      [[0,0],[0,1],[0,2]],
+      [[0,0],[1,0],[1,1]],
+      [[0,0],[1,1]]                       // diagonal 2 (her son's idea)
+    ],
+    medium: [
+      [[0,0],[0,1],[1,0],[1,1]],          // square
+      [[0,0],[0,1],[0,2],[0,3]],          // line of 4
+      [[0,0],[0,1],[0,2],[1,1]],          // T
+      [[0,0],[1,0],[2,0],[2,1]],          // L
+      [[0,1],[1,1],[2,1],[2,0]],          // J
+      [[0,1],[0,2],[1,0],[1,1]],          // S
+      [[0,0],[0,1],[1,1],[1,2]],          // Z
+      [[0,0],[1,1],[2,2]]                 // diagonal 3 (her son's idea)
+    ],
+    big: [
+      [[0,0],[0,1],[0,2],[0,3],[0,4]],    // line of 5
+      [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]], // 3x3
+      [[0,0],[1,0],[2,0],[2,1],[2,2]],    // big corner
+      [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2]] // 2x3
+    ]
+  };
+  var WEIGHTS = {
+    easy:   { small: 0.5,  medium: 0.4,  big: 0.1 },
+    medium: { small: 0.3,  medium: 0.45, big: 0.25 },
+    hard:   { small: 0.15, medium: 0.4,  big: 0.45 }
+  };
+
+  function normalize(cells){
+    var minR = Infinity, minC = Infinity;
+    cells.forEach(function(p){ minR = Math.min(minR, p[0]); minC = Math.min(minC, p[1]); });
+    return cells.map(function(p){ return [p[0] - minR, p[1] - minC]; })
+      .sort(function(a, b){ return a[0] - b[0] || a[1] - b[1]; });
+  }
+  function keyOf(cells){ return cells.map(function(p){ return p.join(','); }).join(';'); }
+  function rotations(base){
+    var out = [], seen = {}, cur = base;
+    for (var k = 0; k < 4; k++) {
+      var n = normalize(cur), key = keyOf(n);
+      if (!seen[key]) { seen[key] = 1; out.push(n); }
+      cur = cur.map(function(p){ return [p[1], -p[0]]; });
+    }
+    return out;
+  }
+  // SHAPES[class] = list of bases, each a list of its orientations.
+  var SHAPES = {};
+  var VALID_SHAPE = {};
+  Object.keys(BASES).forEach(function(cls){
+    SHAPES[cls] = BASES[cls].map(function(b){
+      var rs = rotations(b);
+      rs.forEach(function(r){ VALID_SHAPE[keyOf(r)] = 1; });
+      return rs;
+    });
+  });
+  function dims(cells){
+    var h = 0, w = 0;
+    cells.forEach(function(p){ h = Math.max(h, p[0] + 1); w = Math.max(w, p[1] + 1); });
+    return { h: h, w: w };
+  }
+
+  var state = {
+    board: [],        // length 64: -1 empty, else a COLORS index
+    tray: [null, null, null], // { cells, color } or null once placed
+    score: 0,
+    best: { easy: 0, medium: 0, hard: 0 }, // best score per level, kept between visits
+    difficulty: 'easy',
+    over: false,
+    placing: false
+  };
+
+  var els = {
+    board: document.getElementById('board'),
+    tray: document.getElementById('tray'),
+    slots: Array.prototype.slice.call(document.querySelectorAll('.slot')),
+    game: document.getElementById('game'),
+    floater: document.getElementById('floater'),
+    score: document.getElementById('score'),
+    best: document.getElementById('best'),
+    bestVal: document.getElementById('bestVal'),
+    celebration: document.getElementById('celebration'),
+    diffGroup: document.getElementById('diffGroup'),
+    backBtn: document.getElementById('backBtn'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    controlsSlider: document.getElementById('controlsSlider')
+  };
+  var sqEls = [];
+
+  function updateAppHeight(){
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  updateAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateAppHeight);
+    window.visualViewport.addEventListener('scroll', updateAppHeight);
+  } else {
+    window.addEventListener('resize', updateAppHeight);
+  }
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'visible') updateAppHeight();
+  });
+
+  var landscapeBlockMQ = window.matchMedia('(max-height:500px) and (min-width:500px) and (orientation:landscape)');
+  var wasInLandscapeBlock = landscapeBlockMQ.matches;
+  function onLandscapeBlockChange(e){
+    if (wasInLandscapeBlock && !e.matches) {
+      saveResume();
+      location.reload();
+    }
+    wasInLandscapeBlock = e.matches;
+  }
+  if (landscapeBlockMQ.addEventListener) {
+    landscapeBlockMQ.addEventListener('change', onLandscapeBlockChange);
+  } else if (landscapeBlockMQ.addListener) {
+    landscapeBlockMQ.addListener(onLandscapeBlockChange);
+  }
+
+  // ---------- rules ----------
+  function fitsAt(board, cells, r, c){
+    for (var i = 0; i < cells.length; i++) {
+      var rr = r + cells[i][0], cc = c + cells[i][1];
+      if (rr < 0 || rr >= N || cc < 0 || cc >= N) return false;
+      if (board[rr * N + cc] !== -1) return false;
+    }
+    return true;
+  }
+  function fitsAnywhere(board, cells){
+    var d = dims(cells);
+    for (var r = 0; r <= N - d.h; r++) {
+      for (var c = 0; c <= N - d.w; c++) {
+        if (fitsAt(board, cells, r, c)) return true;
+      }
+    }
+    return false;
+  }
+  // Rows and columns that are full on this board.
+  function fullLines(board){
+    var rows = [], cols = [];
+    for (var r = 0; r < N; r++) {
+      var full = true;
+      for (var c = 0; c < N; c++) if (board[r * N + c] === -1) { full = false; break; }
+      if (full) rows.push(r);
+    }
+    for (var c2 = 0; c2 < N; c2++) {
+      var fullC = true;
+      for (var r2 = 0; r2 < N; r2++) if (board[r2 * N + c2] === -1) { fullC = false; break; }
+      if (fullC) cols.push(c2);
+    }
+    return { rows: rows, cols: cols };
+  }
+  function lineCells(lines){
+    var set = {};
+    lines.rows.forEach(function(r){ for (var c = 0; c < N; c++) set[r * N + c] = 1; });
+    lines.cols.forEach(function(c){ for (var r = 0; r < N; r++) set[r * N + c] = 1; });
+    return Object.keys(set).map(Number);
+  }
+  // Place on a copy and clear whatever fills up.
+  function placedCopy(board, cells, r, c, color){
+    var b = board.slice();
+    cells.forEach(function(p){ b[(r + p[0]) * N + c + p[1]] = color; });
+    lineCells(fullLines(b)).forEach(function(i){ b[i] = -1; });
+    return b;
+  }
+
+  // Can all these pieces be placed, in some order? Capped so a crowded
+  // board can't stall the deal; running out counts as "no".
+  function allPlaceable(board, pieces, budget){
+    if (!pieces.length) return true;
+    for (var k = 0; k < pieces.length; k++) {
+      var cells = pieces[k], d = dims(cells);
+      var rest = pieces.slice(0, k).concat(pieces.slice(k + 1));
+      for (var r = 0; r <= N - d.h; r++) {
+        for (var c = 0; c <= N - d.w; c++) {
+          if (!fitsAt(board, cells, r, c)) continue;
+          if (--budget.n < 0) return false;
+          if (allPlaceable(placedCopy(board, cells, r, c, 0), rest, budget)) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  // ---------- dealing ----------
+  function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+  function randomCells(){
+    var w = WEIGHTS[state.difficulty], x = Math.random(), cls;
+    if (x < w.small) cls = 'small';
+    else if (x < w.small + w.medium) cls = 'medium';
+    else cls = 'big';
+    return pick(pick(SHAPES[cls]));
+  }
+  // The pieces lie on the mat with at least one free tile between them: in
+  // one row if they fit with gaps, otherwise one above the other two (or
+  // two above one), a free row between. Sets that can't be arranged like
+  // that aren't dealt.
+  // Phones and tablets: 8 wide x 5 deep under the board. Desktop: 5 wide x
+  // 8 tall beside it (same media query as the CSS).
+  var SIDE_MAT = window.matchMedia('(min-width: 1024px) and (min-height: 501px)');
+  var MAT_COLS, MAT_ROWS;
+  function setMatDims(){
+    if (SIDE_MAT.matches) { MAT_COLS = 5; MAT_ROWS = N; }
+    else { MAT_COLS = N; MAT_ROWS = 5; }
+  }
+  setMatDims();
+  function setWidth(set){
+    return set.reduce(function(sum, p){ return sum + (p ? dims(p.cells).w : 0); }, 0);
+  }
+  // Columns for a row of pieces (widths ws) with at least `gap` between
+  // them; spare columns go to the gaps between pieces first, then the edges.
+  // Returns the start column of each, or null if they don't fit.
+  function rowCols(ws, gap, cols){
+    var n = ws.length;
+    var spare = cols - ws.reduce(function(a, b){ return a + b; }, 0) - gap * (n - 1);
+    if (spare < 0) return null;
+    var gaps = [];
+    for (var i = 0; i <= n; i++) gaps.push((i > 0 && i < n ? gap : 0) + Math.floor(spare / (n + 1)));
+    var rest = spare - Math.floor(spare / (n + 1)) * (n + 1);
+    var order = [];
+    for (var j = 1; j < n; j++) order.push(j);
+    order.push(0, n);
+    for (var o = 0; rest > 0; o = (o + 1) % order.length, rest--) gaps[order[o]]++;
+    var cols = [], col = gaps[0];
+    ws.forEach(function(w, idx){ cols.push(col); col += w + gaps[idx + 1]; });
+    return cols;
+  }
+  // Spots ({col,row} per tray index) for the pieces in `set`, or null.
+  // tight: allow pieces touching in one row (only for games saved before
+  // the gaps existed).
+  // A tall mat (desktop) is planned as a wide one on its side: widths and
+  // heights swap, then the spots swap back.
+  function planLayout(set, tight){
+    var ks = [];
+    set.forEach(function(p, k){ if (p) ks.push(k); });
+    if (!ks.length) return {};
+    var d = {}, tall = MAT_ROWS > MAT_COLS;
+    ks.forEach(function(k){
+      var dm = dims(set[k].cells);
+      d[k] = tall ? { w: dm.h, h: dm.w } : dm;
+    });
+    var plan = planWide(ks, d, tall ? MAT_ROWS : MAT_COLS, tall ? MAT_COLS : MAT_ROWS, tight);
+    if (plan && tall) Object.keys(plan).forEach(function(k){ plan[k] = { col: plan[k].row, row: plan[k].col }; });
+    return plan;
+  }
+  function planWide(ks, d, MAT_COLS, MAT_ROWS, tight){
+    function row(group, top, height){
+      var cols = rowCols(group.map(function(k){ return d[k].w; }), 1, MAT_COLS);
+      if (!cols) return null;
+      var out = {};
+      group.forEach(function(k, i){ out[k] = { col: cols[i], row: top + Math.floor((height - d[k].h) / 2) }; });
+      return out;
+    }
+    var one = row(ks, 0, MAT_ROWS);
+    if (one) return one;
+    if (ks.length > 1) {
+      // One piece on its own row, the rest on another, a free row between.
+      for (var a = 0; a < ks.length; a++) {
+        var alone = [ks[a]], rest = ks.filter(function(_, i){ return i !== a; });
+        var pairs = [[alone, rest], [rest, alone]];
+        for (var q = 0; q < 2; q++) {
+          var topG = pairs[q][0], botG = pairs[q][1];
+          var hTop = Math.max.apply(null, topG.map(function(k){ return d[k].h; }));
+          var hBot = Math.max.apply(null, botG.map(function(k){ return d[k].h; }));
+          var total = hTop + 1 + hBot;
+          if (total > MAT_ROWS) continue;
+          var r0 = Math.floor((MAT_ROWS - total) / 2);
+          var t = row(topG, r0, hTop), b = row(botG, r0 + hTop + 1, hBot);
+          if (t && b) { for (var key in b) t[key] = b[key]; return t; }
+        }
+      }
+    }
+    if (tight) {
+      var cols = rowCols(ks.map(function(k){ return d[k].w; }), 0, MAT_COLS);
+      if (cols) {
+        var out = {};
+        ks.forEach(function(k, i){ out[k] = { col: cols[i], row: Math.floor((MAT_ROWS - d[k].h) / 2) }; });
+        return out;
+      }
+    }
+    return null;
+  }
+  function randomSet(){
+    var set;
+    for (var t = 0; t < 200; t++) {
+      var colors = COLORS.map(function(_, i){ return i; });
+      set = [];
+      for (var k = 0; k < 3; k++) {
+        var ci = colors.splice(Math.floor(Math.random() * colors.length), 1)[0];
+        set.push({ cells: randomCells(), color: ci });
+      }
+      if (planLayout(set)) return set;
+    }
+    return set.map(function(p){ return { cells: [[0,0]], color: p.color }; }); // never expected
+  }
+  // Easy: all three fit (in some order). Medium: at least one fits.
+  // Hard: whatever comes.
+  function dealSet(){
+    var d = state.difficulty, set, t;
+    if (d === 'easy') {
+      for (t = 0; t < 30; t++) {
+        set = randomSet();
+        if (allPlaceable(state.board, set.map(function(p){ return p.cells; }), { n: 4000 })) return set;
+      }
+    }
+    if (d === 'easy' || d === 'medium') {
+      for (t = 0; t < 30; t++) {
+        set = randomSet();
+        if (set.some(function(p){ return fitsAnywhere(state.board, p.cells); })) return set;
+      }
+    }
+    return randomSet();
+  }
+
+  // ---------- rendering ----------
+  function buildBoardDom(){
+    els.board.innerHTML = '';
+    sqEls = [];
+    for (var i = 0; i < N * N; i++) {
+      var sq = document.createElement('div');
+      sq.className = 'sq';
+      els.board.appendChild(sq);
+      sqEls.push(sq);
+    }
+  }
+  function renderSq(i){
+    var el = sqEls[i], v = state.board[i];
+    el.classList.remove('clearing', 'ghost', 'lit');
+    if (v === -1) {
+      el.classList.remove('filled');
+      el.style.removeProperty('--c');
+    } else {
+      el.classList.add('filled');
+      el.style.setProperty('--c', COLORS[v]);
+    }
+  }
+  function renderBoard(){ for (var i = 0; i < N * N; i++) renderSq(i); }
+
+  function pieceEl(p){
+    var d = dims(p.cells);
+    var el = document.createElement('div');
+    el.className = 'piece';
+    el.style.setProperty('--w', d.w);
+    el.style.setProperty('--h', d.h);
+    el.style.setProperty('--c', COLORS[p.color]);
+    p.cells.forEach(function(q){
+      var b = document.createElement('i');
+      b.style.setProperty('--x', q[1]);
+      b.style.setProperty('--y', q[0]);
+      el.appendChild(b);
+    });
+    return el;
+  }
+  // Spots on the mat for a new set (see planLayout). A placed piece's spot
+  // stays empty until the next set.
+  function layoutTray(){
+    var plan = planLayout(state.tray, true) || {};
+    Object.keys(plan).forEach(function(k){
+      els.slots[k].style.setProperty('--col', plan[k].col);
+      els.slots[k].style.setProperty('--row', plan[k].row);
+    });
+  }
+  function buildMat(){
+    var old = els.tray.querySelector('.mat-grid');
+    if (old) old.remove();
+    var grid = document.createElement('div');
+    grid.className = 'mat-grid';
+    for (var i = 0; i < MAT_COLS * MAT_ROWS; i++) grid.appendChild(document.createElement('i'));
+    els.tray.insertBefore(grid, els.tray.firstChild);
+  }
+  buildMat();
+  // Crossing between the phone/tablet and desktop layouts turns the mat:
+  // re-arrange the pieces on it (a set that can't lie on the new mat with
+  // gaps gets a new deal -- only happens when a window is resized).
+  function onMatShapeChange(){
+    cancelDrag();
+    setMatDims();
+    buildMat();
+    if (!state.tray.some(function(p){ return p; })) return;
+    if (!state.over && !planLayout(state.tray)) {
+      state.tray = dealSet();
+      renderTray(true);
+      saveProgress();
+    } else {
+      layoutTray();
+    }
+  }
+  if (SIDE_MAT.addEventListener) SIDE_MAT.addEventListener('change', onMatShapeChange);
+  else if (SIDE_MAT.addListener) SIDE_MAT.addListener(onMatShapeChange);
+  function renderTray(pop){
+    if (pop) layoutTray();
+    state.tray.forEach(function(p, k){
+      var slot = els.slots[k];
+      slot.innerHTML = '';
+      slot.classList.remove('lifted', 'pressed', 'spring', 'shake', 'gone', 'pop');
+      slot.classList.toggle('empty', !p);
+      if (!p) return;
+      slot.appendChild(pieceEl(p));
+      if (pop) {
+        slot.style.setProperty('--d', (k * 70) + 'ms');
+        void slot.offsetWidth;
+        slot.classList.add('pop');
+      }
+    });
+  }
+  els.slots.forEach(function(slot){
+    slot.addEventListener('animationend', function(e){
+      if (e.animationName === 'piece-pop') slot.classList.remove('pop');
+      if (e.animationName === 'press-spring') slot.classList.remove('spring');
+    });
+  });
+
+  function bumpEl(el){
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+    clearTimeout(el._bumpT);
+    el._bumpT = setTimeout(function(){ el.classList.remove('bump'); }, 200);
+  }
+  function renderScore(bump){
+    els.score.textContent = state.score;
+    if (bump) bumpEl(els.score);
+  }
+  // The level's best, hidden until there is one.
+  function renderBest(){
+    var b = state.best[state.difficulty] || 0;
+    els.bestVal.textContent = b;
+    els.best.hidden = !b;
+    els.best.classList.remove('new');
+  }
+
+  // ---------- game flow ----------
+  var celebrationTimer = null, overTimer = null;
+
+  function startGame(){
+    if (demo) endDemo(true);
+    clearTimeout(celebrationTimer);
+    clearTimeout(overTimer);
+    cancelDrag();
+    els.floater.className = 'floater';
+    els.floater.innerHTML = '';
+    els.celebration.style.display = 'none';
+    els.game.style.display = '';
+    state.board = new Array(N * N).fill(-1);
+    state.score = 0;
+    state.over = false;
+    state.placing = false;
+    buildBoardDom();
+    renderBoard();
+    renderScore(false);
+    renderBest();
+    state.tray = dealSet();
+    renderTray(true);
+    saveProgress();
+  }
+
+  function commitPlace(k, r, c, noScore){
+    var p = state.tray[k];
+    state.tray[k] = null;
+    var placed = [];
+    p.cells.forEach(function(q){
+      var i = (r + q[0]) * N + c + q[1];
+      state.board[i] = p.color;
+      placed.push(i);
+    });
+    var lines = fullLines(state.board);
+    var cleared = lineCells(lines);
+    var n = lines.rows.length + lines.cols.length;
+    // Squares + lines: a point per square placed, 10 per line, and a
+    // bigger reward for clearing several at once (2 lines = 40, 3 = 90).
+    if (!noScore) state.score += p.cells.length + 10 * n * n; // the demo's move doesn't count
+
+    placed.forEach(function(i){
+      renderSq(i);
+      var el = sqEls[i];
+      el.classList.remove('drop'); void el.offsetWidth; el.classList.add('drop');
+      setTimeout(function(){ el.classList.remove('drop'); }, 280);
+    });
+    if (cleared.length) {
+      PLSound.play('positive');
+      // The whole line pops at once (her call, 2026-11-15: the ripple read
+      // as a hard stepped gradient; nothing else on the site staggers).
+      cleared.forEach(function(i){
+        state.board[i] = -1;
+        var el = sqEls[i];
+        el.classList.remove('drop');
+        el.classList.add('clearing');
+        setTimeout(function(){
+          if (el.classList.contains('clearing')) renderSq(i);
+        }, 260);
+      });
+    }
+    renderScore(true);
+    renderTray(false);
+
+    if (state.tray.every(function(t){ return !t; })) {
+      // A short beat with an empty tray, then the new set pops in.
+      state.tray = dealSet();
+      state.placing = true;
+      setTimeout(function(){
+        state.placing = false;
+        renderTray(true);
+      }, cleared.length ? 220 : 80);
+    }
+    saveProgress();
+    checkOver(cleared.length ? 700 : 300);
+  }
+
+  function checkOver(delay){
+    var left = state.tray.filter(function(t){ return t; });
+    if (!left.length) return;
+    if (left.some(function(t){ return fitsAnywhere(state.board, t.cells); })) return;
+    state.over = true;
+    // A new best is kept straight away, so leaving now can't lose it.
+    var newBest = state.score > (state.best[state.difficulty] || 0);
+    if (newBest) state.best[state.difficulty] = state.score;
+    saveProgress();
+    overTimer = setTimeout(function(){
+      // The pieces that don't fit shake their heads, with the site's short
+      // 'negative' sound (her call) -- not on a new best, where the smiley's
+      // big sound follows instead.
+      if (!newBest) PLSound.play('negative');
+      els.slots.forEach(function(s){
+        if (s.classList.contains('empty')) return;
+        s.classList.remove('shake', 'pop', 'spring'); void s.offsetWidth; s.classList.add('shake');
+      });
+      overTimer = setTimeout(newBest ? showCelebration : quietEnd, 900);
+    }, delay);
+  }
+
+  // Out of room without beating the best: no face, no sound. Every block
+  // on the board and the pieces left on the mat pop and disappear together
+  // (her call: no wave), then the new set pops in.
+  function quietEnd(){
+    sqEls.forEach(function(el){ if (el.classList.contains('filled')) el.classList.add('wave-out'); });
+    els.slots.forEach(function(s){ if (!s.classList.contains('empty')) s.classList.add('gone'); });
+    celebrationTimer = setTimeout(startGame, 380);
+  }
+
+  var CELEBRATION_FACE_SVG = '<svg class="celebration-face" viewBox="0 0 973 366" style="--final-scale:1;">' +
+    '<circle fill="var(--face)" cx="65" cy="65" r="65"/>' +
+    '<circle fill="var(--face)" cx="908" cy="65" r="65"/>' +
+    '<rect fill="var(--face)" x="161" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--face)" x="683" y="171" width="130" height="130"/>' +
+    '<rect fill="var(--face)" x="291" y="301" width="392" height="65"/>' +
+    '</svg>';
+
+  // Out of room with a new best: the smiley, and the grey best under the
+  // score lights up and jumps to the new number. Then a fresh board.
+  function showCelebration(){
+    updateAppHeight();
+    els.celebration.innerHTML = CELEBRATION_FACE_SVG;
+    PLSound.play('complete');
+    els.game.style.display = 'none';
+    els.celebration.style.display = 'flex';
+    els.bestVal.textContent = state.best[state.difficulty];
+    els.best.hidden = false;
+    els.best.classList.add('new');
+    bumpEl(els.best);
+    celebrationTimer = setTimeout(startGame, 3000);
+  }
+
+  // ---------- drag ----------
+  var drag = null;
+  var ghost = { key: '', cells: [] };
+
+  function boardGeom(){
+    var rect = els.board.getBoundingClientRect();
+    var gap = parseFloat(getComputedStyle(els.board).columnGap) || 0;
+    var cell = (rect.width - (N - 1) * gap) / N;
+    return { left: rect.left, top: rect.top, cell: cell, gap: gap, step: cell + gap };
+  }
+
+  els.slots.forEach(function(slot, k){
+    slot.addEventListener('pointerdown', function(e){ onSlotDown(e, k); });
+  });
+
+  function onSlotDown(e, k){
+    if (drag || state.over || state.placing || !state.tray[k]) return;
+    if (e.button != null && e.button > 0) return;
+    // Mouse only: on touch, the tap must stay a tap so iOS lets sound start.
+    if (e.pointerType === 'mouse') e.preventDefault();
+    PLSound.play('click');
+    var slot = els.slots[k];
+    slot.classList.remove('spring');
+    slot.classList.add('pressed');
+    drag = {
+      k: k,
+      slot: slot,
+      pointerId: e.pointerId,
+      touch: e.pointerType !== 'mouse',
+      startX: e.clientX,
+      startY: e.clientY,
+      started: false
+    };
+    try { slot.setPointerCapture(e.pointerId); } catch (err) {}
+    slot.addEventListener('pointermove', onMove);
+    slot.addEventListener('pointerup', onUp);
+    slot.addEventListener('pointercancel', onCancel);
+  }
+
+  function detach(){
+    if (!drag) return;
+    var s = drag.slot;
+    s.removeEventListener('pointermove', onMove);
+    s.removeEventListener('pointerup', onUp);
+    s.removeEventListener('pointercancel', onCancel);
+    try { s.releasePointerCapture(drag.pointerId); } catch (err) {}
+  }
+
+  function setFloater(x, y, s){
+    els.floater.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+  }
+
+  function startLift(e){
+    var d = drag;
+    d.started = true;
+    var pe = d.slot.querySelector('.piece');
+    d.slot.classList.remove('pressed', 'spring', 'pop');
+    // The slot's own box (its layout size): a piece grabbed while it is
+    // still popping in (or pressed) is scaled down on screen.
+    var sr = d.slot.getBoundingClientRect();
+    var rect = {
+      left: sr.left + (sr.width - pe.offsetWidth) / 2,
+      top: sr.top + (sr.height - pe.offsetHeight) / 2,
+      width: pe.offsetWidth
+    };
+    var g = boardGeom();
+    var p = state.tray[d.k];
+    var dm = dims(p.cells);
+    d.geom = g;
+    d.fullW = dm.w * g.cell + (dm.w - 1) * g.gap;
+    d.fullH = dm.h * g.cell + (dm.h - 1) * g.gap;
+    d.trayX = rect.left; d.trayY = rect.top;
+    d.trayScale = rect.width / d.fullW;
+    // Mouse keeps the spot that was grabbed; a finger holds the piece
+    // above itself so it stays in sight.
+    d.grabX = (d.startX - rect.left) / d.trayScale;
+    d.grabY = (d.startY - rect.top) / d.trayScale;
+    d.lift = g.cell * 1.1;
+
+    var f = els.floater;
+    f.innerHTML = '';
+    var big = pieceEl(p);
+    big.style.setProperty('--pc', g.cell + 'px');
+    big.style.setProperty('--pg', g.gap + 'px');
+    f.appendChild(big);
+    f.className = 'floater on';
+    setFloater(d.trayX, d.trayY, d.trayScale);
+    d.slot.classList.add('lifted');
+    void f.offsetWidth;
+    f.classList.add('lifting');
+    clearTimeout(d.liftT);
+    d.liftT = setTimeout(function(){ f.classList.remove('lifting'); }, 150);
+    moveTo(e);
+  }
+
+  function targetXY(e){
+    var d = drag;
+    if (d.touch) return { x: e.clientX - d.fullW / 2, y: e.clientY - d.fullH - d.lift };
+    return { x: e.clientX - d.grabX, y: e.clientY - d.grabY };
+  }
+
+  function moveTo(e){
+    var d = drag, t = targetXY(e);
+    d.x = t.x; d.y = t.y;
+    setFloater(t.x, t.y, 1);
+    var g = d.geom;
+    var c = Math.round((t.x - g.left) / g.step);
+    var r = Math.round((t.y - g.top) / g.step);
+    var p = state.tray[d.k];
+    if (fitsAt(state.board, p.cells, r, c)) { d.r = r; d.c = c; showGhost(p, r, c); }
+    else { d.r = null; clearGhost(); }
+  }
+
+  function showGhost(p, r, c){
+    var key = r + ',' + c;
+    if (ghost.key === key) return;
+    clearGhost();
+    ghost.key = key;
+    var b = state.board.slice(), cells = [];
+    p.cells.forEach(function(q){
+      var i = (r + q[0]) * N + c + q[1];
+      b[i] = p.color;
+      cells.push(i);
+      sqEls[i].classList.add('ghost');
+      sqEls[i].style.setProperty('--c', COLORS[p.color]);
+    });
+    var lit = lineCells(fullLines(b));
+    lit.forEach(function(i){
+      sqEls[i].classList.add('lit');
+      sqEls[i].style.setProperty('--lit', COLORS[p.color]);
+    });
+    ghost.cells = cells.concat(lit);
+  }
+  function clearGhost(){
+    ghost.cells.forEach(function(i){
+      var el = sqEls[i];
+      if (!el) return;
+      el.classList.remove('lit');
+      if (el.classList.contains('ghost')) {
+        el.classList.remove('ghost');
+        if (state.board[i] === -1) el.style.removeProperty('--c');
+      }
+    });
+    ghost.cells = [];
+    ghost.key = '';
+  }
+
+  function onMove(e){
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    if (!drag.started) {
+      if (Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY) <= TAP_SLOP) return;
+      startLift(e);
+      return;
+    }
+    moveTo(e);
+  }
+
+  function onUp(e){
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    var d = drag;
+    detach();
+    drag = null;
+    if (!d.started) {
+      // A tap: press and spring, nothing else.
+      d.slot.classList.remove('pressed');
+      void d.slot.offsetWidth;
+      d.slot.classList.add('spring');
+      return;
+    }
+    clearTimeout(d.liftT);
+    clearGhost();
+    var f = els.floater;
+    f.classList.remove('lifting');
+    if (d.r != null && fitsAt(state.board, state.tray[d.k].cells, d.r, d.c) && !state.over) {
+      state.placing = true;
+      f.classList.add('placing');
+      setFloater(d.geom.left + d.c * d.geom.step, d.geom.top + d.r * d.geom.step, 1);
+      setTimeout(function(){
+        f.className = 'floater';
+        f.innerHTML = '';
+        state.placing = false;
+        commitPlace(d.k, d.r, d.c);
+      }, 90);
+    } else {
+      flyBack(d);
+    }
+  }
+
+  function flyBack(d){
+    var f = els.floater;
+    f.classList.add('returning');
+    setFloater(d.trayX, d.trayY, d.trayScale);
+    setTimeout(function(){
+      f.className = 'floater';
+      f.innerHTML = '';
+      d.slot.classList.remove('lifted');
+    }, 230);
+  }
+
+  function onCancel(e){
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    cancelDrag();
+  }
+  // A drag that never got its pointerup (an OS gesture took the touch,
+  // the tab was hidden): the piece goes back to the tray.
+  function cancelDrag(){
+    if (!drag) return;
+    var d = drag;
+    detach();
+    drag = null;
+    clearGhost();
+    d.slot.classList.remove('pressed');
+    if (d.started) { clearTimeout(d.liftT); els.floater.classList.remove('lifting'); flyBack(d); }
+  }
+  window.addEventListener('blur', cancelDrag);
+  document.addEventListener('visibilitychange', function(){ if (document.hidden) cancelDrag(); });
+
+  // ---------- first-visit demo ----------
+  // The very first visit opens on a starter board: the bottom row is full
+  // but for a two-square gap, and after a moment the domino on the mat
+  // lifts by itself and glides into it -- the row lights up lime and
+  // clears, the way Unblock's starter board shows its move. Then he plays
+  // on with the other two pieces. The demo's move doesn't score. Any touch
+  // on the game stops it and leaves the domino for him. No demo under
+  // Reduce Motion.
+  var STARTER_KEY = 'blocks.starterShown';
+  var demo = null;
+  function starterShown(){
+    try { return localStorage.getItem(STARTER_KEY) === '1'; } catch (e) { return true; }
+  }
+  function startStarter(){
+    startGame();
+    for (var c = 0; c < N; c++) if (c !== 3 && c !== 4) state.board[(N - 1) * N + c] = c % COLORS.length;
+    state.tray = [
+      { cells: [[0, 0], [0, 1]], color: 2 },               // the orange domino
+      { cells: [[0, 0], [1, 0], [1, 1]], color: 1 },
+      { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], color: 0 }
+    ];
+    renderBoard();
+    renderTray(true);
+    saveProgress();
+    var timers = [];
+    demo = { timers: timers };
+    function later(ms, fn){ timers.push(setTimeout(fn, ms)); }
+    later(1400, function(){
+      var slot = els.slots[0], pe = slot.querySelector('.piece');
+      if (!pe) return endDemo(true);
+      var g = boardGeom(), sr = slot.getBoundingClientRect(), p = state.tray[0];
+      var f = els.floater;
+      f.innerHTML = '';
+      var big = pieceEl(p);
+      big.style.setProperty('--pc', g.cell + 'px');
+      big.style.setProperty('--pg', g.gap + 'px');
+      f.appendChild(big);
+      f.className = 'floater on';
+      f.style.transition = 'none';
+      setFloater(sr.left, sr.top, 1);
+      slot.classList.add('lifted');
+      void f.offsetWidth;
+      f.style.transition = 'transform 1000ms cubic-bezier(0.45, 0, 0.25, 1)';
+      setFloater(g.left + 3 * g.step, g.top + (N - 1) * g.step, 1);
+      later(650, function(){ showGhost(p, N - 1, 3); });
+      later(1050, function(){
+        f.style.transition = '';
+        f.className = 'floater';
+        f.innerHTML = '';
+        clearGhost();
+        commitPlace(0, N - 1, 3, true);
+        endDemo(false);
+      });
+    });
+  }
+  function endDemo(skipped){
+    if (!demo) return;
+    demo.timers.forEach(clearTimeout);
+    demo = null;
+    try { localStorage.setItem(STARTER_KEY, '1'); } catch (e) {}
+    if (skipped) {
+      var f = els.floater;
+      f.style.transition = '';
+      f.className = 'floater';
+      f.innerHTML = '';
+      clearGhost();
+      els.slots[0].classList.remove('lifted');
+    }
+    // Now's the moment to show there are levels (as in Unblock).
+    if (window.PLLevelHint) PLLevelHint(skipped ? 900 : 1200);
+  }
+  // A touch anywhere on the game stops the demo (capture: before a piece
+  // is picked up by the same touch).
+  els.game.addEventListener('pointerdown', function(){ if (demo) endDemo(true); }, true);
+
+  // ---------- buttons ----------
+  // A game left unfinished (refresh or another level) still counts toward
+  // that level's best -- quietly, no smiley. A game left by going back or
+  // closing the page is saved and carries on next visit instead.
+  function keepBest(){
+    if (state.over) return; // already counted at game over
+    if (state.score > (state.best[state.difficulty] || 0)) {
+      state.best[state.difficulty] = state.score;
+      saveProgress();
+    }
+  }
+  els.diffGroup.addEventListener('click', function(e){
+    var btn = e.target.closest('.diff-btn');
+    if (!btn) return;
+    keepBest();
+    state.difficulty = btn.dataset.tier;
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    startGame();
+  });
+  els.refreshBtn.addEventListener('click', function(){ keepBest(); startGame(); });
+  els.backBtn.addEventListener('click', function(){ PLSound.go('../../'); });
+
+  function introduceTraySlider(){
+    var el = els.controlsSlider;
+    if (!el || window.innerWidth > 767) return;
+    var STORAGE_KEY = 'blocks.traySliderIntroShown';
+    try { if (localStorage.getItem(STORAGE_KEY)) return; } catch (e) {}
+    var maxScroll = el.scrollWidth - el.clientWidth;
+    if (maxScroll <= 0) return;
+    var reveal = maxScroll;
+    el.scrollLeft = reveal;
+    var duration = 1800;
+    var start = null;
+    function easeInOutCubic(t){
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+    function step(ts){
+      if (start === null) start = ts;
+      var elapsed = ts - start;
+      if (elapsed >= duration) {
+        el.scrollLeft = 0;
+        try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+        return;
+      }
+      el.scrollLeft = reveal * (1 - easeInOutCubic(elapsed / duration));
+      requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  introduceTraySlider();
+
+  // ---------- resume after the rotate-block reload ----------
+  var RESUME_KEY = 'playandlearn.resume.blocks';
+  var RESUME_MAX_AGE = 10 * 60 * 1000;
+  function saveResume(){
+    try {
+      var data = snapshotGame();
+      if (data) sessionStorage.setItem(RESUME_KEY, JSON.stringify({ at: Date.now(), data: data }));
+    } catch (e) {}
+  }
+  function takeResume(){
+    try {
+      var raw = sessionStorage.getItem(RESUME_KEY);
+      sessionStorage.removeItem(RESUME_KEY);
+      if (!raw) return null;
+      var saved = JSON.parse(raw);
+      if (!saved || Date.now() - saved.at > RESUME_MAX_AGE) return null;
+      return saved.data;
+    } catch (e) { return null; }
+  }
+
+  // The board is updated the moment a piece lands (clear animations only
+  // play on top), so a snapshot is always a settled game. Nothing to keep
+  // once the game is over.
+  function snapshotGame(){
+    if (state.over) return null;
+    return {
+      cv: COLORS_VERSION,
+      difficulty: state.difficulty,
+      board: state.board.slice(),
+      tray: state.tray.map(function(p){ return p ? { cells: p.cells, color: p.color } : null; }),
+      score: state.score
+    };
+  }
+
+  function validPiece(p){
+    if (p === null) return true;
+    if (!p || !Array.isArray(p.cells) || !p.cells.length) return false;
+    if (!(p.color >= 0 && p.color < COLORS.length && p.color % 1 === 0)) return false;
+    try { return !!VALID_SHAPE[keyOf(normalize(p.cells))]; } catch (e) { return false; }
+  }
+
+  function restoreGame(data){
+    if (!data || typeof data !== 'object') return false;
+    data = upgradeColors(data);
+    if (['easy', 'medium', 'hard'].indexOf(data.difficulty) === -1) return false;
+    if (!Array.isArray(data.board) || data.board.length !== N * N) return false;
+    for (var i = 0; i < data.board.length; i++) {
+      var v = data.board[i];
+      if (v !== -1 && !(v >= 0 && v < COLORS.length && v % 1 === 0)) return false;
+    }
+    if (!Array.isArray(data.tray) || data.tray.length !== 3 || !data.tray.every(validPiece)) return false;
+    if (!(data.score >= 0)) return false;
+
+    state.difficulty = data.difficulty;
+    state.board = data.board.slice();
+    state.tray = data.tray.map(function(p){ return p ? { cells: normalize(p.cells), color: p.color } : null; });
+    if (state.tray.every(function(p){ return !p; }) || !planLayout(state.tray, true)) state.tray = dealSet();
+    state.score = Math.floor(data.score);
+    state.over = false;
+    state.placing = false;
+    buildBoardDom();
+    renderBoard();
+    renderScore(false);
+    renderBest();
+    renderTray(true);
+    checkOver(400);
+    return true;
+  }
+
+  // Remember the level -- and the game in progress -- between visits, so
+  // leaving and coming back carries on. Refresh starts a new game.
+  var SAVE_KEY = null;
+  function saveProgress(){
+    if (!SAVE_KEY) return; // not set up yet (nothing loaded to overwrite)
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ n: N, difficulty: state.difficulty, game: snapshotGame(), best: state.best }));
+    } catch (e) {}
+  }
+  function loadProgress(){
+    try {
+      localStorage.removeItem('playandlearn.saved.blocks-wide'); // left over from the wide-mat trial
+      var d = JSON.parse(localStorage.getItem('playandlearn.saved.blocks') || 'null');
+      if (!d || ['easy', 'medium', 'hard'].indexOf(d.difficulty) === -1) return null;
+      // Saved on a different board size (the 7x7 days): keep the level, but
+      // that game can't continue here and its bests don't compare.
+      if (d.n !== N) { d.game = null; d.best = null; }
+      return d;
+    } catch (e) { return null; }
+  }
+  var saved = loadProgress();
+  if (saved && saved.best && typeof saved.best === 'object') {
+    ['easy', 'medium', 'hard'].forEach(function(t){
+      var v = saved.best[t];
+      if (v >= 0 && v < 1e7) state.best[t] = Math.floor(v);
+    });
+  }
+  function markActive(){
+    els.diffGroup.querySelectorAll('.diff-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tier') === state.difficulty);
+    });
+  }
+  window.addEventListener('pagehide', saveProgress);
+  document.addEventListener('visibilitychange', function(){
+    if (document.visibilityState === 'hidden') saveProgress();
+  });
+
+  var resumed = takeResume();
+  SAVE_KEY = RED_TRIAL ? null : 'playandlearn.saved.blocks'; // trial views don't save
+  if (RED_TRIAL) {
+    // Red trial: the same sample board in every frame.
+    markActive();
+    startGame();
+    var SAMPLE = [
+      '........',
+      '........',
+      '........',
+      '.....2..',
+      '0...122.',
+      '00.21100',
+      '1110..00',
+      '11..2.22'
+    ];
+    for (var sr = 0; sr < N; sr++) for (var sc = 0; sc < N; sc++) {
+      var ch = SAMPLE[sr].charAt(sc);
+      state.board[sr * N + sc] = ch === '.' ? -1 : Number(ch);
+    }
+    state.score = 0;
+    state.tray = [
+      { cells: [[0, 0], [0, 1], [0, 2]], color: 2 },
+      { cells: [[0, 0], [1, 1]], color: 0 },
+      { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], color: 1 }
+    ];
+    renderBoard();
+    renderScore(false);
+    renderTray(true);
+    return;
+  }
+  if (resumed && restoreGame(resumed)) {
+    markActive();
+  } else if (saved && saved.game && restoreGame(saved.game)) {
+    markActive();
+  } else {
+    if (saved) state.difficulty = saved.difficulty;
+    markActive();
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!saved && !starterShown() && !reduced && !RED_TRIAL) { startStarter(); return; }
+    startGame();
+  }
+  // No demo this time: the level hint plays as on every other game.
+  setTimeout(function(){ if (window.PLLevelHint) PLLevelHint(window.innerWidth <= 767 ? 2200 : 900); }, 0);
+})();
+</script>
+<script data-after-first-solve>
+/* Level hint: the three levels light up green, yellow and red in turn, once
+   on the whole site. ?levelhint replays. */
+(function(){
+  var g = document.getElementById('diffGroup'); if (!g) return;
+  var KEY = 'playandlearn.levelHintShown';
+  var force = /[?&]levelhint\b/.test(location.search), played = false;
+  function shown(){
+    try {
+      if (localStorage.getItem(KEY)) return true;
+      for (var i = 0; i < localStorage.length; i++) {
+        if (/\.levelHintShown$/.test(localStorage.key(i))) return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+  function play(delay){
+    if (played || (!force && shown())) return;
+    played = true;
+    try { localStorage.setItem(KEY, '1'); } catch (e) {}
+    setTimeout(function(){
+      ['easy','medium','hard'].forEach(function(t, i){
+        setTimeout(function(){
+          var b = g.querySelector('[data-tier="' + t + '"]'); if (!b) return;
+          b.classList.remove('hint'); void b.offsetWidth; b.classList.add('hint');
+          setTimeout(function(){ b.classList.remove('hint'); }, 1350);
+        }, i * 500);
+      });
+    }, delay || 0);
+  }
+  g.addEventListener('click', function(e){
+    var b = e.target.closest('.diff-btn'); if (!b) return;
+    b.classList.remove('pick'); void b.offsetWidth; b.classList.add('pick');
+    clearTimeout(b._pickT);
+    b._pickT = setTimeout(function(){ b.classList.remove('pick'); }, 950);
+  });
+  window.PLLevelHint = play;
+  if (!document.currentScript.hasAttribute('data-after-first-solve')) {
+    play(window.innerWidth <= 767 ? 2200 : 900);
+  }
+})();
+</script>
+</body>
+</html>
