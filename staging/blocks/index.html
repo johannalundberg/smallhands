@@ -38,7 +38,7 @@
   }
 
   :root{
-    --bg:#4848A8; /* toned-down blue (her pick, 2026-11-15; #5F44FF too poppy, then #5643CC); before: indigo #3D3A8F, brick #8A2F2A */
+    --bg:#766C65; /* darker clay grey: neutral like the other games (her pick 2026-11-16; was blue #4848A8) */
     --bright:#E4E4E4;
     --ink:#202020;
     --ink-muted:rgba(0,0,0,0.28); /* buttons and empty squares */
@@ -456,13 +456,11 @@
 }
 </script>
 <script>
-  // Neutral background trial (her note: Blocks stands out against the
-  // other games -- try a more neutral background). ?bg=0..12 (0 = now);
-  // compare.html shows them side by side on a fixed sample board; trial
-  // views never save.
-  var BG_TRIAL_OPTIONS = { 0:'#4848A8', 1:'#6E6763', 2:'#7A756E', 3:'#6A6A6A', 4:'#6B6F78', 5:'#8C857D', 6:'#9A9285', 7:'#6F7568', 8:'#5E6152', 9:'#7B6E66', 10:'#5A5F66', 11:'#8E8E8A', 12:'#857A72', 13:'#7D736B', 14:'#766C65' };
-  var RED_TRIAL = (/[?&]bg=(1[0-4]|[0-9])\b/.exec(location.search) || [])[1];
-  if (RED_TRIAL) document.documentElement.style.setProperty('--bg', BG_TRIAL_OPTIONS[RED_TRIAL]);
+  // Red trial on the clay grey: ?red=1..4 (1 = now, shared with Unblock's
+  // red car). compare.html shows them side by side on a fixed sample
+  // board; trial views never save.
+  var RED_TRIAL_OPTIONS = { 1:'#F53B3C', 2:'#FF3D3F', 3:'#FF384C', 4:'#FF4749' };
+  var RED_TRIAL = (/[?&]red=([1-4])\b/.exec(location.search) || [])[1];
 </script>
 </head>
 <body>
@@ -535,6 +533,7 @@
   // Her Figma red, dark grey and orange (her pick, option B, 2026-11-15;
   // pink #EE65EA before it, same slot).
   var COLORS = ['#F53B3C', '#101010', '#FF7235']; // red car (shared with Unblock), the hub tiles' almost black (was brown #2A2420), Memory's bright orange (her picks, 2026-11-15)
+  if (RED_TRIAL) COLORS[0] = RED_TRIAL_OPTIONS[RED_TRIAL];
   var COLORS_VERSION = 5;
   // Older saves, upgraded step by step:
   // v1 (seven colours, amber first) -> v2: amber becomes orange, the rest
